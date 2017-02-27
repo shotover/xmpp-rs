@@ -2,6 +2,16 @@
 name = "sasl"
 version = "0.1.0"
 authors = ["lumi <lumi@pew.im>"]
+description = "A crate for SASL authentication. Still needs a bunch of documenation."
+homepage = "https://gitlab.com/lumi/sasl-rs"
+repository = "https://gitlab.com/lumi/sasl-rs"
+documentation = "https://docs.rs/sasl"
+readme = "README.md"
+keywords = ["sasl", "authentication"]
+license = "LGPL-3.0+"
+
+[badges]
+gitlab = { repository = "lumi/sasl-rs" }
 
 [dependencies]
 openssl = "0.9.7"
