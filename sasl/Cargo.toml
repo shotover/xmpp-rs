@@ -1,0 +1,8 @@
+[package]
+name = "sasl"
+version = "0.1.0"
+authors = ["lumi <lumi@pew.im>"]
+
+[dependencies]
+openssl = "0.9.7"
+base64 = "0.4.0"
