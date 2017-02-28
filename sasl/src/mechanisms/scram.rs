@@ -66,13 +66,22 @@ fn generate_nonce() -> Result<String, ErrorStack> {
     Ok(base64::encode(&data))
 }
 
+/// A trait which defines the needed methods for SCRAM.
 pub trait ScramProvider {
+    /// The name of the hash function.
     fn name() -> &'static str;
+
+    /// A function which hashes the data using the hash function.
     fn hash(data: &[u8]) -> Vec<u8>;
+
+    /// A function which performs an HMAC using the hash function.
     fn hmac(data: &[u8], key: &[u8]) -> Vec<u8>;
+
+    /// A function which does PBKDF2 key derivation using the hash function.
     fn derive(data: &[u8], salt: &[u8], iterations: usize) -> Vec<u8>;
 }
 
+/// A `ScramProvider` which provides SCRAM-SHA-1 and SCRAM-SHA-1-PLUS
 pub struct Sha1;
 
 impl ScramProvider for Sha1 {
@@ -99,6 +108,7 @@ impl ScramProvider for Sha1 {
     }
 }
 
+/// A `ScramProvider` which provides SCRAM-SHA-256 and SCRAM-SHA-256-PLUS
 pub struct Sha256;
 
 impl ScramProvider for Sha256 {
@@ -136,6 +146,7 @@ enum ScramState {
     },
 }
 
+/// A struct for the SASL SCRAM-* and SCRAM-*-PLUS mechanisms.
 pub struct Scram<S: ScramProvider> {
     name: String,
     username: String,
@@ -147,6 +158,10 @@ pub struct Scram<S: ScramProvider> {
 }
 
 impl<S: ScramProvider> Scram<S> {
+    /// Constructs a new struct for authenticating using the SASL SCRAM-* mechanism.
+    ///
+    /// It is recommended that instead you use a `SaslCredentials` struct and turn it into the
+    /// requested mechanism using `from_credentials`.
     pub fn new<N: Into<String>, P: Into<String>>(
         username: N,
         password: P,
@@ -162,6 +177,12 @@ impl<S: ScramProvider> Scram<S> {
         })
     }
 
+    /// Constructs a new struct for authenticating using the SASL SCRAM-* mechanism.
+    ///
+    /// This one takes a nonce instead of generating it.
+    ///
+    /// It is recommended that instead you use a `SaslCredentials` struct and turn it into the
+    /// requested mechanism using `from_credentials`.
     pub fn new_with_nonce<N: Into<String>, P: Into<String>>(
         username: N,
         password: P,
@@ -178,11 +199,18 @@ impl<S: ScramProvider> Scram<S> {
         }
     }
 
+    /// Constructs a new struct for authenticating using the SASL SCRAM-*-PLUS mechanism.
+    ///
+    /// This means that this function will also take the channel binding data.
+    ///
+    /// It is recommended that instead you use a `SaslCredentials` struct and turn it into the
+    /// requested mechanism using `from_credentials`.
     pub fn new_with_channel_binding<N: Into<String>, P: Into<String>>(
         username: N,
         password: P,
         channel_binding: Vec<u8>,
     ) -> Result<Scram<S>, Error> {
+        // TODO: channel binding modes other than tls-unique
         Ok(Scram {
             name: format!("SCRAM-{}-PLUS", S::name()),
             username: username.into(),

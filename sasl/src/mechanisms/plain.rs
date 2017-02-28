@@ -4,12 +4,17 @@ use SaslCredentials;
 use SaslMechanism;
 use SaslSecret;
 
+/// A struct for the SASL PLAIN mechanism.
 pub struct Plain {
     username: String,
     password: String,
 }
 
 impl Plain {
+    /// Constructs a new struct for authenticating using the SASL PLAIN mechanism.
+    ///
+    /// It is recommended that instead you use a `SaslCredentials` struct and turn it into the
+    /// requested mechanism using `from_credentials`.
     pub fn new<N: Into<String>, P: Into<String>>(username: N, password: P) -> Plain {
         Plain {
             username: username.into(),

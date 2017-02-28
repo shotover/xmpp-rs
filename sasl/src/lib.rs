@@ -1,14 +1,50 @@
-//! Provides the `SaslMechanism` trait and some implementations.
+#![deny(missing_docs)]
+
+//! This crate provides a framework for SASL authentication and a few authentication mechanisms.
+//!
+//! # Examples
+//!
+//! ```rust
+//! use sasl::{SaslCredentials, SaslSecret, SaslMechanism, Error};
+//! use sasl::mechanisms::Plain;
+//!
+//! let creds = SaslCredentials {
+//!     username: "user".to_owned(),
+//!     secret: SaslSecret::Password("pencil".to_owned()),
+//!     channel_binding: None,
+//! };
+//!
+//! let mut mechanism = Plain::from_credentials(creds).unwrap();
+//!
+//! let initial_data = mechanism.initial().unwrap();
+//!
+//! assert_eq!(initial_data, b"\0user\0pencil");
+//! ```
+//!
+//! You may look at the tests of `mechanisms/scram.rs` for examples of more advanced usage.
+//!
+//! # Usage
+//!
+//! You can use this in your crate by adding this under `dependencies` in your `Cargo.toml`:
+//!
+//! ```toml,ignore
+//! sasl = "*"
+//! ```
 
 extern crate base64;
 extern crate openssl;
 
-pub mod error;
+mod error;
+
+pub use error::Error;
 
 /// A struct containing SASL credentials.
 pub struct SaslCredentials {
-    pub username: String,
+    /// The requested username.
+    pub username: String, // TODO: change this since some mechanisms do not use it
+    /// The secret used to authenticate.
     pub secret: SaslSecret,
+    /// Optionally, channel binding data, for *-PLUS mechanisms.
     pub channel_binding: Option<Vec<u8>>,
 }
 
@@ -20,6 +56,7 @@ pub enum SaslSecret {
     Password(String),
 }
 
+/// A trait which defines SASL mechanisms.
 pub trait SaslMechanism {
     /// The name of the mechanism.
     fn name(&self) -> &str;

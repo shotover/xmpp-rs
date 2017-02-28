@@ -4,9 +4,14 @@ use SaslCredentials;
 use SaslMechanism;
 use SaslSecret;
 
+/// A struct for the SASL ANONYMOUS mechanism.
 pub struct Anonymous;
 
 impl Anonymous {
+    /// Constructs a new struct for authenticating using the SASL ANONYMOUS mechanism.
+    ///
+    /// It is recommended that instead you use a `SaslCredentials` struct and turn it into the
+    /// requested mechanism using `from_credentials`.
     pub fn new() -> Anonymous {
         Anonymous
     }
