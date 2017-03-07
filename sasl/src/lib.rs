@@ -5,12 +5,12 @@
 //! # Examples
 //!
 //! ```rust
-//! use sasl::{SaslCredentials, SaslMechanism, Error};
+//! use sasl::{Credentials, Mechanism, Error};
 //! use sasl::mechanisms::Plain;
 //!
-//! let creds = SaslCredentials::default()
-//!                             .with_username("user")
-//!                             .with_password("pencil");
+//! let creds = Credentials::default()
+//!                         .with_username("user")
+//!                         .with_password("pencil");
 //!
 //! let mut mechanism = Plain::from_credentials(creds).unwrap();
 //!
@@ -38,40 +38,40 @@ pub use error::Error;
 
 /// A struct containing SASL credentials.
 #[derive(Clone, Debug)]
-pub struct SaslCredentials {
+pub struct Credentials {
     /// The requested username.
     pub username: Option<String>,
     /// The secret used to authenticate.
-    pub secret: SaslSecret,
+    pub secret: Secret,
     /// Channel binding data, for *-PLUS mechanisms.
     pub channel_binding: ChannelBinding,
 }
 
-impl Default for SaslCredentials {
-    fn default() -> SaslCredentials {
-        SaslCredentials {
+impl Default for Credentials {
+    fn default() -> Credentials {
+        Credentials {
             username: None,
-            secret: SaslSecret::None,
+            secret: Secret::None,
             channel_binding: ChannelBinding::None,
         }
     }
 }
 
-impl SaslCredentials {
-    /// Creates a new SaslCredentials with the specified username.
-    pub fn with_username<N: Into<String>>(mut self, username: N) -> SaslCredentials {
+impl Credentials {
+    /// Creates a new Credentials with the specified username.
+    pub fn with_username<N: Into<String>>(mut self, username: N) -> Credentials {
         self.username = Some(username.into());
         self
     }
 
-    /// Creates a new SaslCredentials with the specified password.
-    pub fn with_password<P: Into<String>>(mut self, password: P) -> SaslCredentials {
-        self.secret = SaslSecret::Password(password.into());
+    /// Creates a new Credentials with the specified password.
+    pub fn with_password<P: Into<String>>(mut self, password: P) -> Credentials {
+        self.secret = Secret::Password(password.into());
         self
     }
 
-    /// Creates a new SaslCredentials with the specified chanel binding.
-    pub fn with_channel_binding(mut self, channel_binding: ChannelBinding) -> SaslCredentials {
+    /// Creates a new Credentials with the specified chanel binding.
+    pub fn with_channel_binding(mut self, channel_binding: ChannelBinding) -> Credentials {
         self.channel_binding = channel_binding;
         self
     }
@@ -82,6 +82,8 @@ impl SaslCredentials {
 pub enum ChannelBinding {
     /// No channel binding data.
     None,
+    /// Advertise that the client does not think the server supports channel binding.
+    Unsupported,
     /// p=tls-unique channel binding data.
     TlsUnique(Vec<u8>),
 }
@@ -91,6 +93,7 @@ impl ChannelBinding {
     pub fn header(&self) -> &[u8] {
         match *self {
             ChannelBinding::None => b"n,,",
+            ChannelBinding::Unsupported => b"y,,",
             ChannelBinding::TlsUnique(_) => b"p=tls-unique,,",
         }
     }
@@ -99,6 +102,7 @@ impl ChannelBinding {
     pub fn data(&self) -> &[u8] {
         match *self {
             ChannelBinding::None => &[],
+            ChannelBinding::Unsupported => &[],
             ChannelBinding::TlsUnique(ref data) => data,
         }
     }
@@ -106,7 +110,7 @@ impl ChannelBinding {
 
 /// Represents a SASL secret, like a password.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum SaslSecret {
+pub enum Secret {
     /// No extra data needed.
     None,
     /// Password required.
@@ -114,12 +118,12 @@ pub enum SaslSecret {
 }
 
 /// A trait which defines SASL mechanisms.
-pub trait SaslMechanism {
+pub trait Mechanism {
     /// The name of the mechanism.
     fn name(&self) -> &str;
 
-    /// Creates this mechanism from `SaslCredentials`.
-    fn from_credentials(credentials: SaslCredentials) -> Result<Self, String>
+    /// Creates this mechanism from `Credentials`.
+    fn from_credentials(credentials: Credentials) -> Result<Self, String>
     where
         Self: Sized;
 

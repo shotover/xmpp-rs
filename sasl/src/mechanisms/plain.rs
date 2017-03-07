@@ -1,8 +1,8 @@
 //! Provides the SASL "PLAIN" mechanism.
 
-use SaslCredentials;
-use SaslMechanism;
-use SaslSecret;
+use Credentials;
+use Mechanism;
+use Secret;
 
 /// A struct for the SASL PLAIN mechanism.
 pub struct Plain {
@@ -13,7 +13,7 @@ pub struct Plain {
 impl Plain {
     /// Constructs a new struct for authenticating using the SASL PLAIN mechanism.
     ///
-    /// It is recommended that instead you use a `SaslCredentials` struct and turn it into the
+    /// It is recommended that instead you use a `Credentials` struct and turn it into the
     /// requested mechanism using `from_credentials`.
     pub fn new<N: Into<String>, P: Into<String>>(username: N, password: P) -> Plain {
         Plain {
@@ -23,13 +23,13 @@ impl Plain {
     }
 }
 
-impl SaslMechanism for Plain {
+impl Mechanism for Plain {
     fn name(&self) -> &str {
         "PLAIN"
     }
 
-    fn from_credentials(credentials: SaslCredentials) -> Result<Plain, String> {
-        if let SaslSecret::Password(password) = credentials.secret {
+    fn from_credentials(credentials: Credentials) -> Result<Plain, String> {
+        if let Secret::Password(password) = credentials.secret {
             if let Some(username) = credentials.username {
                 Ok(Plain::new(username, password))
             } else {
