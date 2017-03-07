@@ -6,6 +6,11 @@ What's this?
 
 A crate which handles SASL authentication.
 
+Can I see an example?
+---------------------
+
+Look at the documentation [here](https://docs.rs/sasl).
+
 What license is it under?
 -------------------------
 

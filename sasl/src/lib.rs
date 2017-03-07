@@ -5,14 +5,12 @@
 //! # Examples
 //!
 //! ```rust
-//! use sasl::{SaslCredentials, SaslSecret, SaslMechanism, Error};
+//! use sasl::{SaslCredentials, SaslMechanism, Error};
 //! use sasl::mechanisms::Plain;
 //!
-//! let creds = SaslCredentials {
-//!     username: "user".to_owned(),
-//!     secret: SaslSecret::Password("pencil".to_owned()),
-//!     channel_binding: None,
-//! };
+//! let creds = SaslCredentials::default()
+//!                             .with_username("user")
+//!                             .with_password("pencil");
 //!
 //! let mut mechanism = Plain::from_credentials(creds).unwrap();
 //!
@@ -39,16 +37,75 @@ mod error;
 pub use error::Error;
 
 /// A struct containing SASL credentials.
+#[derive(Clone, Debug)]
 pub struct SaslCredentials {
     /// The requested username.
-    pub username: String, // TODO: change this since some mechanisms do not use it
+    pub username: Option<String>,
     /// The secret used to authenticate.
     pub secret: SaslSecret,
-    /// Optionally, channel binding data, for *-PLUS mechanisms.
-    pub channel_binding: Option<Vec<u8>>,
+    /// Channel binding data, for *-PLUS mechanisms.
+    pub channel_binding: ChannelBinding,
+}
+
+impl Default for SaslCredentials {
+    fn default() -> SaslCredentials {
+        SaslCredentials {
+            username: None,
+            secret: SaslSecret::None,
+            channel_binding: ChannelBinding::None,
+        }
+    }
+}
+
+impl SaslCredentials {
+    /// Creates a new SaslCredentials with the specified username.
+    pub fn with_username<N: Into<String>>(mut self, username: N) -> SaslCredentials {
+        self.username = Some(username.into());
+        self
+    }
+
+    /// Creates a new SaslCredentials with the specified password.
+    pub fn with_password<P: Into<String>>(mut self, password: P) -> SaslCredentials {
+        self.secret = SaslSecret::Password(password.into());
+        self
+    }
+
+    /// Creates a new SaslCredentials with the specified chanel binding.
+    pub fn with_channel_binding(mut self, channel_binding: ChannelBinding) -> SaslCredentials {
+        self.channel_binding = channel_binding;
+        self
+    }
+}
+
+/// Channel binding configuration.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ChannelBinding {
+    /// No channel binding data.
+    None,
+    /// p=tls-unique channel binding data.
+    TlsUnique(Vec<u8>),
+}
+
+impl ChannelBinding {
+    /// Return the gs2 header for this channel binding mechanism.
+    pub fn header(&self) -> &[u8] {
+        match *self {
+            ChannelBinding::None => b"n,,",
+            ChannelBinding::TlsUnique(_) => b"p=tls-unique,,",
+        }
+    }
+
+    /// Return the channel binding data for this channel binding mechanism.
+    pub fn data(&self) -> &[u8] {
+        match *self {
+            ChannelBinding::None => &[],
+            ChannelBinding::TlsUnique(ref data) => data,
+        }
+    }
 }
 
 /// Represents a SASL secret, like a password.
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum SaslSecret {
     /// No extra data needed.
     None,

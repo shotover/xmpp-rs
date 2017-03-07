@@ -30,7 +30,11 @@ impl SaslMechanism for Plain {
 
     fn from_credentials(credentials: SaslCredentials) -> Result<Plain, String> {
         if let SaslSecret::Password(password) = credentials.secret {
-            Ok(Plain::new(credentials.username, password))
+            if let Some(username) = credentials.username {
+                Ok(Plain::new(username, password))
+            } else {
+                Err("PLAIN requires a username".to_owned())
+            }
         } else {
             Err("PLAIN requires a password".to_owned())
         }

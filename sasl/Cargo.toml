@@ -2,7 +2,7 @@
 name = "sasl"
 version = "0.1.1"
 authors = ["lumi <lumi@pew.im>"]
-description = "A crate for SASL authentication. Still needs a bunch of documenation."
+description = "A crate for SASL authentication."
 homepage = "https://gitlab.com/lumi/sasl-rs"
 repository = "https://gitlab.com/lumi/sasl-rs"
 documentation = "https://docs.rs/sasl"

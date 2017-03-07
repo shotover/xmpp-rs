@@ -2,6 +2,7 @@
 
 use base64;
 
+use ChannelBinding;
 use SaslCredentials;
 use SaslMechanism;
 use SaslSecret;
@@ -153,18 +154,20 @@ pub struct Scram<S: ScramProvider> {
     password: String,
     client_nonce: String,
     state: ScramState,
-    channel_binding: Option<Vec<u8>>,
+    channel_binding: ChannelBinding,
     _marker: PhantomData<S>,
 }
 
 impl<S: ScramProvider> Scram<S> {
-    /// Constructs a new struct for authenticating using the SASL SCRAM-* mechanism.
+    /// Constructs a new struct for authenticating using the SASL SCRAM-* and SCRAM-*-PLUS
+    /// mechanisms, depending on the passed channel binding.
     ///
     /// It is recommended that instead you use a `SaslCredentials` struct and turn it into the
     /// requested mechanism using `from_credentials`.
     pub fn new<N: Into<String>, P: Into<String>>(
         username: N,
         password: P,
+        channel_binding: ChannelBinding,
     ) -> Result<Scram<S>, Error> {
         Ok(Scram {
             name: format!("SCRAM-{}", S::name()),
@@ -172,17 +175,14 @@ impl<S: ScramProvider> Scram<S> {
             password: password.into(),
             client_nonce: generate_nonce()?,
             state: ScramState::Init,
-            channel_binding: None,
+            channel_binding: channel_binding,
             _marker: PhantomData,
         })
     }
 
-    /// Constructs a new struct for authenticating using the SASL SCRAM-* mechanism.
-    ///
-    /// This one takes a nonce instead of generating it.
-    ///
-    /// It is recommended that instead you use a `SaslCredentials` struct and turn it into the
-    /// requested mechanism using `from_credentials`.
+    // Used for testing.
+    #[doc(hidden)]
+    #[cfg(test)]
     pub fn new_with_nonce<N: Into<String>, P: Into<String>>(
         username: N,
         password: P,
@@ -194,32 +194,9 @@ impl<S: ScramProvider> Scram<S> {
             password: password.into(),
             client_nonce: nonce,
             state: ScramState::Init,
-            channel_binding: None,
+            channel_binding: ChannelBinding::None,
             _marker: PhantomData,
         }
-    }
-
-    /// Constructs a new struct for authenticating using the SASL SCRAM-*-PLUS mechanism.
-    ///
-    /// This means that this function will also take the channel binding data.
-    ///
-    /// It is recommended that instead you use a `SaslCredentials` struct and turn it into the
-    /// requested mechanism using `from_credentials`.
-    pub fn new_with_channel_binding<N: Into<String>, P: Into<String>>(
-        username: N,
-        password: P,
-        channel_binding: Vec<u8>,
-    ) -> Result<Scram<S>, Error> {
-        // TODO: channel binding modes other than tls-unique
-        Ok(Scram {
-            name: format!("SCRAM-{}-PLUS", S::name()),
-            username: username.into(),
-            password: password.into(),
-            client_nonce: generate_nonce()?,
-            state: ScramState::Init,
-            channel_binding: Some(channel_binding),
-            _marker: PhantomData,
-        })
     }
 }
 
@@ -231,12 +208,11 @@ impl<S: ScramProvider> SaslMechanism for Scram<S> {
 
     fn from_credentials(credentials: SaslCredentials) -> Result<Scram<S>, String> {
         if let SaslSecret::Password(password) = credentials.secret {
-            if let Some(binding) = credentials.channel_binding {
-                Scram::new_with_channel_binding(credentials.username, password, binding)
+            if let Some(username) = credentials.username {
+                Scram::new(username, password, credentials.channel_binding)
                     .map_err(|_| "can't generate nonce".to_owned())
             } else {
-                Scram::new(credentials.username, password)
-                    .map_err(|_| "can't generate nonce".to_owned())
+                Err("SCRAM requires a username".to_owned())
             }
         } else {
             Err("SCRAM requires a password".to_owned())
@@ -245,11 +221,7 @@ impl<S: ScramProvider> SaslMechanism for Scram<S> {
 
     fn initial(&mut self) -> Result<Vec<u8>, String> {
         let mut gs2_header = Vec::new();
-        if let Some(_) = self.channel_binding {
-            gs2_header.extend(b"p=tls-unique,,");
-        } else {
-            gs2_header.extend(b"n,,");
-        }
+        gs2_header.extend(self.channel_binding.header());
         let mut bare = Vec::new();
         bare.extend(b"n=");
         bare.extend(self.username.bytes());
@@ -286,9 +258,7 @@ impl<S: ScramProvider> SaslMechanism for Scram<S> {
                 client_final_message_bare.extend(b"c=");
                 let mut cb_data: Vec<u8> = Vec::new();
                 cb_data.extend(gs2_header);
-                if let Some(ref cb) = self.channel_binding {
-                    cb_data.extend(cb);
-                }
+                cb_data.extend(self.channel_binding.data());
                 client_final_message_bare.extend(base64::encode(&cb_data).bytes());
                 client_final_message_bare.extend(b",r=");
                 client_final_message_bare.extend(server_nonce.bytes());
