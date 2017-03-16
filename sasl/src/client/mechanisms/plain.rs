@@ -1,8 +1,7 @@
 //! Provides the SASL "PLAIN" mechanism.
 
-use Credentials;
-use Mechanism;
-use Secret;
+use client::Mechanism;
+use common::{Credentials, Identity, Password, Secret};
 
 /// A struct for the SASL PLAIN mechanism.
 pub struct Plain {
@@ -29,14 +28,14 @@ impl Mechanism for Plain {
     }
 
     fn from_credentials(credentials: Credentials) -> Result<Plain, String> {
-        if let Secret::Password(password) = credentials.secret {
-            if let Some(username) = credentials.username {
+        if let Secret::Password(Password::Plain(password)) = credentials.secret {
+            if let Identity::Username(username) = credentials.identity {
                 Ok(Plain::new(username, password))
             } else {
                 Err("PLAIN requires a username".to_owned())
             }
         } else {
-            Err("PLAIN requires a password".to_owned())
+            Err("PLAIN requires a plaintext password".to_owned())
         }
     }
 
