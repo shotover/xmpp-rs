@@ -124,6 +124,8 @@
 //! ```
 
 extern crate base64;
+
+#[cfg(feature = "scram")]
 extern crate openssl;
 
 mod error;
