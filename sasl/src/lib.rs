@@ -25,12 +25,15 @@
 //! ## More complex usage
 //!
 //! ```rust
-//! use sasl::server::{Validator, Mechanism as ServerMechanism, Response};
+//! #[macro_use] extern crate sasl;
+//!
+//! use sasl::server::{Validator, Provider, Mechanism as ServerMechanism, Response};
 //! use sasl::server::mechanisms::{Plain as ServerPlain, Scram as ServerScram};
 //! use sasl::client::Mechanism as ClientMechanism;
 //! use sasl::client::mechanisms::{Plain as ClientPlain, Scram as ClientScram};
-//! use sasl::common::{Identity, Credentials, Secret, Password, ChannelBinding};
+//! use sasl::common::{Identity, Credentials, Password, ChannelBinding};
 //! use sasl::common::scram::{ScramProvider, Sha1, Sha256};
+//! use sasl::secret;
 //!
 //! const USERNAME: &'static str = "user";
 //! const PASSWORD: &'static str = "pencil";
@@ -39,41 +42,67 @@
 //!
 //! struct MyValidator;
 //!
-//! impl Validator for MyValidator {
-//!     fn validate_credentials(&self, creds: &Credentials) -> Result<Identity, String> {
-//!         if creds.identity != Identity::Username(USERNAME.to_owned()) {
-//!             Err("authentication failure".to_owned())
+//! impl Validator<secret::Plain> for MyValidator {
+//!     fn validate(&self, identity: &Identity, value: &secret::PlainValue) -> Result<(), String> {
+//!         let &secret::PlainValue(ref password) = value;
+//!         if identity != &Identity::Username(USERNAME.to_owned()) {
+//!             Err("authentication failed".to_owned())
 //!         }
-//!         else if creds.secret != Secret::password_plain(PASSWORD) {
-//!             Err("authentication failure".to_owned())
+//!         else if password != PASSWORD {
+//!             Err("authentication failed".to_owned())
 //!         }
 //!         else {
-//!             Ok(creds.identity.clone())
+//!             Ok(())
 //!         }
-//!     }
-//!
-//!     fn request_pbkdf2<S: ScramProvider>(&self) -> Result<(Vec<u8>, usize, Vec<u8>), String> {
-//!         Ok( ( SALT.to_vec()
-//!             , ITERATIONS
-//!             , S::derive(&Password::Plain(PASSWORD.to_owned()), &SALT, ITERATIONS)? ) )
 //!     }
 //! }
 //!
-//! let mut mech = ServerPlain::new(MyValidator);
-//! let expected_response = Response::Success(Identity::Username("user".to_owned()), Vec::new());
-//! assert_eq!(mech.respond(b"\0user\0pencil"), Ok(expected_response));
+//! impl Provider<secret::Pbkdf2Sha1> for MyValidator {
+//!     fn provide(&self, identity: &Identity) -> Result<secret::Pbkdf2Sha1Value, String> {
+//!         if identity != &Identity::Username(USERNAME.to_owned()) {
+//!             Err("authentication failed".to_owned())
+//!         }
+//!         else {
+//!             let digest = sasl::common::scram::Sha1::derive
+//!                 ( &Password::Plain((PASSWORD.to_owned()))
+//!                 , &SALT[..]
+//!                 , ITERATIONS )?;
+//!             Ok(secret::Pbkdf2Sha1Value {
+//!                 salt: SALT.to_vec(),
+//!                 iterations: ITERATIONS,
+//!                 digest: digest,
+//!             })
+//!         }
+//!     }
+//! }
 //!
-//! let mut mech = ServerPlain::new(MyValidator);
-//! assert_eq!(mech.respond(b"\0user\0marker"), Err("authentication failure".to_owned()));
+//! impl_validator_using_provider!(MyValidator, secret::Pbkdf2Sha1);
 //!
-//! let creds = Credentials::default()
-//!                         .with_username(USERNAME)
-//!                         .with_password(PASSWORD);
+//! impl Provider<secret::Pbkdf2Sha256> for MyValidator {
+//!     fn provide(&self, identity: &Identity) -> Result<secret::Pbkdf2Sha256Value, String> {
+//!         if identity != &Identity::Username(USERNAME.to_owned()) {
+//!             Err("authentication failed".to_owned())
+//!         }
+//!         else {
+//!             let digest = sasl::common::scram::Sha256::derive
+//!                 ( &Password::Plain((PASSWORD.to_owned()))
+//!                 , &SALT[..]
+//!                 , ITERATIONS )?;
+//!             Ok(secret::Pbkdf2Sha256Value {
+//!                 salt: SALT.to_vec(),
+//!                 iterations: ITERATIONS,
+//!                 digest: digest,
+//!             })
+//!         }
+//!     }
+//! }
 //!
-//! fn finish<CM, SM, V>(cm: &mut CM, sm: &mut SM) -> Result<Identity, String>
+//! impl_validator_using_provider!(MyValidator, secret::Pbkdf2Sha256);
+
+//!
+//! fn finish<CM, SM>(cm: &mut CM, sm: &mut SM) -> Result<Identity, String>
 //!     where CM: ClientMechanism,
-//!           SM: ServerMechanism<V>,
-//!           V: Validator {
+//!           SM: ServerMechanism {
 //!     let init = cm.initial()?;
 //!     println!("C: {}", String::from_utf8_lossy(&init));
 //!     let mut resp = sm.respond(&init)?;
@@ -99,20 +128,32 @@
 //!     }
 //! }
 //!
-//! let mut client_mech = ClientPlain::from_credentials(creds.clone()).unwrap();
-//! let mut server_mech = ServerPlain::new(MyValidator);
+//! fn main() {
+//!     let mut mech = ServerPlain::new(MyValidator);
+//!     let expected_response = Response::Success(Identity::Username("user".to_owned()), Vec::new());
+//!     assert_eq!(mech.respond(b"\0user\0pencil"), Ok(expected_response));
 //!
-//! assert_eq!(finish(&mut client_mech, &mut server_mech), Ok(Identity::Username(USERNAME.to_owned())));
+//!     let mut mech = ServerPlain::new(MyValidator);
+//!     assert_eq!(mech.respond(b"\0user\0marker"), Err("authentication failed".to_owned()));
 //!
-//! let mut client_mech = ClientScram::<Sha1>::from_credentials(creds.clone()).unwrap();
-//! let mut server_mech = ServerScram::<Sha1, _>::new(MyValidator, ChannelBinding::Unsupported);
+//!     let creds = Credentials::default()
+//!                             .with_username(USERNAME)
+//!                             .with_password(PASSWORD);
+//!     let mut client_mech = ClientPlain::from_credentials(creds.clone()).unwrap();
+//!     let mut server_mech = ServerPlain::new(MyValidator);
 //!
-//! assert_eq!(finish(&mut client_mech, &mut server_mech), Ok(Identity::Username(USERNAME.to_owned())));
+//!     assert_eq!(finish(&mut client_mech, &mut server_mech), Ok(Identity::Username(USERNAME.to_owned())));
 //!
-//! let mut client_mech = ClientScram::<Sha256>::from_credentials(creds.clone()).unwrap();
-//! let mut server_mech = ServerScram::<Sha256, _>::new(MyValidator, ChannelBinding::Unsupported);
+//!     let mut client_mech = ClientScram::<Sha1>::from_credentials(creds.clone()).unwrap();
+//!     let mut server_mech = ServerScram::<Sha1, _>::new(MyValidator, ChannelBinding::Unsupported);
 //!
-//! assert_eq!(finish(&mut client_mech, &mut server_mech), Ok(Identity::Username(USERNAME.to_owned())));
+//!     assert_eq!(finish(&mut client_mech, &mut server_mech), Ok(Identity::Username(USERNAME.to_owned())));
+//!
+//!     let mut client_mech = ClientScram::<Sha256>::from_credentials(creds.clone()).unwrap();
+//!     let mut server_mech = ServerScram::<Sha256, _>::new(MyValidator, ChannelBinding::Unsupported);
+//!
+//!     assert_eq!(finish(&mut client_mech, &mut server_mech), Ok(Identity::Username(USERNAME.to_owned())));
+//! }
 //! ```
 //!
 //! # Usage
@@ -131,7 +172,9 @@ extern crate openssl;
 mod error;
 
 pub mod client;
-pub mod common;
+#[macro_use]
 pub mod server;
+pub mod common;
+pub mod secret;
 
 pub use error::Error;
