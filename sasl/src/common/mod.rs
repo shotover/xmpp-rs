@@ -4,6 +4,7 @@ use std::convert::From;
 
 use std::string::FromUtf8Error;
 
+#[cfg(feature = "scram")]
 pub mod scram;
 
 #[derive(Clone, Debug, PartialEq, Eq)]

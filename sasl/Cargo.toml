@@ -13,6 +13,13 @@ license = "LGPL-3.0+"
 [badges]
 gitlab = { repository = "lumi/sasl-rs" }
 
+[features]
+default = ["scram"]
+scram = ["openssl"]
+
 [dependencies]
-openssl = "0.9.7"
 base64 = "0.4.0"
+
+[dependencies.openssl]
+version = "0.9.7"
+optional = true

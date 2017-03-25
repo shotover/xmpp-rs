@@ -1,8 +1,12 @@
-use common::scram::ScramProvider;
 use common::{Credentials, Identity};
+
+#[cfg(feature = "scram")]
+use common::scram::ScramProvider;
 
 pub trait Validator {
     fn validate_credentials(&self, credentials: &Credentials) -> Result<Identity, String>;
+
+    #[cfg(feature = "scram")]
     fn request_pbkdf2<S: ScramProvider>(&self) -> Result<(Vec<u8>, usize, Vec<u8>), String>;
 }
 
@@ -63,6 +67,7 @@ pub mod mechanisms {
         }
     }
 
+    #[cfg(feature = "scram")]
     mod scram {
         use std::marker::PhantomData;
 
@@ -235,5 +240,6 @@ pub mod mechanisms {
     }
 
     pub use self::plain::Plain;
+    #[cfg(feature = "scram")]
     pub use self::scram::Scram;
 }
