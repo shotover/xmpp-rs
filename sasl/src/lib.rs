@@ -98,7 +98,6 @@
 //! }
 //!
 //! impl_validator_using_provider!(MyValidator, secret::Pbkdf2Sha256);
-
 //!
 //! fn finish<CM, SM>(cm: &mut CM, sm: &mut SM) -> Result<Identity, String>
 //!     where CM: ClientMechanism,
