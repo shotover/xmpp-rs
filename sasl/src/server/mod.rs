@@ -3,8 +3,8 @@ use secret::SecretKind;
 
 #[macro_export]
 macro_rules! impl_validator_using_provider {
-    ( $type:ty, $secret:ty ) => {
-        impl $crate::server::Validator<$secret> for $type {
+    ( $validator:ty, $secret:ty ) => {
+        impl $crate::server::Validator<$secret> for $validator {
             fn validate(
                 &self,
                 identity: &$crate::common::Identity,
