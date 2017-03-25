@@ -33,8 +33,7 @@ impl<V: Validator<secret::Plain>> Mechanism for Plain<V> {
         let password =
             String::from_utf8(password.to_vec()).map_err(|_| "error decoding password")?;
         let ident = Identity::Username(username);
-        self.validator
-            .validate(&ident, &secret::PlainValue(password))?;
+        self.validator.validate(&ident, &secret::Plain(password))?;
         Ok(Response::Success(ident, Vec::new()))
     }
 }

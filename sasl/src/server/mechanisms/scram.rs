@@ -5,7 +5,7 @@ use base64;
 use common::scram::{generate_nonce, ScramProvider};
 use common::{parse_frame, xor, ChannelBinding, Identity};
 use secret;
-use secret::Pbkdf2SecretValue;
+use secret::Pbkdf2Secret;
 use server::{Mechanism, Provider, Response};
 
 enum ScramState {
@@ -24,8 +24,8 @@ enum ScramState {
 pub struct Scram<S, P>
 where
     S: ScramProvider,
-    P: Provider<S::SecretKind>,
-    <S::SecretKind as secret::SecretKind>::Value: secret::Pbkdf2SecretValue,
+    P: Provider<S::Secret>,
+    S::Secret: secret::Pbkdf2Secret,
 {
     name: String,
     state: ScramState,
@@ -37,8 +37,8 @@ where
 impl<S, P> Scram<S, P>
 where
     S: ScramProvider,
-    P: Provider<S::SecretKind>,
-    <S::SecretKind as secret::SecretKind>::Value: secret::Pbkdf2SecretValue,
+    P: Provider<S::Secret>,
+    S::Secret: secret::Pbkdf2Secret,
 {
     pub fn new(provider: P, channel_binding: ChannelBinding) -> Scram<S, P> {
         Scram {
@@ -54,8 +54,8 @@ where
 impl<S, P> Mechanism for Scram<S, P>
 where
     S: ScramProvider,
-    P: Provider<S::SecretKind>,
-    <S::SecretKind as secret::SecretKind>::Value: secret::Pbkdf2SecretValue,
+    P: Provider<S::Secret>,
+    S::Secret: secret::Pbkdf2Secret,
 {
     fn name(&self) -> &str {
         &self.name

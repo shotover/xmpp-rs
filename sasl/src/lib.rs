@@ -43,8 +43,8 @@
 //! struct MyValidator;
 //!
 //! impl Validator<secret::Plain> for MyValidator {
-//!     fn validate(&self, identity: &Identity, value: &secret::PlainValue) -> Result<(), String> {
-//!         let &secret::PlainValue(ref password) = value;
+//!     fn validate(&self, identity: &Identity, value: &secret::Plain) -> Result<(), String> {
+//!         let &secret::Plain(ref password) = value;
 //!         if identity != &Identity::Username(USERNAME.to_owned()) {
 //!             Err("authentication failed".to_owned())
 //!         }
@@ -58,7 +58,7 @@
 //! }
 //!
 //! impl Provider<secret::Pbkdf2Sha1> for MyValidator {
-//!     fn provide(&self, identity: &Identity) -> Result<secret::Pbkdf2Sha1Value, String> {
+//!     fn provide(&self, identity: &Identity) -> Result<secret::Pbkdf2Sha1, String> {
 //!         if identity != &Identity::Username(USERNAME.to_owned()) {
 //!             Err("authentication failed".to_owned())
 //!         }
@@ -67,7 +67,7 @@
 //!                 ( &Password::Plain((PASSWORD.to_owned()))
 //!                 , &SALT[..]
 //!                 , ITERATIONS )?;
-//!             Ok(secret::Pbkdf2Sha1Value {
+//!             Ok(secret::Pbkdf2Sha1 {
 //!                 salt: SALT.to_vec(),
 //!                 iterations: ITERATIONS,
 //!                 digest: digest,
@@ -79,7 +79,7 @@
 //! impl_validator_using_provider!(MyValidator, secret::Pbkdf2Sha1);
 //!
 //! impl Provider<secret::Pbkdf2Sha256> for MyValidator {
-//!     fn provide(&self, identity: &Identity) -> Result<secret::Pbkdf2Sha256Value, String> {
+//!     fn provide(&self, identity: &Identity) -> Result<secret::Pbkdf2Sha256, String> {
 //!         if identity != &Identity::Username(USERNAME.to_owned()) {
 //!             Err("authentication failed".to_owned())
 //!         }
@@ -88,7 +88,7 @@
 //!                 ( &Password::Plain((PASSWORD.to_owned()))
 //!                 , &SALT[..]
 //!                 , ITERATIONS )?;
-//!             Ok(secret::Pbkdf2Sha256Value {
+//!             Ok(secret::Pbkdf2Sha256 {
 //!                 salt: SALT.to_vec(),
 //!                 iterations: ITERATIONS,
 //!                 digest: digest,
