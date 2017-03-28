@@ -4,7 +4,7 @@ sasl-rs
 What's this?
 ------------
 
-A crate which handles SASL authentication.
+A crate which handles SASL authentication. Still unstable until 1.0.0.
 
 Can I see an example?
 ---------------------
