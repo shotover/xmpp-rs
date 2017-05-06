@@ -145,7 +145,6 @@ impl<S: ScramProvider> Mechanism for Scram<S> {
                 auth_message.extend(challenge);
                 auth_message.push(b',');
                 auth_message.extend(&client_final_message_bare);
-                println!("_ {}", String::from_utf8_lossy(&auth_message));
                 let stored_key = S::hash(&client_key);
                 let client_signature = S::hmac(&auth_message, &stored_key);
                 let client_proof = xor(&client_key, &client_signature);
