@@ -49,14 +49,14 @@ impl ScramProvider for Sha1 {
     }
 
     fn hash(data: &[u8]) -> Vec<u8> {
-        hash(MessageDigest::sha1(), data).unwrap()
+        hash(MessageDigest::sha1(), data).unwrap().to_vec()
     }
 
     fn hmac(data: &[u8], key: &[u8]) -> Vec<u8> {
         let pkey = PKey::hmac(key).unwrap();
         let mut signer = Signer::new(MessageDigest::sha1(), &pkey).unwrap();
         signer.update(data).unwrap();
-        signer.finish().unwrap()
+        signer.sign_to_vec().unwrap()
     }
 
     fn derive(password: &Password, salt: &[u8], iterations: usize) -> Result<Vec<u8>, String> {
@@ -112,14 +112,14 @@ impl ScramProvider for Sha256 {
     }
 
     fn hash(data: &[u8]) -> Vec<u8> {
-        hash(MessageDigest::sha256(), data).unwrap()
+        hash(MessageDigest::sha256(), data).unwrap().to_vec()
     }
 
     fn hmac(data: &[u8], key: &[u8]) -> Vec<u8> {
         let pkey = PKey::hmac(key).unwrap();
         let mut signer = Signer::new(MessageDigest::sha256(), &pkey).unwrap();
         signer.update(data).unwrap();
-        signer.finish().unwrap()
+        signer.sign_to_vec().unwrap()
     }
 
     fn derive(password: &Password, salt: &[u8], iterations: usize) -> Result<Vec<u8>, String> {
