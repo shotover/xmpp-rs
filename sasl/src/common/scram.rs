@@ -1,8 +1,10 @@
 use hmac::{Hmac, Mac};
-use openssl::error::ErrorStack;
 use openssl::hash::MessageDigest;
 use openssl::pkcs5::pbkdf2_hmac;
-use openssl::rand::rand_bytes;
+use rand_os::{
+    rand_core::{Error as RngError, RngCore},
+    OsRng,
+};
 use sha1::{Digest, Sha1 as Sha1_hash};
 use sha2::Sha256 as Sha256_hash;
 
@@ -13,9 +15,10 @@ use crate::secret;
 use base64;
 
 /// Generate a nonce for SCRAM authentication.
-pub fn generate_nonce() -> Result<String, ErrorStack> {
-    let mut data = vec![0; 32];
-    rand_bytes(&mut data)?;
+pub fn generate_nonce() -> Result<String, RngError> {
+    let mut data = [0u8; 32];
+    let mut rng = OsRng::new()?;
+    rng.fill_bytes(&mut data);
     Ok(base64::encode(&data))
 }
 

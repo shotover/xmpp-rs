@@ -20,6 +20,7 @@ scram = ["openssl"]
 
 [dependencies]
 base64 = "0.10"
+rand_os = "0.1"
 sha-1 = "0.8"
 sha2 = "0.8"
 hmac = "0.7"
