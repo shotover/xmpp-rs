@@ -137,8 +137,8 @@ impl<S: ScramProvider> Mechanism for Scram<S> {
                 client_final_message_bare.extend(b",r=");
                 client_final_message_bare.extend(server_nonce.bytes());
                 let salted_password = S::derive(&self.password, &salt, iterations)?;
-                let client_key = S::hmac(b"Client Key", &salted_password);
-                let server_key = S::hmac(b"Server Key", &salted_password);
+                let client_key = S::hmac(b"Client Key", &salted_password)?;
+                let server_key = S::hmac(b"Server Key", &salted_password)?;
                 let mut auth_message = Vec::new();
                 auth_message.extend(initial_message);
                 auth_message.push(b',');
@@ -146,9 +146,9 @@ impl<S: ScramProvider> Mechanism for Scram<S> {
                 auth_message.push(b',');
                 auth_message.extend(&client_final_message_bare);
                 let stored_key = S::hash(&client_key);
-                let client_signature = S::hmac(&auth_message, &stored_key);
+                let client_signature = S::hmac(&auth_message, &stored_key)?;
                 let client_proof = xor(&client_key, &client_signature);
-                let server_signature = S::hmac(&auth_message, &server_key);
+                let server_signature = S::hmac(&auth_message, &server_key)?;
                 let mut client_final_message = Vec::new();
                 client_final_message.extend(&client_final_message_bare);
                 client_final_message.extend(b",p=");
