@@ -18,7 +18,7 @@ default = ["scram"]
 scram = ["openssl"]
 
 [dependencies]
-base64 = "0.9.1"
+base64 = "0.10"
 
 [dependencies.openssl]
 version = "0.10.7"
