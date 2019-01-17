@@ -1,6 +1,6 @@
 [package]
 name = "sasl"
-version = "0.4.2"
+version = "0.4.3"
 authors = ["lumi <lumi@pew.im>"]
 description = "A crate for SASL authentication. Currently only does the client side."
 homepage = "https://gitlab.com/lumi/sasl-rs"
@@ -9,17 +9,19 @@ documentation = "https://docs.rs/sasl"
 readme = "README.md"
 keywords = ["sasl", "authentication"]
 license = "LGPL-3.0+"
+edition = "2018"
 
 [badges]
 gitlab = { repository = "lumi/sasl-rs" }
 
 [features]
 default = ["scram"]
-scram = ["openssl"]
+scram = []
 
 [dependencies]
-base64 = "0.9.1"
-
-[dependencies.openssl]
-version = "0.10.7"
-optional = true
+base64 = "0.10"
+rand_os = "0.1"
+sha-1 = "0.8"
+sha2 = "0.8"
+hmac = "0.7"
+pbkdf2 = { version = "0.3", default-features = false }

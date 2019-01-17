@@ -1,7 +1,7 @@
 //! Provides the SASL "ANONYMOUS" mechanism.
 
-use client::Mechanism;
-use common::{Credentials, Secret};
+use crate::client::Mechanism;
+use crate::common::{Credentials, Secret};
 
 /// A struct for the SASL ANONYMOUS mechanism.
 pub struct Anonymous;

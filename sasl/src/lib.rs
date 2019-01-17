@@ -163,11 +163,6 @@
 //! sasl = "*"
 //! ```
 
-extern crate base64;
-
-#[cfg(feature = "scram")]
-extern crate openssl;
-
 mod error;
 
 pub mod client;
@@ -176,4 +171,4 @@ pub mod server;
 pub mod common;
 pub mod secret;
 
-pub use error::Error;
+pub use crate::error::Error;

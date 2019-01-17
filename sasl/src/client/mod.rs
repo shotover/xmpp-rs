@@ -1,4 +1,4 @@
-use common::Credentials;
+use crate::common::Credentials;
 
 /// A trait which defines SASL mechanisms.
 pub trait Mechanism {
