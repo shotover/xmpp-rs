@@ -1,6 +1,5 @@
 use hmac::{Hmac, Mac};
-use openssl::hash::MessageDigest;
-use openssl::pkcs5::pbkdf2_hmac;
+use pbkdf2::pbkdf2;
 use rand_os::{
     rand_core::{Error as RngError, RngCore},
     OsRng,
@@ -72,14 +71,7 @@ impl ScramProvider for Sha1 {
         match *password {
             Password::Plain(ref plain) => {
                 let mut result = vec![0; 20];
-                pbkdf2_hmac(
-                    plain.as_bytes(),
-                    salt,
-                    iterations,
-                    MessageDigest::sha1(),
-                    &mut result,
-                )
-                .unwrap();
+                pbkdf2::<Hmac<Sha1_hash>>(plain.as_bytes(), salt, iterations, &mut result);
                 Ok(result)
             }
             Password::Pbkdf2 {
@@ -141,14 +133,7 @@ impl ScramProvider for Sha256 {
         match *password {
             Password::Plain(ref plain) => {
                 let mut result = vec![0; 32];
-                pbkdf2_hmac(
-                    plain.as_bytes(),
-                    salt,
-                    iterations,
-                    MessageDigest::sha256(),
-                    &mut result,
-                )
-                .unwrap();
+                pbkdf2::<Hmac<Sha256_hash>>(plain.as_bytes(), salt, iterations, &mut result);
                 Ok(result)
             }
             Password::Pbkdf2 {

@@ -24,6 +24,7 @@ rand_os = "0.1"
 sha-1 = "0.8"
 sha2 = "0.8"
 hmac = "0.7"
+pbkdf2 = { version = "0.3", default-features = false }
 
 [dependencies.openssl]
 version = "0.10.7"
