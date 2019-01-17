@@ -1,5 +1,5 @@
-use common::Identity;
-use secret::Secret;
+use crate::common::Identity;
+use crate::secret::Secret;
 
 #[macro_export]
 macro_rules! impl_validator_using_provider {

@@ -21,8 +21,8 @@ pub struct Pbkdf2Sha1 {
 impl Pbkdf2Sha1 {
     #[cfg(feature = "openssl")]
     pub fn derive(password: &str, salt: &[u8], iterations: usize) -> Result<Pbkdf2Sha1, String> {
-        use common::scram::{ScramProvider, Sha1};
-        use common::Password;
+        use crate::common::scram::{ScramProvider, Sha1};
+        use crate::common::Password;
         let digest = Sha1::derive(&Password::Plain(password.to_owned()), salt, iterations)?;
         Ok(Pbkdf2Sha1 {
             salt: salt.to_vec(),
@@ -56,8 +56,8 @@ pub struct Pbkdf2Sha256 {
 impl Pbkdf2Sha256 {
     #[cfg(feature = "openssl")]
     pub fn derive(password: &str, salt: &[u8], iterations: usize) -> Result<Pbkdf2Sha256, String> {
-        use common::scram::{ScramProvider, Sha256};
-        use common::Password;
+        use crate::common::scram::{ScramProvider, Sha256};
+        use crate::common::Password;
         let digest = Sha256::derive(&Password::Plain(password.to_owned()), salt, iterations)?;
         Ok(Pbkdf2Sha256 {
             salt: salt.to_vec(),

@@ -2,11 +2,11 @@
 
 use base64;
 
-use client::Mechanism;
-use common::scram::{generate_nonce, ScramProvider};
-use common::{parse_frame, xor, ChannelBinding, Credentials, Identity, Password, Secret};
+use crate::client::Mechanism;
+use crate::common::scram::{generate_nonce, ScramProvider};
+use crate::common::{parse_frame, xor, ChannelBinding, Credentials, Identity, Password, Secret};
 
-use error::Error;
+use crate::error::Error;
 
 use std::marker::PhantomData;
 
@@ -189,9 +189,9 @@ impl<S: ScramProvider> Mechanism for Scram<S> {
 
 #[cfg(test)]
 mod tests {
-    use client::mechanisms::Scram;
-    use client::Mechanism;
-    use common::scram::{Sha1, Sha256};
+    use crate::client::mechanisms::Scram;
+    use crate::client::Mechanism;
+    use crate::common::scram::{Sha1, Sha256};
 
     #[test]
     fn scram_sha1_works() {

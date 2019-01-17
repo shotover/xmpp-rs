@@ -1,6 +1,6 @@
-use common::Identity;
-use secret;
-use server::{Mechanism, Response, Validator};
+use crate::common::Identity;
+use crate::secret;
+use crate::server::{Mechanism, Response, Validator};
 
 pub struct Plain<V: Validator<secret::Plain>> {
     validator: V,
