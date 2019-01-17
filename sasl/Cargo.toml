@@ -16,7 +16,7 @@ gitlab = { repository = "lumi/sasl-rs" }
 
 [features]
 default = ["scram"]
-scram = ["openssl"]
+scram = []
 
 [dependencies]
 base64 = "0.10"
@@ -25,7 +25,3 @@ sha-1 = "0.8"
 sha2 = "0.8"
 hmac = "0.7"
 pbkdf2 = { version = "0.3", default-features = false }
-
-[dependencies.openssl]
-version = "0.10.7"
-optional = true

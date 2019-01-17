@@ -19,7 +19,7 @@ pub struct Pbkdf2Sha1 {
 }
 
 impl Pbkdf2Sha1 {
-    #[cfg(feature = "openssl")]
+    #[cfg(feature = "scram")]
     pub fn derive(password: &str, salt: &[u8], iterations: usize) -> Result<Pbkdf2Sha1, String> {
         use crate::common::scram::{ScramProvider, Sha1};
         use crate::common::Password;
@@ -54,7 +54,7 @@ pub struct Pbkdf2Sha256 {
 }
 
 impl Pbkdf2Sha256 {
-    #[cfg(feature = "openssl")]
+    #[cfg(feature = "scram")]
     pub fn derive(password: &str, salt: &[u8], iterations: usize) -> Result<Pbkdf2Sha256, String> {
         use crate::common::scram::{ScramProvider, Sha256};
         use crate::common::Password;
