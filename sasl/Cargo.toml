@@ -16,12 +16,12 @@ gitlab = { repository = "lumi/sasl-rs" }
 
 [features]
 default = ["scram"]
-scram = []
+scram = ["base64", "rand_os", "sha-1", "sha2", "hmac", "pbkdf2"]
 
 [dependencies]
-base64 = "0.10"
-rand_os = "0.1"
-sha-1 = "0.8"
-sha2 = "0.8"
-hmac = "0.7"
-pbkdf2 = { version = "0.3", default-features = false }
+base64 = { version = "0.10", optional = true }
+rand_os = { version = "0.1", optional = true }
+sha-1 = { version = "0.8", optional = true }
+sha2 = { version = "0.8", optional = true }
+hmac = { version = "0.7", optional = true }
+pbkdf2 = { version = "0.3", default-features = false, optional = true }
