@@ -22,8 +22,11 @@ use std::str::FromStr;
 #[cfg(feature = "serde")]
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 
+#[cfg(feature = "icu")]
+use icu::{Icu, Strict};
+
 /// An error that signifies that a `Jid` cannot be parsed from a string.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum JidParseError {
     /// Happens when there is no domain, that is either the string is empty,
     /// starts with a /, or contains the @/ sequence.
@@ -37,6 +40,10 @@ pub enum JidParseError {
 
     /// Happens when the resource is empty, that is the string ends with a /.
     EmptyResource,
+
+    #[cfg(feature = "icu")]
+    /// TODO
+    IcuError(icu::Error),
 }
 
 impl StdError for JidParseError {}
@@ -51,6 +58,8 @@ impl fmt::Display for JidParseError {
                 JidParseError::NoResource => "no resource found in this full JID",
                 JidParseError::EmptyNode => "nodepart empty despite the presence of a @",
                 JidParseError::EmptyResource => "resource empty despite the presence of a /",
+                #[cfg(feature = "icu")]
+                JidParseError::IcuError(_err) => "TODO",
             }
         )
     }
@@ -388,7 +397,19 @@ fn _from_str(s: &str) -> Result<StringJid, JidParseError> {
     } else if let ParserState::Resource = state {
         return Err(JidParseError::EmptyResource);
     }
-    Ok((node, domain.ok_or(JidParseError::NoDomain)?, resource))
+    let domain = domain.ok_or(JidParseError::NoDomain)?;
+    #[cfg(feature = "icu")]
+    let (node, domain, resource) = {
+        let icu = Icu::new().unwrap();
+        let node = node.map(|node| icu.nodeprep(&node, Strict::AllowUnassigned).unwrap());
+        let domain = icu.idna2008.to_unicode(&domain).unwrap();
+        let resource = resource.map(|resource| {
+            icu.resourceprep(&resource, Strict::AllowUnassigned)
+                .unwrap()
+        });
+        (node, domain, resource)
+    };
+    Ok((node, domain, resource))
 }
 
 impl FromStr for FullJid {
@@ -904,5 +925,13 @@ mod tests {
             .attr("from", jid)
             .build();
         assert_eq!(elem.attr("from"), Some(String::from(bare).as_ref()));
+    }
+
+    #[cfg(feature = "icu")]
+    #[test]
+    fn icu_jid() {
+        let full = FullJid::from_str("Test@☃.coM/Test™").unwrap();
+        let equiv = FullJid::new("test", "☃.com", "TestTM");
+        assert_eq!(full, equiv);
     }
 }
