@@ -93,7 +93,7 @@ impl<S: ScramProvider> Mechanism for Scram<S> {
         }
     }
 
-    fn initial(&mut self) -> Result<Vec<u8>, String> {
+    fn initial(&mut self) -> Vec<u8> {
         let mut gs2_header = Vec::new();
         gs2_header.extend(self.channel_binding.header());
         let mut bare = Vec::new();
@@ -108,7 +108,7 @@ impl<S: ScramProvider> Mechanism for Scram<S> {
             initial_message: bare,
             gs2_header: gs2_header,
         };
-        Ok(data)
+        data
     }
 
     fn response(&mut self, challenge: &[u8]) -> Result<Vec<u8>, String> {
@@ -206,7 +206,7 @@ mod tests {
         let server_final = b"v=rmF9pqV8S7suAoZWja4dJRkFsKQ=";
         let mut mechanism =
             Scram::<Sha1>::new_with_nonce(username, password, client_nonce.to_owned());
-        let init = mechanism.initial().unwrap();
+        let init = mechanism.initial();
         assert_eq!(
             String::from_utf8(init.clone()).unwrap(),
             String::from_utf8(client_init[..].to_owned()).unwrap()
@@ -231,7 +231,7 @@ mod tests {
         let server_final = b"v=6rriTRBi23WpRR/wtup+mMhUZUn/dB5nLTJRsjl95G4=";
         let mut mechanism =
             Scram::<Sha256>::new_with_nonce(username, password, client_nonce.to_owned());
-        let init = mechanism.initial().unwrap();
+        let init = mechanism.initial();
         assert_eq!(
             String::from_utf8(init.clone()).unwrap(),
             String::from_utf8(client_init[..].to_owned()).unwrap()

@@ -39,12 +39,12 @@ impl Mechanism for Plain {
         }
     }
 
-    fn initial(&mut self) -> Result<Vec<u8>, String> {
+    fn initial(&mut self) -> Vec<u8> {
         let mut auth = Vec::new();
         auth.push(0);
         auth.extend(self.username.bytes());
         auth.push(0);
         auth.extend(self.password.bytes());
-        Ok(auth)
+        auth
     }
 }
