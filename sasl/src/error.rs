@@ -1,5 +1,5 @@
 #[cfg(feature = "scram")]
-use rand_os::rand_core::Error as RngError;
+use getrandom::Error as RngError;
 
 /// A wrapper enum for things that could go wrong in this crate.
 #[derive(Debug)]
