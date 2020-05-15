@@ -1,9 +1,6 @@
+use getrandom::{getrandom, Error as RngError};
 use hmac::{Hmac, Mac};
 use pbkdf2::pbkdf2;
-use rand_os::{
-    rand_core::{Error as RngError, RngCore},
-    OsRng,
-};
 use sha1::{Digest, Sha1 as Sha1_hash};
 use sha2::Sha256 as Sha256_hash;
 
@@ -16,8 +13,7 @@ use base64;
 /// Generate a nonce for SCRAM authentication.
 pub fn generate_nonce() -> Result<String, RngError> {
     let mut data = [0u8; 32];
-    let mut rng = OsRng::new()?;
-    rng.fill_bytes(&mut data);
+    getrandom(&mut data)?;
     Ok(base64::encode(&data))
 }
 
