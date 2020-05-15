@@ -1,6 +1,6 @@
 //! Provides the SASL "ANONYMOUS" mechanism.
 
-use crate::client::Mechanism;
+use crate::client::{Mechanism, MechanismError};
 use crate::common::{Credentials, Secret};
 
 /// A struct for the SASL ANONYMOUS mechanism.
@@ -21,11 +21,11 @@ impl Mechanism for Anonymous {
         "ANONYMOUS"
     }
 
-    fn from_credentials(credentials: Credentials) -> Result<Anonymous, String> {
+    fn from_credentials(credentials: Credentials) -> Result<Anonymous, MechanismError> {
         if let Secret::None = credentials.secret {
             Ok(Anonymous)
         } else {
-            Err("the anonymous sasl mechanism requires no credentials".to_owned())
+            Err(MechanismError::AnonymousRequiresNoCredentials)
         }
     }
 }

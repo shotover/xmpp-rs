@@ -17,7 +17,7 @@
 //!
 //! let mut mechanism = Plain::from_credentials(creds).unwrap();
 //!
-//! let initial_data = mechanism.initial().unwrap();
+//! let initial_data = mechanism.initial();
 //!
 //! assert_eq!(initial_data, b"\0user\0pencil");
 //! ```
@@ -28,8 +28,9 @@
 //! #[macro_use] extern crate sasl;
 //!
 //! use sasl::server::{Validator, Provider, Mechanism as ServerMechanism, Response};
+//! use sasl::server::{ValidatorError, ProviderError, MechanismError as ServerMechanismError};
 //! use sasl::server::mechanisms::{Plain as ServerPlain, Scram as ServerScram};
-//! use sasl::client::Mechanism as ClientMechanism;
+//! use sasl::client::{Mechanism as ClientMechanism, MechanismError as ClientMechanismError};
 //! use sasl::client::mechanisms::{Plain as ClientPlain, Scram as ClientScram};
 //! use sasl::common::{Identity, Credentials, Password, ChannelBinding};
 //! use sasl::common::scram::{ScramProvider, Sha1, Sha256};
@@ -43,13 +44,13 @@
 //! struct MyValidator;
 //!
 //! impl Validator<secret::Plain> for MyValidator {
-//!     fn validate(&self, identity: &Identity, value: &secret::Plain) -> Result<(), String> {
+//!     fn validate(&self, identity: &Identity, value: &secret::Plain) -> Result<(), ValidatorError> {
 //!         let &secret::Plain(ref password) = value;
 //!         if identity != &Identity::Username(USERNAME.to_owned()) {
-//!             Err("authentication failed".to_owned())
+//!             Err(ValidatorError::AuthenticationFailed)
 //!         }
 //!         else if password != PASSWORD {
-//!             Err("authentication failed".to_owned())
+//!             Err(ValidatorError::AuthenticationFailed)
 //!         }
 //!         else {
 //!             Ok(())
@@ -58,9 +59,9 @@
 //! }
 //!
 //! impl Provider<secret::Pbkdf2Sha1> for MyValidator {
-//!     fn provide(&self, identity: &Identity) -> Result<secret::Pbkdf2Sha1, String> {
+//!     fn provide(&self, identity: &Identity) -> Result<secret::Pbkdf2Sha1, ProviderError> {
 //!         if identity != &Identity::Username(USERNAME.to_owned()) {
-//!             Err("authentication failed".to_owned())
+//!             Err(ProviderError::AuthenticationFailed)
 //!         }
 //!         else {
 //!             let digest = sasl::common::scram::Sha1::derive
@@ -79,9 +80,9 @@
 //! impl_validator_using_provider!(MyValidator, secret::Pbkdf2Sha1);
 //!
 //! impl Provider<secret::Pbkdf2Sha256> for MyValidator {
-//!     fn provide(&self, identity: &Identity) -> Result<secret::Pbkdf2Sha256, String> {
+//!     fn provide(&self, identity: &Identity) -> Result<secret::Pbkdf2Sha256, ProviderError> {
 //!         if identity != &Identity::Username(USERNAME.to_owned()) {
-//!             Err("authentication failed".to_owned())
+//!             Err(ProviderError::AuthenticationFailed)
 //!         }
 //!         else {
 //!             let digest = sasl::common::scram::Sha256::derive
@@ -99,10 +100,28 @@
 //!
 //! impl_validator_using_provider!(MyValidator, secret::Pbkdf2Sha256);
 //!
-//! fn finish<CM, SM>(cm: &mut CM, sm: &mut SM) -> Result<Identity, String>
+//! #[derive(Debug, PartialEq)]
+//! enum MechanismError {
+//!     Client(ClientMechanismError),
+//!     Server(ServerMechanismError),
+//! }
+//!
+//! impl From<ClientMechanismError> for MechanismError {
+//!     fn from(err: ClientMechanismError) -> MechanismError {
+//!         MechanismError::Client(err)
+//!     }
+//! }
+//!
+//! impl From<ServerMechanismError> for MechanismError {
+//!     fn from(err: ServerMechanismError) -> MechanismError {
+//!         MechanismError::Server(err)
+//!     }
+//! }
+//!
+//! fn finish<CM, SM>(cm: &mut CM, sm: &mut SM) -> Result<Identity, MechanismError>
 //!     where CM: ClientMechanism,
 //!           SM: ServerMechanism {
-//!     let init = cm.initial()?;
+//!     let init = cm.initial();
 //!     println!("C: {}", String::from_utf8_lossy(&init));
 //!     let mut resp = sm.respond(&init)?;
 //!     loop {
@@ -133,7 +152,7 @@
 //!     assert_eq!(mech.respond(b"\0user\0pencil"), Ok(expected_response));
 //!
 //!     let mut mech = ServerPlain::new(MyValidator);
-//!     assert_eq!(mech.respond(b"\0user\0marker"), Err("authentication failed".to_owned()));
+//!     assert_eq!(mech.respond(b"\0user\0marker"), Err(ServerMechanismError::ValidatorError(ValidatorError::AuthenticationFailed)));
 //!
 //!     let creds = Credentials::default()
 //!                             .with_username(USERNAME)

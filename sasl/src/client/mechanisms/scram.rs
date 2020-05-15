@@ -2,7 +2,7 @@
 
 use base64;
 
-use crate::client::Mechanism;
+use crate::client::{Mechanism, MechanismError};
 use crate::common::scram::{generate_nonce, ScramProvider};
 use crate::common::{parse_frame, xor, ChannelBinding, Credentials, Identity, Password, Secret};
 
@@ -80,16 +80,16 @@ impl<S: ScramProvider> Mechanism for Scram<S> {
         &self.name
     }
 
-    fn from_credentials(credentials: Credentials) -> Result<Scram<S>, String> {
+    fn from_credentials(credentials: Credentials) -> Result<Scram<S>, MechanismError> {
         if let Secret::Password(password) = credentials.secret {
             if let Identity::Username(username) = credentials.identity {
                 Scram::new(username, password, credentials.channel_binding)
-                    .map_err(|_| "can't generate nonce".to_owned())
+                    .map_err(|_| MechanismError::CannotGenerateNonce)
             } else {
-                Err("SCRAM requires a username".to_owned())
+                Err(MechanismError::ScramRequiresUsername)
             }
         } else {
-            Err("SCRAM requires a password".to_owned())
+            Err(MechanismError::ScramRequiresPassword)
         }
     }
 
@@ -111,7 +111,7 @@ impl<S: ScramProvider> Mechanism for Scram<S> {
         data
     }
 
-    fn response(&mut self, challenge: &[u8]) -> Result<Vec<u8>, String> {
+    fn response(&mut self, challenge: &[u8]) -> Result<Vec<u8>, MechanismError> {
         let next_state;
         let ret;
         match self.state {
@@ -120,13 +120,13 @@ impl<S: ScramProvider> Mechanism for Scram<S> {
                 ref gs2_header,
             } => {
                 let frame =
-                    parse_frame(challenge).map_err(|_| "can't decode challenge".to_owned())?;
+                    parse_frame(challenge).map_err(|_| MechanismError::CannotDecodeChallenge)?;
                 let server_nonce = frame.get("r");
                 let salt = frame.get("s").and_then(|v| base64::decode(v).ok());
                 let iterations = frame.get("i").and_then(|v| v.parse().ok());
-                let server_nonce = server_nonce.ok_or_else(|| "no server nonce".to_owned())?;
-                let salt = salt.ok_or_else(|| "no server salt".to_owned())?;
-                let iterations = iterations.ok_or_else(|| "no server iterations".to_owned())?;
+                let server_nonce = server_nonce.ok_or_else(|| MechanismError::NoServerNonce)?;
+                let salt = salt.ok_or_else(|| MechanismError::NoServerSalt)?;
+                let iterations = iterations.ok_or_else(|| MechanismError::NoServerIterations)?;
                 // TODO: SASLprep
                 let mut client_final_message_bare = Vec::new();
                 client_final_message_bare.extend(b"c=");
@@ -159,15 +159,15 @@ impl<S: ScramProvider> Mechanism for Scram<S> {
                 ret = client_final_message;
             }
             _ => {
-                return Err("not in the right state to receive this response".to_owned());
+                return Err(MechanismError::InvalidState);
             }
         }
         self.state = next_state;
         Ok(ret)
     }
 
-    fn success(&mut self, data: &[u8]) -> Result<(), String> {
-        let frame = parse_frame(data).map_err(|_| "can't decode success response".to_owned())?;
+    fn success(&mut self, data: &[u8]) -> Result<(), MechanismError> {
+        let frame = parse_frame(data).map_err(|_| MechanismError::CannotDecodeSuccessResponse)?;
         match self.state {
             ScramState::GotServerData {
                 ref server_signature,
@@ -176,13 +176,13 @@ impl<S: ScramProvider> Mechanism for Scram<S> {
                     if sig == *server_signature {
                         Ok(())
                     } else {
-                        Err("invalid signature in success response".to_owned())
+                        Err(MechanismError::InvalidSignatureInSuccessResponse)
                     }
                 } else {
-                    Err("no signature in success response".to_owned())
+                    Err(MechanismError::NoSignatureInSuccessResponse)
                 }
             }
-            _ => Err("not in the right state to get a success response".to_owned()),
+            _ => Err(MechanismError::InvalidState),
         }
     }
 }

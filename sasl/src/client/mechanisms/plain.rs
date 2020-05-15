@@ -1,6 +1,6 @@
 //! Provides the SASL "PLAIN" mechanism.
 
-use crate::client::Mechanism;
+use crate::client::{Mechanism, MechanismError};
 use crate::common::{Credentials, Identity, Password, Secret};
 
 /// A struct for the SASL PLAIN mechanism.
@@ -27,15 +27,15 @@ impl Mechanism for Plain {
         "PLAIN"
     }
 
-    fn from_credentials(credentials: Credentials) -> Result<Plain, String> {
+    fn from_credentials(credentials: Credentials) -> Result<Plain, MechanismError> {
         if let Secret::Password(Password::Plain(password)) = credentials.secret {
             if let Identity::Username(username) = credentials.identity {
                 Ok(Plain::new(username, password))
             } else {
-                Err("PLAIN requires a username".to_owned())
+                Err(MechanismError::PlainRequiresUsername)
             }
         } else {
-            Err("PLAIN requires a plaintext password".to_owned())
+            Err(MechanismError::PlainRequiresPlaintextPassword)
         }
     }
 
