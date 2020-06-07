@@ -1,3 +1,6 @@
+#[cfg(feature = "scram")]
+use crate::common::scram::DeriveError;
+
 pub trait Secret {}
 
 pub trait Pbkdf2Secret {
@@ -20,7 +23,11 @@ pub struct Pbkdf2Sha1 {
 
 impl Pbkdf2Sha1 {
     #[cfg(feature = "scram")]
-    pub fn derive(password: &str, salt: &[u8], iterations: usize) -> Result<Pbkdf2Sha1, String> {
+    pub fn derive(
+        password: &str,
+        salt: &[u8],
+        iterations: usize,
+    ) -> Result<Pbkdf2Sha1, DeriveError> {
         use crate::common::scram::{ScramProvider, Sha1};
         use crate::common::Password;
         let digest = Sha1::derive(&Password::Plain(password.to_owned()), salt, iterations)?;
@@ -55,7 +62,11 @@ pub struct Pbkdf2Sha256 {
 
 impl Pbkdf2Sha256 {
     #[cfg(feature = "scram")]
-    pub fn derive(password: &str, salt: &[u8], iterations: usize) -> Result<Pbkdf2Sha256, String> {
+    pub fn derive(
+        password: &str,
+        salt: &[u8],
+        iterations: usize,
+    ) -> Result<Pbkdf2Sha256, DeriveError> {
         use crate::common::scram::{ScramProvider, Sha256};
         use crate::common::Password;
         let digest = Sha256::derive(&Password::Plain(password.to_owned()), salt, iterations)?;
