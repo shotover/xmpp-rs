@@ -83,7 +83,7 @@ impl Secret {
     pub fn password_pbkdf2<S: Into<String>>(
         method: S,
         salt: Vec<u8>,
-        iterations: usize,
+        iterations: u32,
         data: Vec<u8>,
     ) -> Secret {
         Secret::Password(Password::Pbkdf2 {
@@ -104,7 +104,7 @@ pub enum Password {
     Pbkdf2 {
         method: String,
         salt: Vec<u8>,
-        iterations: usize,
+        iterations: u32,
         data: Vec<u8>,
     },
 }

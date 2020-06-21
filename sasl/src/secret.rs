@@ -5,7 +5,7 @@ pub trait Secret {}
 
 pub trait Pbkdf2Secret {
     fn salt(&self) -> &[u8];
-    fn iterations(&self) -> usize;
+    fn iterations(&self) -> u32;
     fn digest(&self) -> &[u8];
 }
 
@@ -17,17 +17,13 @@ impl Secret for Plain {}
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Pbkdf2Sha1 {
     pub salt: Vec<u8>,
-    pub iterations: usize,
+    pub iterations: u32,
     pub digest: Vec<u8>,
 }
 
 impl Pbkdf2Sha1 {
     #[cfg(feature = "scram")]
-    pub fn derive(
-        password: &str,
-        salt: &[u8],
-        iterations: usize,
-    ) -> Result<Pbkdf2Sha1, DeriveError> {
+    pub fn derive(password: &str, salt: &[u8], iterations: u32) -> Result<Pbkdf2Sha1, DeriveError> {
         use crate::common::scram::{ScramProvider, Sha1};
         use crate::common::Password;
         let digest = Sha1::derive(&Password::Plain(password.to_owned()), salt, iterations)?;
@@ -45,7 +41,7 @@ impl Pbkdf2Secret for Pbkdf2Sha1 {
     fn salt(&self) -> &[u8] {
         &self.salt
     }
-    fn iterations(&self) -> usize {
+    fn iterations(&self) -> u32 {
         self.iterations
     }
     fn digest(&self) -> &[u8] {
@@ -56,7 +52,7 @@ impl Pbkdf2Secret for Pbkdf2Sha1 {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Pbkdf2Sha256 {
     pub salt: Vec<u8>,
-    pub iterations: usize,
+    pub iterations: u32,
     pub digest: Vec<u8>,
 }
 
@@ -65,7 +61,7 @@ impl Pbkdf2Sha256 {
     pub fn derive(
         password: &str,
         salt: &[u8],
-        iterations: usize,
+        iterations: u32,
     ) -> Result<Pbkdf2Sha256, DeriveError> {
         use crate::common::scram::{ScramProvider, Sha256};
         use crate::common::Password;
@@ -84,7 +80,7 @@ impl Pbkdf2Secret for Pbkdf2Sha256 {
     fn salt(&self) -> &[u8] {
         &self.salt
     }
-    fn iterations(&self) -> usize {
+    fn iterations(&self) -> u32 {
         self.iterations
     }
     fn digest(&self) -> &[u8] {

@@ -39,7 +39,7 @@
 //! const USERNAME: &'static str = "user";
 //! const PASSWORD: &'static str = "pencil";
 //! const SALT: [u8; 8] = [35, 71, 92, 105, 212, 219, 114, 93];
-//! const ITERATIONS: usize = 4096;
+//! const ITERATIONS: u32 = 4096;
 //!
 //! struct MyValidator;
 //!
