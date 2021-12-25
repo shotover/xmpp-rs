@@ -62,6 +62,7 @@ pub enum MechanismError {
 
     CannotDecodeResponse,
     InvalidKeyLength(hmac::digest::InvalidLength),
+    RandomFailure(getrandom::Error),
     NoProof,
     CannotDecodeProof,
     AuthenticationFailed,
@@ -95,6 +96,12 @@ impl From<ValidatorError> for MechanismError {
 impl From<hmac::digest::InvalidLength> for MechanismError {
     fn from(err: hmac::digest::InvalidLength) -> MechanismError {
         MechanismError::InvalidKeyLength(err)
+    }
+}
+
+impl From<getrandom::Error> for MechanismError {
+    fn from(err: getrandom::Error) -> MechanismError {
+        MechanismError::RandomFailure(err)
     }
 }
 
@@ -139,6 +146,9 @@ impl fmt::Display for MechanismError {
 
             MechanismError::CannotDecodeResponse => write!(fmt, "can’t decode response"),
             MechanismError::InvalidKeyLength(err) => write!(fmt, "invalid key length: {}", err),
+            MechanismError::RandomFailure(err) => {
+                write!(fmt, "failure to get random data: {}", err)
+            }
             MechanismError::NoProof => write!(fmt, "no proof"),
             MechanismError::CannotDecodeProof => write!(fmt, "can’t decode proof"),
             MechanismError::AuthenticationFailed => write!(fmt, "authentication failed"),
