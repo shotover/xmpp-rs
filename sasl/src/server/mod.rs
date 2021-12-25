@@ -61,7 +61,7 @@ pub enum MechanismError {
     ProviderError(ProviderError),
 
     CannotDecodeResponse,
-    InvalidKeyLength(hmac::crypto_mac::InvalidKeyLength),
+    InvalidKeyLength(hmac::digest::InvalidLength),
     NoProof,
     CannotDecodeProof,
     AuthenticationFailed,
@@ -92,8 +92,8 @@ impl From<ValidatorError> for MechanismError {
     }
 }
 
-impl From<hmac::crypto_mac::InvalidKeyLength> for MechanismError {
-    fn from(err: hmac::crypto_mac::InvalidKeyLength) -> MechanismError {
+impl From<hmac::digest::InvalidLength> for MechanismError {
+    fn from(err: hmac::digest::InvalidLength) -> MechanismError {
         MechanismError::InvalidKeyLength(err)
     }
 }

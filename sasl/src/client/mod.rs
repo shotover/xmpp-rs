@@ -1,6 +1,6 @@
 use crate::common::scram::DeriveError;
 use crate::common::Credentials;
-use hmac::crypto_mac::InvalidKeyLength;
+use hmac::digest::InvalidLength;
 use std::fmt;
 
 #[derive(Debug, PartialEq)]
@@ -19,7 +19,7 @@ pub enum MechanismError {
     NoServerSalt,
     NoServerIterations,
     DeriveError(DeriveError),
-    InvalidKeyLength(InvalidKeyLength),
+    InvalidKeyLength(InvalidLength),
     InvalidState,
 
     CannotDecodeSuccessResponse,
@@ -33,8 +33,8 @@ impl From<DeriveError> for MechanismError {
     }
 }
 
-impl From<InvalidKeyLength> for MechanismError {
-    fn from(err: InvalidKeyLength) -> MechanismError {
+impl From<InvalidLength> for MechanismError {
+    fn from(err: InvalidLength) -> MechanismError {
         MechanismError::InvalidKeyLength(err)
     }
 }

@@ -1,5 +1,5 @@
 use getrandom::{getrandom, Error as RngError};
-use hmac::{crypto_mac::InvalidKeyLength, Hmac, Mac, NewMac};
+use hmac::{digest::InvalidLength, Hmac, Mac};
 use pbkdf2::pbkdf2;
 use sha1::{Digest, Sha1 as Sha1_hash};
 use sha2::Sha256 as Sha256_hash;
@@ -52,7 +52,7 @@ pub trait ScramProvider {
     fn hash(data: &[u8]) -> Vec<u8>;
 
     /// A function which performs an HMAC using the hash function.
-    fn hmac(data: &[u8], key: &[u8]) -> Result<Vec<u8>, InvalidKeyLength>;
+    fn hmac(data: &[u8], key: &[u8]) -> Result<Vec<u8>, InvalidLength>;
 
     /// A function which does PBKDF2 key derivation using the hash function.
     fn derive(data: &Password, salt: &[u8], iterations: u32) -> Result<Vec<u8>, DeriveError>;
@@ -75,9 +75,9 @@ impl ScramProvider for Sha1 {
         vec
     }
 
-    fn hmac(data: &[u8], key: &[u8]) -> Result<Vec<u8>, InvalidKeyLength> {
+    fn hmac(data: &[u8], key: &[u8]) -> Result<Vec<u8>, InvalidLength> {
         type HmacSha1 = Hmac<Sha1_hash>;
-        let mut mac = HmacSha1::new_varkey(key)?;
+        let mut mac = HmacSha1::new_from_slice(key)?;
         mac.update(data);
         let result = mac.finalize();
         let mut vec = Vec::with_capacity(Sha1_hash::output_size());
@@ -135,9 +135,9 @@ impl ScramProvider for Sha256 {
         vec
     }
 
-    fn hmac(data: &[u8], key: &[u8]) -> Result<Vec<u8>, InvalidKeyLength> {
+    fn hmac(data: &[u8], key: &[u8]) -> Result<Vec<u8>, InvalidLength> {
         type HmacSha256 = Hmac<Sha256_hash>;
-        let mut mac = HmacSha256::new_varkey(key)?;
+        let mut mac = HmacSha256::new_from_slice(key)?;
         mac.update(data);
         let result = mac.finalize();
         let mut vec = Vec::with_capacity(Sha256_hash::output_size());
