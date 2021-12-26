@@ -198,6 +198,10 @@ pub struct Agent {
 }
 
 impl Agent {
+    pub async fn disconnect(&mut self) -> Result<(), Error> {
+        self.client.send_end().await
+    }
+
     pub async fn join_room(
         &mut self,
         room: BareJid,
