@@ -87,6 +87,7 @@ async fn main() -> Result<(), Option<()>> {
                 Event::AvatarRetrieved(jid, path) => {
                     println!("Received avatar for {} in {}.", jid, path);
                 }
+                _ => (),
             }
         }
     }
