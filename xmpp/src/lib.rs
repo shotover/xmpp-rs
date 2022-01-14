@@ -7,7 +7,9 @@
 #![deny(bare_trait_objects)]
 
 use futures::stream::StreamExt;
-use reqwest::{Body as ReqwestBody, Client as ReqwestClient};
+use reqwest::{
+    header::HeaderMap as ReqwestHeaderMap, Body as ReqwestBody, Client as ReqwestClient,
+};
 use std::cell::RefCell;
 use std::convert::TryFrom;
 use std::path::{Path, PathBuf};
@@ -20,7 +22,7 @@ use xmpp_parsers::{
     caps::{compute_disco, hash_caps, Caps},
     disco::{DiscoInfoQuery, DiscoInfoResult, Feature, Identity},
     hashes::Algo,
-    http_upload::{SlotRequest, SlotResult},
+    http_upload::{Header as HttpUploadHeader, SlotRequest, SlotResult},
     iq::{Iq, IqType},
     message::{Body, Message, MessageType},
     muc::{
@@ -468,11 +470,23 @@ async fn handle_upload_result(
     if let Some((index, file)) = res {
         agent.uploads.remove(index);
         let slot = SlotResult::try_from(elem).unwrap();
+
+        let mut headers = ReqwestHeaderMap::new();
+        for header in slot.put.headers {
+            let (attr, val) = match header {
+                HttpUploadHeader::Authorization(val) => ("Authorization", val),
+                HttpUploadHeader::Cookie(val) => ("Cookie", val),
+                HttpUploadHeader::Expires(val) => ("Expires", val),
+            };
+            headers.insert(attr, val.parse().unwrap());
+        }
+
         let web = ReqwestClient::new();
         let stream = FramedRead::new(File::open(file).await.unwrap(), BytesCodec::new());
         let body = ReqwestBody::wrap_stream(stream);
         let res = web
             .put(slot.put.url.as_str())
+            .headers(headers)
             .body(body)
             .send()
             .await
