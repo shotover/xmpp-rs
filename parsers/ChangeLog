@@ -1,3 +1,24 @@
+Version 0.19.0:
+2022-03-07  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+    * New parsers/serialisers:
+        - External Service Discovery (XEP-0215).
+        - HTTP File Upload (XEP-0363).
+        - Message Archive Management Preferences (XEP-0441), actually spun off
+          from XEP-0313.
+    * Improvements:
+        - Add constructor helpers for more structs.
+        - Impl Eq and Hash on disco::Feature (thanks Paul!).
+        - Impl MessagePayload for PubSubEvent (thanks Paul!).
+        - Bump minidom to 0.14.
+        - Bump the hash crates to their latest version.
+        - Run clippy.
+        - Rename the directory to parsers, to avoid colliding prefix with
+          xmpp-rs.
+    * Breaking changes:
+        - Bump bookmarks 2 to version 1.1.3.
+        - Use proper types in Jingle specs (XEP-0294 and XEP-0339).
+        - Move preferences from MAM to MAM prefs, following the spec split.
+
 Version 0.18.0:
 2021-01-13  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * Bugfixes:
