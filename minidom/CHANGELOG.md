@@ -1,3 +1,10 @@
+Version 0.14.0, released 2022-03-07:
+  * Changes
+    * Bump quick-xml dependency (thanks eijebong!)
+  * Fixes
+    * Handle identical namespaces of sibling elements correctly (thanks Jasper!)
+    * Fix support for newer rustc (see https://github.com/rust-lang/rust/issues/90199)
+
 Version 0.13.0, released 2021-01-13:
   * Changes
     * Force namespaces on Element, which was a breaking change.
