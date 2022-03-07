@@ -1,6 +1,6 @@
 [package]
 name = "xmpp-parsers"
-version = "0.18.1"
+version = "0.19.0"
 authors = [
   "Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>",
   "Maxime “pep” Buquet <pep@bouah.net>",
