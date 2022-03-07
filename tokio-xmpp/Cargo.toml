@@ -26,7 +26,7 @@ tokio-util = { version = "0.6", features = ["codec"] }
 trust-dns-proto = "0.20"
 trust-dns-resolver = "0.20"
 xml5ever = "0.16"
-xmpp-parsers = "0.18"
+xmpp-parsers = "0.19"
 webpki-roots = { version = "0.22", optional = true }
 
 [build-dependencies]
