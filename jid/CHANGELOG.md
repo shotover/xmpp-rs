@@ -1,3 +1,7 @@
+Version 0.9.3, release 2022-03-07:
+  * Updates
+    - Bumped minidom to 0.14
+
 Version 0.9.2, release 2021-01-13:
   * Updates
     - Bumped minidom to 0.13
