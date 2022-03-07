@@ -19,7 +19,7 @@ Version 0.19.0:
         - Use proper types in Jingle specs (XEP-0294 and XEP-0339).
         - Move preferences from MAM to MAM prefs, following the spec split.
 
-Version 0.18.0:
+Version 0.18.1:
 2021-01-13  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * Bugfixes:
         - Bump minidom to 0.13, as 0.12.1 got yanked.
