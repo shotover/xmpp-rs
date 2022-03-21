@@ -121,7 +121,7 @@ impl From<Conference> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::pubsub::pubsub::Item as PubSubItem;
+    use crate::pubsub::{pubsub::Item as PubSubItem, PubSubEvent};
     use crate::Element;
     use std::convert::TryFrom;
 
@@ -172,9 +172,8 @@ mod tests {
         let payload = item.payload.clone().unwrap();
         println!("FOO: payload: {:?}", payload);
         // let conference = Conference::try_from(payload).unwrap();
-        let conference = Conference::try_from(payload);
+        let conference = Conference::try_from(payload).unwrap();
         println!("FOO: conference: {:?}", conference);
-        /*
         assert_eq!(conference.autojoin, Autojoin::True);
         assert_eq!(conference.name, Some(String::from("Test MUC")));
         assert_eq!(conference.clone().nick.unwrap(), "Coucou");
@@ -196,6 +195,5 @@ mod tests {
         assert_eq!(conference.name, Some(String::from("Test MUC")));
         assert_eq!(conference.clone().nick.unwrap(), "Coucou");
         assert_eq!(conference.clone().password.unwrap(), "secret");
-        */
     }
 }
