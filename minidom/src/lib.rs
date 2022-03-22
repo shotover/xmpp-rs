@@ -19,7 +19,7 @@
 //!
 //! Run with `cargo run --example articles`. Located in `examples/articles.rs`.
 //!
-//! ```rust,ignore
+//! ```rust
 //! extern crate minidom;
 //!
 //! use minidom::Element;
