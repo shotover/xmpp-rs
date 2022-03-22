@@ -189,6 +189,9 @@ pub const HASH_ALGO_BLAKE2B_256: &str = "urn:xmpp:hash-function-text-names:id-bl
 /// XEP-0300: Use of Cryptographic Hash Functions in XMPP
 pub const HASH_ALGO_BLAKE2B_512: &str = "urn:xmpp:hash-function-text-names:id-blake2b512";
 
+/// XEP-0301: In-Band Real Time Text
+pub const RTT: &str = "urn:xmpp:rtt:0";
+
 /// XEP-0308: Last Message Correction
 pub const MESSAGE_CORRECT: &str = "urn:xmpp:message-correct:0";
 

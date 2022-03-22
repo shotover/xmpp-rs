@@ -180,6 +180,9 @@ pub mod forwarding;
 /// XEP-0300: Use of Cryptographic Hash Functions in XMPP
 pub mod hashes;
 
+/// XEP-0301: In-Band Real Time Text
+pub mod rtt;
+
 /// XEP-0308: Last Message Correction
 pub mod message_correct;
 
