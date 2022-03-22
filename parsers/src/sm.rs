@@ -180,7 +180,7 @@ mod tests {
 
     #[test]
     fn a() {
-        let elem: Element = "<a xmlns='urn:xmpp:sm:3' h='5'".parse().unwrap();
+        let elem: Element = "<a xmlns='urn:xmpp:sm:3' h='5'/>".parse().unwrap();
         let a = A::try_from(elem).unwrap();
         assert_eq!(a.h, 5);
     }

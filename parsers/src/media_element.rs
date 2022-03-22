@@ -174,8 +174,7 @@ mod tests {
 
     #[test]
     fn test_xep_ex1() {
-        let elem: Element = r#"
-<media xmlns='urn:xmpp:media-element'>
+        let elem: Element = r#"<media xmlns='urn:xmpp:media-element'>
   <uri type='audio/x-wav'>
     http://victim.example.com/challenges/speech.wav?F3A6292C
   </uri>
@@ -211,8 +210,7 @@ mod tests {
 
     #[test]
     fn test_xep_ex2() {
-        let elem: Element = r#"
-<x xmlns='jabber:x:data' type='form'>
+        let elem: Element = r#"<x xmlns='jabber:x:data' type='form'>
   [ ... ]
   <field var='ocr'>
     <media xmlns='urn:xmpp:media-element'

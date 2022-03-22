@@ -46,7 +46,7 @@ impl TryFrom<Element> for TimeResult {
                 check_no_children!(child, "tzo");
                 check_no_attributes!(child, "tzo");
                 // TODO: Add a FromStr implementation to FixedOffset to avoid this hack.
-                let fake_date = String::from("2019-04-22T11:38:00") + &child.text();
+                let fake_date = format!("{}{}", "2019-04-22T11:38:00", child.text());
                 let date_time = DateTime::from_str(&fake_date)?;
                 tzo = Some(date_time.timezone());
             } else if child.is("utc", ns::TIME) {

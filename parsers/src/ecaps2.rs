@@ -236,8 +236,7 @@ mod tests {
 
     #[test]
     fn test_xep_ex1() {
-        let elem: Element = r#"
-<query xmlns="http://jabber.org/protocol/disco#info">
+        let elem: Element = r#"<query xmlns="http://jabber.org/protocol/disco#info">
   <identity category="client" name="BombusMod" type="mobile"/>
   <feature var="http://jabber.org/protocol/si"/>
   <feature var="http://jabber.org/protocol/bytestreams"/>
@@ -307,8 +306,7 @@ mod tests {
 
     #[test]
     fn test_xep_ex2() {
-        let elem: Element = r#"
-<query xmlns="http://jabber.org/protocol/disco#info">
+        let elem: Element = r#"<query xmlns="http://jabber.org/protocol/disco#info">
   <identity category="client" name="Tkabber" type="pc" xml:lang="en"/>
   <identity category="client" name="Ткаббер" type="pc" xml:lang="ru"/>
   <feature var="games:board"/>

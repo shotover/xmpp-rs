@@ -186,8 +186,7 @@ mod tests {
 
     #[test]
     fn parse_bundle() {
-        let elem: Element = r#"
-<bundle xmlns="eu.siacs.conversations.axolotl">
+        let elem: Element = r#"<bundle xmlns="eu.siacs.conversations.axolotl">
   <signedPreKeyPublic signedPreKeyId="1">BYAbACA15bPn95p7RGC2XbgQyly8aRKS4BaJ+hD8Ybhe</signedPreKeyPublic>
   <signedPreKeySignature>sIJVNDZi/NgFsry4OBdM+adyGttLEXbUh/h/5dVOZveMgyVoIdgwBUzq8Wgd2xYTQMioNzwYebTX+9p0h9eujA==</signedPreKeySignature>
   <identityKey>BQFd2p/Oq97vAAdLKA09DlcSg0x1xWn260p1jaeyIhAZ</identityKey>
@@ -254,8 +253,7 @@ mod tests {
     }
     #[test]
     fn parse_device_list() {
-        let elem: Element = r#"
-<list xmlns="eu.siacs.conversations.axolotl">
+        let elem: Element = r#"<list xmlns="eu.siacs.conversations.axolotl">
   <device id="1164059891" />
   <device id="26052318" />
   <device id="564866972" />
@@ -275,8 +273,7 @@ mod tests {
     }
     #[test]
     fn parse_encrypted() {
-        let elem: Element = r#"
-<encrypted xmlns="eu.siacs.conversations.axolotl">
+        let elem: Element = r#"<encrypted xmlns="eu.siacs.conversations.axolotl">
   <header sid="564866972">
     <key prekey="true" rid="1236">Mwjp9AESIQVylscLPpj/HlowaTiIsaBj73HCVEllXpVTtMG9EYwRexohBQFd2p/Oq97vAAdLKA09DlcSg0x1xWn260p1jaeyIhAZImIzCiEFhaQ4I+DuQgo6vCLCjHu4uewDZmWHuBl8uJw1IkyZxhUQABgAIjCoEVgVThWlaIlnN3V5Bg1hQX7OD1cvstLD5lH3zZMadL3KeONELESlBbeKmNgcYC/e3HZnbgWzBiic36yNAjAW</key>
     <key rid="26052318">MwohBTV6dpumL1OxA9MdIFmu2E19+cIWDHWYfhdubvo0hmh6EAAYHCIwNc9/59eeYi8pVZQhMJJMVkKUkFP/yrTfG3o1lfpHGseCqb/JTgtDytQPiYrTpHl2V/mdsM6IPig=</key>

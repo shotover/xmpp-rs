@@ -13,9 +13,7 @@
 use crate::element::Element;
 use crate::error::Error;
 
-use quick_xml::Reader;
-
-const TEST_STRING: &'static str = r#"<root xmlns="root_ns" a="b" xml:lang="en">meow<child c="d"/><child xmlns="child_ns" d="e" xml:lang="fr"/>nya</root>"#;
+const TEST_STRING: &'static [u8] = br#"<root xmlns="root_ns" a="b" xml:lang="en">meow<child c="d"/><child xmlns="child_ns" d="e" xml:lang="fr"/>nya</root>"#;
 
 fn build_test_tree() -> Element {
     let mut root = Element::builder("root", "root_ns")
@@ -36,9 +34,8 @@ fn build_test_tree() -> Element {
 
 #[test]
 fn reader_works() {
-    let mut reader = Reader::from_str(TEST_STRING);
     assert_eq!(
-        Element::from_reader(&mut reader).unwrap(),
+        Element::from_reader(TEST_STRING).unwrap(),
         build_test_tree()
     );
 }
@@ -143,7 +140,7 @@ fn writer_works() {
     {
         root.write_to(&mut writer).unwrap();
     }
-    assert_eq!(String::from_utf8(writer).unwrap(), TEST_STRING);
+    assert_eq!(writer, TEST_STRING);
 }
 
 #[test]
@@ -153,7 +150,10 @@ fn writer_with_decl_works() {
     {
         root.write_to_decl(&mut writer).unwrap();
     }
-    let result = format!(r#"<?xml version="1.0" encoding="utf-8"?>{}"#, TEST_STRING);
+    let result = format!(
+        r#"<?xml version="1.0" encoding="utf-8"?>{}"#,
+        String::from_utf8(TEST_STRING.to_owned()).unwrap()
+    );
     assert_eq!(String::from_utf8(writer).unwrap(), result);
 }
 
@@ -348,8 +348,7 @@ fn two_elements_with_same_arguments_different_order_are_equal() {
 
 #[test]
 fn namespace_attributes_works() {
-    let mut reader = Reader::from_str(TEST_STRING);
-    let root = Element::from_reader(&mut reader).unwrap();
+    let root = Element::from_reader(TEST_STRING).unwrap();
     assert_eq!("en", root.attr("xml:lang").unwrap());
     assert_eq!(
         "fr",
@@ -424,7 +423,7 @@ fn namespace_inherited_prefixed2() {
 fn fail_comments() {
     let elem: Result<Element, Error> = "<foo xmlns='ns1'><!-- bar --></foo>".parse();
     match elem {
-        Err(Error::NoComments) => (),
+        Err(_) => (),
         _ => panic!(),
     };
 }
@@ -432,20 +431,16 @@ fn fail_comments() {
 #[test]
 fn xml_error() {
     match "<a xmlns='ns1'></b>".parse::<Element>() {
-        Err(crate::error::Error::XmlError(_)) => (),
+        Err(crate::error::Error::ParserError(rxml::Error::NotWellFormed(
+            rxml::error::WFError::ElementMismatch,
+        ))) => (),
         err => panic!("No or wrong error: {:?}", err),
     }
 
     match "<a xmlns='ns1'></".parse::<Element>() {
-        Err(crate::error::Error::XmlError(_)) => (),
-        err => panic!("No or wrong error: {:?}", err),
-    }
-}
-
-#[test]
-fn invalid_element_error() {
-    match "<a:b:c>".parse::<Element>() {
-        Err(crate::error::Error::InvalidElement) => (),
+        Err(crate::error::Error::ParserError(rxml::Error::NotWellFormed(
+            rxml::error::WFError::InvalidEof(_),
+        ))) => (),
         err => panic!("No or wrong error: {:?}", err),
     }
 }

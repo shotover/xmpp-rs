@@ -17,18 +17,17 @@ use crate::error::{Error, Result};
 use crate::namespaces::NSChoice;
 use crate::node::Node;
 use crate::prefixes::{Namespace, Prefix, Prefixes};
+use crate::tree_builder::TreeBuilder;
 
 use std::collections::{btree_map, BTreeMap};
-use std::io::Write;
+use std::io::{BufRead, Write};
 
 use std::borrow::Cow;
 use std::str;
 
 use quick_xml::events::{BytesDecl, BytesEnd, BytesStart, Event};
-use quick_xml::Reader as EventReader;
 use quick_xml::Writer as EventWriter;
-
-use std::io::BufRead;
+use rxml::{EventRead, Lexer, PullDriver, RawParser};
 
 use std::str::FromStr;
 
@@ -84,8 +83,9 @@ pub struct Element {
     namespace: String,
     /// This is only used when deserializing. If you have to use a custom prefix use
     /// `ElementBuilder::prefix`.
-    prefix: Option<Prefix>,
-    prefixes: Prefixes,
+    pub(crate) prefix: Option<Prefix>,
+    /// Namespace declarations
+    pub prefixes: Prefixes,
     attributes: BTreeMap<String, String>,
     children: Vec<Node>,
 }
@@ -102,8 +102,7 @@ impl FromStr for Element {
     type Err = Error;
 
     fn from_str(s: &str) -> Result<Element> {
-        let mut reader = EventReader::from_str(s);
-        Element::from_reader(&mut reader)
+        Element::from_reader(s.as_bytes())
     }
 }
 
@@ -120,15 +119,8 @@ impl PartialEq for Element {
     }
 }
 
-fn ensure_no_prefix<S: AsRef<str>>(s: &S) -> Result<()> {
-    match s.as_ref().split(':').count() {
-        1 => Ok(()),
-        _ => Err(Error::InvalidElement),
-    }
-}
-
 impl Element {
-    fn new<P: Into<Prefixes>>(
+    pub(crate) fn new<P: Into<Prefixes>>(
         name: String,
         namespace: String,
         prefix: Option<Prefix>,
@@ -136,8 +128,6 @@ impl Element {
         attributes: BTreeMap<String, String>,
         children: Vec<Node>,
     ) -> Element {
-        ensure_no_prefix(&name).unwrap();
-        // TODO: Return Result<Element> instead.
         Element {
             name,
             namespace,
@@ -310,123 +300,18 @@ impl Element {
         namespace.into().compare(self.namespace.as_ref())
     }
 
-    /// Parse a document from an `EventReader`.
-    pub fn from_reader<R: BufRead>(reader: &mut EventReader<R>) -> Result<Element> {
-        let mut buf = Vec::new();
+    /// Parse a document from a `BufRead`.
+    pub fn from_reader<R: BufRead>(reader: R) -> Result<Element> {
+        let mut tree_builder = TreeBuilder::new();
+        let mut driver = PullDriver::wrap(reader, Lexer::new(), RawParser::new());
+        while let Some(event) = driver.read()? {
+            tree_builder.process_event(event)?;
 
-        let mut prefixes = BTreeMap::new();
-        let root: Element = loop {
-            let e = reader.read_event(&mut buf)?;
-            match e {
-                Event::Empty(ref e) | Event::Start(ref e) => {
-                    break build_element(reader, e, &mut prefixes)?;
-                }
-                Event::Eof => {
-                    return Err(Error::EndOfDocument);
-                }
-                Event::Comment { .. } => {
-                    return Err(Error::NoComments);
-                }
-                Event::Text { .. }
-                | Event::End { .. }
-                | Event::CData { .. }
-                | Event::Decl { .. }
-                | Event::PI { .. }
-                | Event::DocType { .. } => (), // TODO: may need more errors
-            }
-        };
-
-        let mut stack = vec![root];
-        let mut prefix_stack = vec![prefixes];
-
-        loop {
-            match reader.read_event(&mut buf)? {
-                Event::Empty(ref e) => {
-                    let mut prefixes = prefix_stack.last().unwrap().clone();
-                    let elem = build_element(reader, e, &mut prefixes)?;
-                    // Since there is no Event::End after, directly append it to the current node
-                    stack.last_mut().unwrap().append_child(elem);
-                }
-                Event::Start(ref e) => {
-                    let mut prefixes = prefix_stack.last().unwrap().clone();
-                    let elem = build_element(reader, e, &mut prefixes)?;
-                    stack.push(elem);
-                    prefix_stack.push(prefixes);
-                }
-                Event::End(ref e) => {
-                    if stack.len() <= 1 {
-                        break;
-                    }
-                    let prefixes = prefix_stack.pop().unwrap();
-                    let elem = stack.pop().unwrap();
-                    if let Some(to) = stack.last_mut() {
-                        // TODO: check whether this is correct, we are comparing &[u8]s, not &strs
-                        let elem_name = e.name();
-                        let mut split_iter = elem_name.splitn(2, |u| *u == 0x3A);
-                        let possible_prefix = split_iter.next().unwrap(); // Can't be empty.
-                        let opening_prefix = {
-                            let mut tmp: Option<Option<String>> = None;
-                            for (prefix, ns) in prefixes {
-                                if ns == elem.namespace {
-                                    tmp = Some(prefix.clone());
-                                    break;
-                                }
-                            }
-                            match tmp {
-                                Some(prefix) => prefix,
-                                None => return Err(Error::InvalidPrefix),
-                            }
-                        };
-                        match split_iter.next() {
-                            // There is a prefix on the closing tag
-                            Some(name) => {
-                                // Does the closing prefix match the opening prefix?
-                                match opening_prefix {
-                                    Some(prefix) if possible_prefix == prefix.as_bytes() => (),
-                                    _ => return Err(Error::InvalidElementClosed),
-                                }
-                                // Does the closing tag name match the opening tag name?
-                                if name != elem.name().as_bytes() {
-                                    return Err(Error::InvalidElementClosed);
-                                }
-                            }
-                            // There was no prefix on the closing tag
-                            None => {
-                                // Is there a prefix on the opening tag?
-                                if opening_prefix.is_some() {
-                                    return Err(Error::InvalidElementClosed);
-                                }
-                                // Does the opening tag name match the closing one?
-                                if possible_prefix != elem.name().as_bytes() {
-                                    return Err(Error::InvalidElementClosed);
-                                }
-                            }
-                        }
-                        to.append_child(elem);
-                    }
-                }
-                Event::Text(s) => {
-                    let text = s.unescape_and_decode(reader)?;
-                    if !text.is_empty() {
-                        let current_elem = stack.last_mut().unwrap();
-                        current_elem.append_text_node(text);
-                    }
-                }
-                Event::CData(s) => {
-                    let text = s.unescape_and_decode(&reader)?;
-                    if !text.is_empty() {
-                        let current_elem = stack.last_mut().unwrap();
-                        current_elem.append_text_node(text);
-                    }
-                }
-                Event::Eof => {
-                    break;
-                }
-                Event::Comment(_) => return Err(Error::NoComments),
-                Event::Decl { .. } | Event::PI { .. } | Event::DocType { .. } => (),
+            if let Some(root) = tree_builder.root.take() {
+                return Ok(root);
             }
         }
-        Ok(stack.pop().unwrap())
+        Err(Error::EndOfDocument)
     }
 
     /// Output a document to a `Writer`.
@@ -822,68 +707,18 @@ impl Element {
         })?;
         self.children.remove(idx).into_element()
     }
-}
 
-fn split_element_name<S: AsRef<str>>(s: S) -> Result<(Option<String>, String)> {
-    let name_parts = s.as_ref().split(':').collect::<Vec<&str>>();
-    match name_parts.len() {
-        2 => Ok((Some(name_parts[0].to_owned()), name_parts[1].to_owned())),
-        1 => Ok((None, name_parts[0].to_owned())),
-        _ => Err(Error::InvalidElement),
-    }
-}
-
-fn build_element<R: BufRead>(
-    reader: &EventReader<R>,
-    event: &BytesStart,
-    prefixes: &mut BTreeMap<Prefix, Namespace>,
-) -> Result<Element> {
-    let (prefix, name) = split_element_name(str::from_utf8(event.name())?)?;
-    let mut local_prefixes = BTreeMap::new();
-
-    let attributes = event
-        .attributes()
-        .map(|o| {
-            let o = o?;
-            let key = str::from_utf8(o.key)?.to_owned();
-            let value = o.unescape_and_decode_value(reader)?;
-            Ok((key, value))
-        })
-        .filter(|o| match *o {
-            Ok((ref key, ref value)) if key == "xmlns" => {
-                local_prefixes.insert(None, value.clone());
-                prefixes.insert(None, value.clone());
-                false
+    /// Remove the leading nodes up to the first child element and
+    /// return it
+    pub fn unshift_child(&mut self) -> Option<Element> {
+        while self.children.len() > 0 {
+            if let Some(el) = self.children.remove(0).into_element() {
+                return Some(el);
             }
-            Ok((ref key, ref value)) if key.starts_with("xmlns:") => {
-                local_prefixes.insert(Some(key[6..].to_owned()), value.to_owned());
-                prefixes.insert(Some(key[6..].to_owned()), value.to_owned());
-                false
-            }
-            _ => true,
-        })
-        .collect::<Result<BTreeMap<String, String>>>()?;
-
-    let namespace: &String = {
-        if let Some(namespace) = local_prefixes.get(&prefix) {
-            namespace
-        } else if let Some(namespace) = prefixes.get(&prefix) {
-            namespace
-        } else {
-            return Err(Error::MissingNamespace);
         }
-    };
 
-    Ok(Element::new(
-        name,
-        namespace.clone(),
-        // Note that this will always be Some(_) as we can't distinguish between the None case and
-        // Some(None). At least we make sure the prefix has a namespace associated.
-        Some(prefix),
-        local_prefixes,
-        attributes,
-        Vec::new(),
-    ))
+        None
+    }
 }
 
 /// An iterator over references to child elements of an `Element`.
@@ -1067,9 +902,8 @@ mod tests {
 
     #[test]
     fn test_from_reader_simple() {
-        let xml = "<foo xmlns='ns1'></foo>";
-        let mut reader = EventReader::from_str(xml);
-        let elem = Element::from_reader(&mut reader);
+        let xml = b"<foo xmlns='ns1'></foo>";
+        let elem = Element::from_reader(&xml[..]);
 
         let elem2 = Element::builder("foo", "ns1").build();
 
@@ -1078,9 +912,8 @@ mod tests {
 
     #[test]
     fn test_from_reader_nested() {
-        let xml = "<foo xmlns='ns1'><bar xmlns='ns1' baz='qxx' /></foo>";
-        let mut reader = EventReader::from_str(xml);
-        let elem = Element::from_reader(&mut reader);
+        let xml = b"<foo xmlns='ns1'><bar xmlns='ns1' baz='qxx' /></foo>";
+        let elem = Element::from_reader(&xml[..]);
 
         let nested = Element::builder("bar", "ns1").attr("baz", "qxx").build();
         let elem2 = Element::builder("foo", "ns1").append(nested).build();
@@ -1090,9 +923,8 @@ mod tests {
 
     #[test]
     fn test_from_reader_with_prefix() {
-        let xml = "<foo xmlns='ns1'><prefix:bar xmlns:prefix='ns1' baz='qxx' /></foo>";
-        let mut reader = EventReader::from_str(xml);
-        let elem = Element::from_reader(&mut reader);
+        let xml = b"<foo xmlns='ns1'><prefix:bar xmlns:prefix='ns1' baz='qxx' /></foo>";
+        let elem = Element::from_reader(&xml[..]);
 
         let nested = Element::builder("bar", "ns1").attr("baz", "qxx").build();
         let elem2 = Element::builder("foo", "ns1").append(nested).build();
@@ -1102,9 +934,8 @@ mod tests {
 
     #[test]
     fn test_from_reader_split_prefix() {
-        let xml = "<foo:bar xmlns:foo='ns1'/>";
-        let mut reader = EventReader::from_str(xml);
-        let elem = Element::from_reader(&mut reader).unwrap();
+        let xml = b"<foo:bar xmlns:foo='ns1'/>";
+        let elem = Element::from_reader(&xml[..]).unwrap();
 
         assert_eq!(elem.name(), String::from("bar"));
         assert_eq!(elem.ns(), String::from("ns1"));
@@ -1118,38 +949,32 @@ mod tests {
     #[test]
     fn parses_spectest_xml() {
         // From: https://gitlab.com/lumi/minidom-rs/issues/8
-        let xml = r#"
-            <rng:grammar xmlns:rng="http://relaxng.org/ns/structure/1.0">
+        let xml = br#"<rng:grammar xmlns:rng="http://relaxng.org/ns/structure/1.0">
                 <rng:name xmlns:rng="http://relaxng.org/ns/structure/1.0"></rng:name>
             </rng:grammar>
         "#;
-        let mut reader = EventReader::from_str(xml);
-        let _ = Element::from_reader(&mut reader).unwrap();
+        let _ = Element::from_reader(&xml[..]).unwrap();
     }
 
     #[test]
     fn does_not_unescape_cdata() {
-        let xml = "<test xmlns='test'><![CDATA[&apos;&gt;blah<blah>]]></test>";
-        let mut reader = EventReader::from_str(xml);
-        let elem = Element::from_reader(&mut reader).unwrap();
+        let xml = b"<test xmlns='test'><![CDATA[&apos;&gt;blah<blah>]]></test>";
+        let elem = Element::from_reader(&xml[..]).unwrap();
         assert_eq!(elem.text(), "&apos;&gt;blah<blah>");
     }
 
     #[test]
     fn test_compare_all_ns() {
-        let xml = "<foo xmlns='foo' xmlns:bar='baz'><bar:meh xmlns:bar='baz' /></foo>";
-        let mut reader = EventReader::from_str(xml);
-        let elem = Element::from_reader(&mut reader).unwrap();
+        let xml = b"<foo xmlns='foo' xmlns:bar='baz'><bar:meh xmlns:bar='baz' /></foo>";
+        let elem = Element::from_reader(&xml[..]).unwrap();
 
         let elem2 = elem.clone();
 
-        let xml3 = "<foo xmlns='foo'><bar:meh xmlns:bar='baz'/></foo>";
-        let mut reader3 = EventReader::from_str(xml3);
-        let elem3 = Element::from_reader(&mut reader3).unwrap();
+        let xml3 = b"<foo xmlns='foo'><bar:meh xmlns:bar='baz'/></foo>";
+        let elem3 = Element::from_reader(&xml3[..]).unwrap();
 
-        let xml4 = "<prefix:foo xmlns:prefix='foo'><bar:meh xmlns:bar='baz'/></prefix:foo>";
-        let mut reader4 = EventReader::from_str(xml4);
-        let elem4 = Element::from_reader(&mut reader4).unwrap();
+        let xml4 = b"<prefix:foo xmlns:prefix='foo'><bar:meh xmlns:bar='baz'/></prefix:foo>";
+        let elem4 = Element::from_reader(&xml4[..]).unwrap();
 
         assert_eq!(elem, elem2);
         assert_eq!(elem, elem3);

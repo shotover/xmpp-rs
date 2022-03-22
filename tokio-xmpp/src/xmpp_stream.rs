@@ -54,7 +54,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin> XMPPStream<S> {
     }
 
     /// Send a `<stream:stream>` start tag
-    pub async fn start<'a>(stream: S, jid: Jid, ns: String) -> Result<Self, Error> {
+    pub async fn start(stream: S, jid: Jid, ns: String) -> Result<Self, Error> {
         let xmpp_stream = Framed::new(stream, XMPPCodec::new());
         stream_start::start(xmpp_stream, jid, ns).await
     }
@@ -65,7 +65,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin> XMPPStream<S> {
     }
 
     /// Re-run `start()`
-    pub async fn restart<'a>(self) -> Result<Self, Error> {
+    pub async fn restart(self) -> Result<Self, Error> {
         let stream = self.stream.into_inner().unwrap().into_inner();
         Self::start(stream, self.jid, self.ns).await
     }

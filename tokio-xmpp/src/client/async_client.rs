@@ -203,30 +203,28 @@ impl Stream for Client {
                 self.poll_next(cx)
             }
             ClientState::Disconnected => Poll::Ready(None),
-            ClientState::Connecting(mut connect) => {
-                match Pin::new(&mut connect).poll(cx) {
-                    Poll::Ready(Ok(Ok(stream))) => {
-                        let bound_jid = stream.jid.clone();
-                        self.state = ClientState::Connected(stream);
-                        Poll::Ready(Some(Event::Online {
-                            bound_jid,
-                            resumed: false,
-                        }))
-                    }
-                    Poll::Ready(Ok(Err(e))) => {
-                        self.state = ClientState::Disconnected;
-                        return Poll::Ready(Some(Event::Disconnected(e.into())));
-                    }
-                    Poll::Ready(Err(e)) => {
-                        self.state = ClientState::Disconnected;
-                        panic!("connect task: {}", e);
-                    }
-                    Poll::Pending => {
-                        self.state = ClientState::Connecting(connect);
-                        Poll::Pending
-                    }
+            ClientState::Connecting(mut connect) => match Pin::new(&mut connect).poll(cx) {
+                Poll::Ready(Ok(Ok(stream))) => {
+                    let bound_jid = stream.jid.clone();
+                    self.state = ClientState::Connected(stream);
+                    Poll::Ready(Some(Event::Online {
+                        bound_jid,
+                        resumed: false,
+                    }))
                 }
-            }
+                Poll::Ready(Ok(Err(e))) => {
+                    self.state = ClientState::Disconnected;
+                    return Poll::Ready(Some(Event::Disconnected(e.into())));
+                }
+                Poll::Ready(Err(e)) => {
+                    self.state = ClientState::Disconnected;
+                    panic!("connect task: {}", e);
+                }
+                Poll::Pending => {
+                    self.state = ClientState::Connecting(connect);
+                    Poll::Pending
+                }
+            },
             ClientState::Connected(mut stream) => {
                 // Poll sink
                 match Pin::new(&mut stream).poll_ready(cx) {

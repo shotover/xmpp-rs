@@ -134,8 +134,7 @@ mod tests {
         assert!(prefs.always.is_empty());
         assert!(prefs.never.is_empty());
 
-        let elem: Element = r#"
-<prefs xmlns='urn:xmpp:mam:2' default='roster'>
+        let elem: Element = r#"<prefs xmlns='urn:xmpp:mam:2' default='roster'>
   <always/>
   <never/>
 </prefs>
@@ -149,8 +148,7 @@ mod tests {
 
     #[test]
     fn test_prefs_result() {
-        let elem: Element = r#"
-<prefs xmlns='urn:xmpp:mam:2' default='roster'>
+        let elem: Element = r#"<prefs xmlns='urn:xmpp:mam:2' default='roster'>
   <always>
     <jid>romeo@montague.lit</jid>
   </always>

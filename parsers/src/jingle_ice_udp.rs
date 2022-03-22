@@ -134,8 +134,7 @@ mod tests {
 
     #[test]
     fn test_gajim() {
-        let elem: Element = "
-<transport xmlns='urn:xmpp:jingle:transports:ice-udp:1' pwd='wakMJ8Ydd5rqnPaFerws5o' ufrag='aeXX'>
+        let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:ice-udp:1' pwd='wakMJ8Ydd5rqnPaFerws5o' ufrag='aeXX'>
     <candidate xmlns='urn:xmpp:jingle:transports:ice-udp:1' component='2' foundation='1' generation='0' id='11b72719-6a1b-4c51-8ae6-9f1538047568' ip='192.168.0.12' network='0' port='56715' priority='1010828030' protocol='tcp' type='host'/>
     <candidate xmlns='urn:xmpp:jingle:transports:ice-udp:1' component='2' foundation='1' generation='0' id='7e07b22d-db50-4e17-9ed9-eafeb96f4f63' ip='192.168.0.12' network='0' port='0' priority='1015022334' protocol='tcp' type='host'/>
     <candidate xmlns='urn:xmpp:jingle:transports:ice-udp:1' component='2' foundation='1' generation='0' id='431de362-c45f-40a8-bf10-9ed898a71d86' ip='192.168.0.12' network='0' port='36480' priority='2013266428' protocol='udp' type='host'/>
@@ -164,8 +163,7 @@ mod tests {
 
     #[test]
     fn test_jitsi_meet() {
-        let elem: Element = "
-<transport ufrag='2acq51d4p07v2m' pwd='7lk9uul39gckit6t02oavv2r9j' xmlns='urn:xmpp:jingle:transports:ice-udp:1'>
+        let elem: Element = "<transport ufrag='2acq51d4p07v2m' pwd='7lk9uul39gckit6t02oavv2r9j' xmlns='urn:xmpp:jingle:transports:ice-udp:1'>
     <fingerprint hash='sha-1' setup='actpass' xmlns='urn:xmpp:jingle:apps:dtls:0'>97:F2:B5:BE:DB:A6:00:B1:3E:40:B2:41:3C:0D:FC:E0:BD:B2:A0:E8</fingerprint>
     <candidate type='host' protocol='udp' id='186cb069513c2bbe546192c93cc4ab3b05ab0d426' ip='2a05:d014:fc7:54a1:8bfc:7248:3d1c:51a4' component='1' port='10000' foundation='1' generation='0' priority='2130706431' network='0'/>
     <candidate type='host' protocol='udp' id='186cb069513c2bbe546192c93cc4ab3b063daeefd' ip='10.15.1.120' component='1' port='10000' foundation='2' generation='0' priority='2130706431' network='0'/>

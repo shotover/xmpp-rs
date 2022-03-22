@@ -123,8 +123,7 @@ mod tests {
     #[test]
     fn test_result() {
         #[cfg(not(feature = "component"))]
-        let elem: Element = r#"
-<result xmlns='urn:xmpp:mam:2' queryid='f27' id='28482-98726-73623'>
+        let elem: Element = r#"<result xmlns='urn:xmpp:mam:2' queryid='f27' id='28482-98726-73623'>
   <forwarded xmlns='urn:xmpp:forward:0'>
     <delay xmlns='urn:xmpp:delay' stamp='2010-07-10T23:08:25Z'/>
     <message xmlns='jabber:client' from="witch@shakespeare.lit" to="macbeth@shakespeare.lit">
@@ -136,8 +135,7 @@ mod tests {
         .parse()
         .unwrap();
         #[cfg(feature = "component")]
-        let elem: Element = r#"
-<result xmlns='urn:xmpp:mam:2' queryid='f27' id='28482-98726-73623'>
+        let elem: Element = r#"<result xmlns='urn:xmpp:mam:2' queryid='f27' id='28482-98726-73623'>
   <forwarded xmlns='urn:xmpp:forward:0'>
     <delay xmlns='urn:xmpp:delay' stamp='2010-07-10T23:08:25Z'/>
     <message xmlns='jabber:component:accept' from="witch@shakespeare.lit" to="macbeth@shakespeare.lit">
@@ -151,8 +149,7 @@ mod tests {
 
     #[test]
     fn test_fin() {
-        let elem: Element = r#"
-<fin xmlns='urn:xmpp:mam:2'>
+        let elem: Element = r#"<fin xmlns='urn:xmpp:mam:2'>
   <set xmlns='http://jabber.org/protocol/rsm'>
     <first index='0'>28482-98726-73623</first>
     <last>09af3-cc343-b409f</last>
@@ -166,8 +163,7 @@ mod tests {
 
     #[test]
     fn test_query_x() {
-        let elem: Element = r#"
-<query xmlns='urn:xmpp:mam:2'>
+        let elem: Element = r#"<query xmlns='urn:xmpp:mam:2'>
   <x xmlns='jabber:x:data' type='submit'>
     <field var='FORM_TYPE' type='hidden'>
       <value>urn:xmpp:mam:2</value>
@@ -185,8 +181,7 @@ mod tests {
 
     #[test]
     fn test_query_x_set() {
-        let elem: Element = r#"
-<query xmlns='urn:xmpp:mam:2'>
+        let elem: Element = r#"<query xmlns='urn:xmpp:mam:2'>
   <x xmlns='jabber:x:data' type='submit'>
     <field var='FORM_TYPE' type='hidden'>
       <value>urn:xmpp:mam:2</value>

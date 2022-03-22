@@ -265,8 +265,7 @@ mod tests {
 
     #[test]
     fn test_xep_5_2() {
-        let elem: Element = r#"
-<query xmlns='http://jabber.org/protocol/disco#info'
+        let elem: Element = r#"<query xmlns='http://jabber.org/protocol/disco#info'
        node='http://psi-im.org#q07IKJEyjvHSyhy//CH0CxmKi8w='>
   <identity category='client' name='Exodus 0.9.1' type='pc'/>
   <feature var='http://jabber.org/protocol/caps'/>
@@ -294,8 +293,7 @@ mod tests {
 
     #[test]
     fn test_xep_5_3() {
-        let elem: Element = r#"
-<query xmlns='http://jabber.org/protocol/disco#info'
+        let elem: Element = r#"<query xmlns='http://jabber.org/protocol/disco#info'
        node='http://psi-im.org#q07IKJEyjvHSyhy//CH0CxmKi8w='>
   <identity xml:lang='en' category='client' name='Psi 0.11' type='pc'/>
   <identity xml:lang='el' category='client' name='Ψ 0.11' type='pc'/>

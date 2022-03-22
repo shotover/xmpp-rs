@@ -163,8 +163,7 @@ mod tests {
 
     #[test]
     fn history() {
-        let elem: Element = "
-            <x xmlns='http://jabber.org/protocol/muc'>
+        let elem: Element = "<x xmlns='http://jabber.org/protocol/muc'>
                 <history maxstanzas='0'/>
             </x>"
             .parse()
@@ -179,8 +178,7 @@ mod tests {
         assert_eq!(history.seconds, None);
         assert_eq!(history.since, None);
 
-        let elem: Element = "
-            <x xmlns='http://jabber.org/protocol/muc'>
+        let elem: Element = "<x xmlns='http://jabber.org/protocol/muc'>
                 <history since='1970-01-01T00:00:00Z'/>
             </x>"
             .parse()

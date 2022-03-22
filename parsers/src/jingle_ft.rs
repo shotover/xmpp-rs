@@ -354,8 +354,7 @@ mod tests {
 
     #[test]
     fn test_description() {
-        let elem: Element = r#"
-<description xmlns='urn:xmpp:jingle:apps:file-transfer:5'>
+        let elem: Element = r#"<description xmlns='urn:xmpp:jingle:apps:file-transfer:5'>
   <file>
     <media-type>text/plain</media-type>
     <name>test.txt</name>
@@ -387,8 +386,7 @@ mod tests {
 
     #[test]
     fn test_request() {
-        let elem: Element = r#"
-<description xmlns='urn:xmpp:jingle:apps:file-transfer:5'>
+        let elem: Element = r#"<description xmlns='urn:xmpp:jingle:apps:file-transfer:5'>
   <file>
     <hash xmlns='urn:xmpp:hashes:2'
           algo='sha-1'>w0mcJylzCn+AfvuGdqkty2+KP48=</hash>
@@ -413,8 +411,7 @@ mod tests {
 
     #[test]
     fn test_descs() {
-        let elem: Element = r#"
-<description xmlns='urn:xmpp:jingle:apps:file-transfer:5'>
+        let elem: Element = r#"<description xmlns='urn:xmpp:jingle:apps:file-transfer:5'>
   <file>
     <media-type>text/plain</media-type>
     <desc xml:lang='fr'>Fichier secret !</desc>
@@ -437,8 +434,7 @@ mod tests {
             Desc(String::from("Fichier secret !"))
         );
 
-        let elem: Element = r#"
-<description xmlns='urn:xmpp:jingle:apps:file-transfer:5'>
+        let elem: Element = r#"<description xmlns='urn:xmpp:jingle:apps:file-transfer:5'>
   <file>
     <media-type>text/plain</media-type>
     <desc xml:lang='fr'>Fichier secret !</desc>

@@ -10,16 +10,16 @@
 
 use crate::element::Element;
 use crate::error::{Error, ParserError, Result};
+use crate::tree_builder::TreeBuilder;
 
-use bytes::BytesMut;
-use quick_xml::Reader as EventReader;
-use std::cell::RefCell;
+use rxml::{PushDriver, RawParser};
 use std::str;
 
 /// Parser
 #[derive(Debug)]
 pub struct Parser {
-    buffer: RefCell<BytesMut>,
+    driver: PushDriver<RawParser>,
+    tree_builder: TreeBuilder,
     state: ParserState,
 }
 
@@ -90,14 +90,17 @@ impl Parser {
     /// Creates a new Parser
     pub fn new() -> Parser {
         Parser {
-            buffer: RefCell::new(BytesMut::new()),
+            driver: PushDriver::default(),
+            tree_builder: TreeBuilder::new(),
             state: ParserState::Empty,
         }
     }
 
     /// Feed bytes to the parser.
     pub fn feed(&mut self, bytes: BytesMut) -> Result<()> {
-        self.buffer.borrow_mut().unsplit(bytes);
+        self.driver.feed(bytes);
+        bytes.clear();
+
         let state = match self.state {
             ParserState::Empty => {
                 // TODO: Try splitting xml prolog and stream header

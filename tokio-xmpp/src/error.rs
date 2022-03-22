@@ -5,7 +5,6 @@ use std::borrow::Cow;
 use std::error::Error as StdError;
 use std::fmt;
 use std::io::Error as IoError;
-use std::str::Utf8Error;
 #[cfg(feature = "tls-rust")]
 use tokio_rustls::rustls::client::InvalidDnsNameError;
 #[cfg(feature = "tls-rust")]
@@ -106,44 +105,6 @@ impl From<InvalidDnsNameError> for Error {
     }
 }
 
-/// Causes for stream parsing errors
-#[derive(Debug)]
-pub enum ParserError {
-    /// Encoding error
-    Utf8(Utf8Error),
-    /// XML parse error
-    Parse(ParseError),
-    /// Illegal `</>`
-    ShortTag,
-    /// Required by `impl Decoder`
-    Io(IoError),
-}
-
-impl fmt::Display for ParserError {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            ParserError::Utf8(e) => write!(fmt, "UTF-8 error: {}", e),
-            ParserError::Parse(e) => write!(fmt, "parse error: {}", e),
-            ParserError::ShortTag => write!(fmt, "short tag"),
-            ParserError::Io(e) => write!(fmt, "IO error: {}", e),
-        }
-    }
-}
-
-impl StdError for ParserError {}
-
-impl From<IoError> for ParserError {
-    fn from(e: IoError) -> Self {
-        ParserError::Io(e)
-    }
-}
-
-impl From<ParserError> for Error {
-    fn from(e: ParserError) -> Self {
-        ProtocolError::Parser(e).into()
-    }
-}
-
 /// XML parse error wrapper type
 #[derive(Debug)]
 pub struct ParseError(pub Cow<'static, str>);
@@ -167,7 +128,7 @@ impl fmt::Display for ParseError {
 #[derive(Debug)]
 pub enum ProtocolError {
     /// XML parser error
-    Parser(ParserError),
+    Parser(minidom::Error),
     /// Error with expected stanza schema
     Parsers(ParsersError),
     /// No TLS available
@@ -205,9 +166,15 @@ impl fmt::Display for ProtocolError {
 
 impl StdError for ProtocolError {}
 
-impl From<ParserError> for ProtocolError {
-    fn from(e: ParserError) -> Self {
+impl From<minidom::Error> for ProtocolError {
+    fn from(e: minidom::Error) -> Self {
         ProtocolError::Parser(e)
+    }
+}
+
+impl From<minidom::Error> for Error {
+    fn from(e: minidom::Error) -> Self {
+        ProtocolError::Parser(e).into()
     }
 }
 

@@ -83,6 +83,7 @@ pub mod error;
 mod namespaces;
 pub mod node;
 mod prefixes;
+pub mod tree_builder;
 
 #[cfg(test)]
 mod tests;

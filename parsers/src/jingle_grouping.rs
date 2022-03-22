@@ -72,8 +72,7 @@ mod tests {
 
     #[test]
     fn parse_group() {
-        let elem: Element = "
-        <group xmlns='urn:xmpp:jingle:apps:grouping:0' semantics='BUNDLE'>
+        let elem: Element = "<group xmlns='urn:xmpp:jingle:apps:grouping:0' semantics='BUNDLE'>
             <content name='voice'/>
             <content name='webcam'/>
         </group>"

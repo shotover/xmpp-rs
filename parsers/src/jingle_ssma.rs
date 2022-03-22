@@ -101,8 +101,7 @@ mod tests {
 
     #[test]
     fn parse_source() {
-        let elem: Element = "
-<source ssrc='1656081975' xmlns='urn:xmpp:jingle:apps:rtp:ssma:0'>
+        let elem: Element = "<source ssrc='1656081975' xmlns='urn:xmpp:jingle:apps:rtp:ssma:0'>
     <parameter name='cname' value='Yv/wvbCdsDW2Prgd'/>
     <parameter name='msid' value='MLTJKIHilGn71fNQoszkQ4jlPTuS5vJyKVIv MLTJKIHilGn71fNQoszkQ4jlPTuS5vJyKVIva0'/>
 </source>"
@@ -124,8 +123,7 @@ mod tests {
 
     #[test]
     fn parse_source_group() {
-        let elem: Element = "
-<ssrc-group semantics='FID' xmlns='urn:xmpp:jingle:apps:rtp:ssma:0'>
+        let elem: Element = "<ssrc-group semantics='FID' xmlns='urn:xmpp:jingle:apps:rtp:ssma:0'>
     <source ssrc='2301230316'/>
     <source ssrc='386328120'/>
 </ssrc-group>"

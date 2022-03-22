@@ -78,8 +78,7 @@ mod tests {
 
     #[test]
     fn example_1() {
-        let elem: Element = "
-<transport xmlns='urn:xmpp:jingle:transports:raw-udp:1'>
+        let elem: Element = "<transport xmlns='urn:xmpp:jingle:transports:raw-udp:1'>
     <candidate component='1'
                generation='0'
                id='a9j3mnbtu1'

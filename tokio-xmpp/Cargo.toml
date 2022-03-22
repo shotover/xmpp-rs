@@ -25,8 +25,9 @@ tokio-stream = { version = "0.1", features = [] }
 tokio-util = { version = "0.6", features = ["codec"] }
 trust-dns-proto = "0.20"
 trust-dns-resolver = "0.20"
-xml5ever = "0.16"
 xmpp-parsers = "0.19"
+minidom = "0.14"
+rxml = "^0.7.1"
 webpki-roots = { version = "0.22", optional = true }
 
 [build-dependencies]

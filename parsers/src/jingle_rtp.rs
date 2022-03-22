@@ -175,8 +175,7 @@ mod tests {
 
     #[test]
     fn test_simple() {
-        let elem: Element = "
-<description xmlns='urn:xmpp:jingle:apps:rtp:1' media='audio'>
+        let elem: Element = "<description xmlns='urn:xmpp:jingle:apps:rtp:1' media='audio'>
     <payload-type xmlns='urn:xmpp:jingle:apps:rtp:1' channels='2' clockrate='48000' id='96' name='OPUS'/>
     <payload-type xmlns='urn:xmpp:jingle:apps:rtp:1' channels='1' clockrate='32000' id='105' name='SPEEX'/>
     <payload-type xmlns='urn:xmpp:jingle:apps:rtp:1' channels='1' clockrate='8000' id='9' name='G722'/>

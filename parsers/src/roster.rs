@@ -142,8 +142,7 @@ mod tests {
         assert_eq!(roster.ver, Some(String::from("ver9")));
         assert!(roster.items.is_empty());
 
-        let elem: Element = r#"
-<query xmlns='jabber:iq:roster' ver='ver11'>
+        let elem: Element = r#"<query xmlns='jabber:iq:roster' ver='ver11'>
   <item jid='romeo@example.net'
         name='Romeo'
         subscription='both'>
@@ -215,16 +214,14 @@ mod tests {
         assert!(roster.ver.is_none());
         assert_eq!(roster.items.len(), 1);
 
-        let elem: Element = r#"
-<query xmlns='jabber:iq:roster'>
+        let elem: Element = r#"<query xmlns='jabber:iq:roster'>
   <item jid='nurse@example.com'
         name='Nurse'>
     <group>Servants</group>
   </item>
-</query>
-"#
-        .parse()
-        .unwrap();
+</query>"#
+            .parse()
+            .unwrap();
         let roster = Roster::try_from(elem).unwrap();
         assert!(roster.ver.is_none());
         assert_eq!(roster.items.len(), 1);
@@ -236,14 +233,12 @@ mod tests {
             Group::from_str("Servants").unwrap()
         );
 
-        let elem: Element = r#"
-<query xmlns='jabber:iq:roster'>
+        let elem: Element = r#"<query xmlns='jabber:iq:roster'>
   <item jid='nurse@example.com'
         subscription='remove'/>
-</query>
-"#
-        .parse()
-        .unwrap();
+</query>"#
+            .parse()
+            .unwrap();
         let roster = Roster::try_from(elem).unwrap();
         assert!(roster.ver.is_none());
         assert_eq!(roster.items.len(), 1);

@@ -137,8 +137,7 @@ mod tests {
 
     #[test]
     fn test_ex2() {
-        let elem: Element = r#"
-<query xmlns='jabber:iq:register'>
+        let elem: Element = r#"<query xmlns='jabber:iq:register'>
   <instructions>
     Choose a username and password for use with this service.
     Please also provide your email address.

@@ -176,8 +176,7 @@ mod tests {
 
     #[test]
     fn list() {
-        let elem: Element = r#"
-        <items xmlns='urn:xmpp:saslcert:1'>
+        let elem: Element = r#"<items xmlns='urn:xmpp:saslcert:1'>
           <item>
             <name>Mobile Client</name>
             <x509cert>AAAA</x509cert>

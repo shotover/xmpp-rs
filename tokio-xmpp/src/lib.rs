@@ -16,5 +16,5 @@ pub use client::{async_client::Client as AsyncClient, simple_client::Client as S
 mod component;
 pub use crate::component::Component;
 mod error;
-pub use crate::error::{AuthError, ConnecterError, Error, ParseError, ParserError, ProtocolError};
+pub use crate::error::{AuthError, ConnecterError, Error, ParseError, ProtocolError};
 pub use starttls::starttls;

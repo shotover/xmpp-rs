@@ -74,8 +74,7 @@ mod tests {
 
     #[test]
     fn parse_exthdr() {
-        let elem: Element = "
-        <rtp-hdrext xmlns='urn:xmpp:jingle:apps:rtp:rtp-hdrext:0'
+        let elem: Element = "<rtp-hdrext xmlns='urn:xmpp:jingle:apps:rtp:rtp-hdrext:0'
                     uri='urn:ietf:params:rtp-hdrext:toffset'
                     id='1'/>"
             .parse()
