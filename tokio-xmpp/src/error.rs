@@ -61,6 +61,8 @@ impl fmt::Display for Error {
     }
 }
 
+impl StdError for Error {}
+
 impl From<IoError> for Error {
     fn from(e: IoError) -> Self {
         Error::Io(e)
@@ -127,6 +129,8 @@ impl fmt::Display for ParserError {
         }
     }
 }
+
+impl StdError for ParserError {}
 
 impl From<IoError> for ParserError {
     fn from(e: IoError) -> Self {
@@ -199,6 +203,8 @@ impl fmt::Display for ProtocolError {
     }
 }
 
+impl StdError for ProtocolError {}
+
 impl From<ParserError> for ProtocolError {
     fn from(e: ParserError) -> Self {
         ProtocolError::Parser(e)
@@ -224,6 +230,8 @@ pub enum AuthError {
     ComponentFail,
 }
 
+impl StdError for AuthError {}
+
 impl fmt::Display for AuthError {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -246,7 +254,7 @@ pub enum ConnecterError {
     Resolve(ResolveError),
 }
 
-impl std::error::Error for ConnecterError {}
+impl StdError for ConnecterError {}
 
 impl std::fmt::Display for ConnecterError {
     fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
