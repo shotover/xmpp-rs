@@ -6,7 +6,6 @@ use std::str::FromStr;
 use std::task::Context;
 use tokio::net::TcpStream;
 use tokio::task::JoinHandle;
-use tokio::task::LocalSet;
 #[cfg(feature = "tls-native")]
 use tokio_native_tls::TlsStream;
 #[cfg(feature = "tls-rust")]
@@ -58,7 +57,7 @@ type XMPPStream = xmpp_stream::XMPPStream<TlsStream<TcpStream>>;
 enum ClientState {
     Invalid,
     Disconnected,
-    Connecting(JoinHandle<Result<XMPPStream, Error>>, LocalSet),
+    Connecting(JoinHandle<Result<XMPPStream, Error>>),
     Connected(XMPPStream),
 }
 
@@ -80,15 +79,14 @@ impl Client {
 
     /// Start a new client given that the JID is already parsed.
     pub fn new_with_config(config: Config) -> Self {
-        let local = LocalSet::new();
-        let connect = local.spawn_local(Self::connect(
+        let connect = tokio::spawn(Self::connect(
             config.server.clone(),
             config.jid.clone(),
             config.password.clone(),
         ));
         let client = Client {
             config,
-            state: ClientState::Connecting(connect, local),
+            state: ClientState::Connecting(connect),
             reconnect: false,
         };
         client
@@ -196,18 +194,16 @@ impl Stream for Client {
             ClientState::Invalid => panic!("Invalid client state"),
             ClientState::Disconnected if self.reconnect => {
                 // TODO: add timeout
-                let mut local = LocalSet::new();
-                let connect = local.spawn_local(Self::connect(
+                let connect = tokio::spawn(Self::connect(
                     self.config.server.clone(),
                     self.config.jid.clone(),
                     self.config.password.clone(),
                 ));
-                let _ = Pin::new(&mut local).poll(cx);
-                self.state = ClientState::Connecting(connect, local);
+                self.state = ClientState::Connecting(connect);
                 self.poll_next(cx)
             }
             ClientState::Disconnected => Poll::Ready(None),
-            ClientState::Connecting(mut connect, mut local) => {
+            ClientState::Connecting(mut connect) => {
                 match Pin::new(&mut connect).poll(cx) {
                     Poll::Ready(Ok(Ok(stream))) => {
                         let bound_jid = stream.jid.clone();
@@ -226,9 +222,7 @@ impl Stream for Client {
                         panic!("connect task: {}", e);
                     }
                     Poll::Pending => {
-                        let _ = Pin::new(&mut local).poll(cx);
-
-                        self.state = ClientState::Connecting(connect, local);
+                        self.state = ClientState::Connecting(connect);
                         Poll::Pending
                     }
                 }
