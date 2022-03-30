@@ -225,6 +225,9 @@ pub mod openpgp;
 /// XEP-0380: Explicit Message Encryption
 pub mod eme;
 
+/// XEP-0380: OMEMO Encryption (experimental version 0.3.0)
+pub mod legacy_omemo;
+
 /// XEP-0390: Entity Capabilities 2.0
 pub mod ecaps2;
 

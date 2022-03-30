@@ -250,6 +250,13 @@ pub const OX_PUBKEYS: &str = "urn:xmpp:openpgp:0:public-keys";
 /// XEP-0380: Explicit Message Encryption
 pub const EME: &str = "urn:xmpp:eme:0";
 
+/// XEP-0384: OMEMO Encryption (experimental version 0.3.0)
+pub const LEGACY_OMEMO: &str = "eu.siacs.conversations.axolotl";
+/// XEP-0384: OMEMO Encryption (experimental version 0.3.0)
+pub const LEGACY_OMEMO_DEVICELIST: &str = "eu.siacs.conversations.axolotl.devicelist";
+/// XEP-0384: OMEMO Encryption (experimental version 0.3.0)
+pub const LEGACY_OMEMO_BUNDLES: &str = "eu.siacs.conversations.axolotl.bundles";
+
 /// XEP-0390: Entity Capabilities 2.0
 pub const ECAPS2: &str = "urn:xmpp:caps";
 /// XEP-0390: Entity Capabilities 2.0
