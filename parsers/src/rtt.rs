@@ -11,23 +11,35 @@ use crate::Element;
 use std::convert::TryFrom;
 
 generate_attribute!(
+    /// Events for real-time text.
     Event, "event", {
+        /// Begin a new real-time message.
         New => "new",
+
+        /// Re-initialize the real-time message.
         Reset => "reset",
+
+        /// Modify existing real-time message.
         Edit => "edit",
+
+        /// Signals activation of real-time text.
         Init => "init",
+
+        /// Signals deactivation of real-time text.
         Cancel => "cancel",
     }, Default = Edit
 );
 
 generate_element!(
-    Insert,
-    "t",
-    RTT,
+    /// Supports the transmission of text, including key presses, and text block inserts.
+    Insert, "t", RTT,
     attributes: [
+        /// Position in the message to start inserting from.  If None, this means to start from the
+        /// end of the message.
         pos: Option<u32> = "p",
     ],
     text: (
+        /// Text to insert.
         text: PlainText<Option<String>>
     )
 );
@@ -46,9 +58,7 @@ impl TryFrom<Action> for Insert {
 // TODO: add a way in the macro to set a default value.
 /*
 generate_element!(
-    Erase,
-    "e",
-    RTT,
+    Erase, "e", RTT,
     attributes: [
         pos: Option<u32> = "p",
         num: Default<u32> = "n",
@@ -56,9 +66,16 @@ generate_element!(
 );
 */
 
+/// Supports the behavior of backspace key presses.  Text is removed towards beginning of the
+/// message.  This element is also used for all delete operations, including the backspace key, the
+/// delete key, and text block deletes.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Erase {
+    /// Position in the message to start erasing from.  If None, this means to start from the end
+    /// of the message.
     pub pos: Option<u32>,
+
+    /// Amount of characters to erase, to the left.
     pub num: u32,
 }
 
@@ -95,10 +112,12 @@ impl TryFrom<Action> for Erase {
 }
 
 generate_element!(
-    Wait,
-    "w",
-    RTT,
+    /// Allow for the transmission of intervals, between real-time text actions, to recreate the
+    /// pauses between key presses.
+    Wait, "w", RTT,
+
     attributes: [
+        /// Amount of milliseconds to wait before the next action.
         time: Required<u32> = "n",
     ]
 );
@@ -114,10 +133,16 @@ impl TryFrom<Action> for Wait {
     }
 }
 
+/// Choice between the three possible actions.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Action {
+    /// Insert text action.
     Insert(Insert),
+
+    /// Erase text action.
     Erase(Erase),
+
+    /// Wait action.
     Wait(Wait),
 }
 
@@ -159,11 +184,23 @@ generate_element!(
 );
 */
 
+/// Element transmitted at regular interval by the sender client while a message is being composed.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Rtt {
+    /// Counter to maintain synchronisation of real-time text.  Senders MUST increment this value
+    /// by 1 for each subsequent edit to the same real-time message, including when appending new
+    /// text.  Receiving clients MUST monitor this 'seq' value as a lightweight verification on the
+    /// synchronization of real-time text messages.  The bounds of 'seq' is 31-bits, the range of
+    /// positive values for a signed 32-bit integer.
     pub seq: u32,
+
+    /// This attribute signals events for real-time text.
     pub event: Event,
+
+    /// When editing a message using XEP-0308, this references the id of the message being edited.
     pub id: Option<String>,
+
+    /// Vector of actions being transmitted by this element.
     pub actions: Vec<Action>,
 }
 
