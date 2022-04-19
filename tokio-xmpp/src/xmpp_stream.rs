@@ -2,9 +2,7 @@
 
 use futures::sink::Send;
 use futures::{sink::SinkExt, task::Poll, Sink, Stream};
-use std::ops::DerefMut;
 use std::pin::Pin;
-use std::sync::Mutex;
 use std::task::Context;
 use tokio::io::{AsyncRead, AsyncWrite};
 use tokio_util::codec::Framed;
@@ -23,7 +21,7 @@ pub struct XMPPStream<S: AsyncRead + AsyncWrite + Unpin> {
     /// The local Jabber-Id
     pub jid: Jid,
     /// Codec instance
-    pub stream: Mutex<Framed<S, XMPPCodec>>,
+    pub stream: Framed<S, XMPPCodec>,
     /// `<stream:features/>` for XMPP version 1.0
     pub stream_features: StreamFeatures,
     /// Root namespace
@@ -46,7 +44,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin> XMPPStream<S> {
     ) -> Self {
         XMPPStream {
             jid,
-            stream: Mutex::new(stream),
+            stream,
             stream_features: StreamFeatures::new(stream_features),
             ns,
             id,
@@ -61,12 +59,12 @@ impl<S: AsyncRead + AsyncWrite + Unpin> XMPPStream<S> {
 
     /// Unwraps the inner stream
     pub fn into_inner(self) -> S {
-        self.stream.into_inner().unwrap().into_inner()
+        self.stream.into_inner()
     }
 
     /// Re-run `start()`
     pub async fn restart(self) -> Result<Self, Error> {
-        let stream = self.stream.into_inner().unwrap().into_inner();
+        let stream = self.stream.into_inner();
         Self::start(stream, self.jid, self.ns).await
     }
 }
@@ -92,7 +90,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin> Sink<Packet> for XMPPStream<S> {
         #[cfg_attr(rustc_least_1_46, allow(unused_mut))] mut self: Pin<&mut Self>,
         item: Packet,
     ) -> Result<(), Self::Error> {
-        Pin::new(&mut self.stream.lock().unwrap().deref_mut())
+        Pin::new(&mut self.stream)
             .start_send(item)
             .map_err(|e| e.into())
     }
@@ -101,7 +99,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin> Sink<Packet> for XMPPStream<S> {
         #[cfg_attr(rustc_least_1_46, allow(unused_mut))] mut self: Pin<&mut Self>,
         cx: &mut Context,
     ) -> Poll<Result<(), Self::Error>> {
-        Pin::new(&mut self.stream.lock().unwrap().deref_mut())
+        Pin::new(&mut self.stream)
             .poll_flush(cx)
             .map_err(|e| e.into())
     }
@@ -110,7 +108,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin> Sink<Packet> for XMPPStream<S> {
         #[cfg_attr(rustc_least_1_46, allow(unused_mut))] mut self: Pin<&mut Self>,
         cx: &mut Context,
     ) -> Poll<Result<(), Self::Error>> {
-        Pin::new(&mut self.stream.lock().unwrap().deref_mut())
+        Pin::new(&mut self.stream)
             .poll_close(cx)
             .map_err(|e| e.into())
     }
@@ -124,7 +122,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin> Stream for XMPPStream<S> {
         #[cfg_attr(rustc_least_1_46, allow(unused_mut))] mut self: Pin<&mut Self>,
         cx: &mut Context,
     ) -> Poll<Option<Self::Item>> {
-        Pin::new(&mut self.stream.lock().unwrap().deref_mut())
+        Pin::new(&mut self.stream)
             .poll_next(cx)
             .map(|result| result.map(|result| result.map_err(|e| e.into())))
     }
