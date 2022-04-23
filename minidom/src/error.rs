@@ -17,11 +17,8 @@ use std::error::Error as StdError;
 /// Our main error type.
 #[derive(Debug)]
 pub enum Error {
-    /// An error from quick_xml.
-    XmlError(::quick_xml::Error),
-
-    /// Error from rxml parsing
-    ParserError(rxml::Error),
+    /// Error from rxml parsing or writing
+    XmlError(rxml::Error),
 
     /// An error which is returned when the end of the document was reached prematurely.
     EndOfDocument,
@@ -41,7 +38,6 @@ impl StdError for Error {
     fn cause(&self) -> Option<&dyn StdError> {
         match self {
             Error::XmlError(e) => Some(e),
-            Error::ParserError(e) => Some(e),
             Error::EndOfDocument => None,
             Error::InvalidPrefix => None,
             Error::MissingNamespace => None,
@@ -54,7 +50,6 @@ impl std::fmt::Display for Error {
     fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
             Error::XmlError(e) => write!(fmt, "XML error: {}", e),
-            Error::ParserError(e) => write!(fmt, "XML parser error: {}", e),
             Error::EndOfDocument => {
                 write!(fmt, "the end of the document has been reached prematurely")
             }
@@ -65,15 +60,15 @@ impl std::fmt::Display for Error {
     }
 }
 
-impl From<::quick_xml::Error> for Error {
-    fn from(err: ::quick_xml::Error) -> Error {
+impl From<rxml::Error> for Error {
+    fn from(err: rxml::Error) -> Error {
         Error::XmlError(err)
     }
 }
 
-impl From<rxml::Error> for Error {
-    fn from(err: rxml::Error) -> Error {
-        Error::ParserError(err)
+impl From<rxml::error::XmlError> for Error {
+    fn from(err: rxml::error::XmlError) -> Error {
+        Error::XmlError(err.into())
     }
 }
 

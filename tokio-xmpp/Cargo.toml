@@ -27,7 +27,7 @@ trust-dns-proto = "0.20"
 trust-dns-resolver = "0.20"
 xmpp-parsers = "0.19"
 minidom = "0.14"
-rxml = "^0.7.1"
+rxml = "^0.8.0"
 webpki-roots = { version = "0.22", optional = true }
 
 [build-dependencies]

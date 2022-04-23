@@ -89,7 +89,7 @@ impl TreeBuilder {
     /// Process a Event that you got out of a RawParser
     pub fn process_event(&mut self, event: RawEvent) -> Result<(), Error> {
         match event {
-            RawEvent::XMLDeclaration(_, _) => {}
+            RawEvent::XmlDeclaration(_, _) => {}
 
             RawEvent::ElementHeadOpen(_, (prefix, name)) => {
                 self.next_tag = Some((
@@ -132,14 +132,8 @@ impl TreeBuilder {
                         .lookup_prefix(&prefix.clone().map(|prefix| prefix.as_str().to_owned()))
                         .ok_or(Error::MissingNamespace)?
                         .to_owned();
-                    let el = Element::new(
-                        name.as_str().to_owned(),
-                        namespace,
-                        Some(prefix.map(|prefix| prefix.as_str().to_owned())),
-                        prefixes,
-                        attrs,
-                        vec![],
-                    );
+                    let el =
+                        Element::new(name.as_str().to_owned(), namespace, prefixes, attrs, vec![]);
                     self.stack.push(el);
                 }
             }

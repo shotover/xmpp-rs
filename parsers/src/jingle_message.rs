@@ -110,13 +110,13 @@ mod tests {
     #[cfg(target_pointer_width = "32")]
     #[test]
     fn test_size() {
-        assert_size!(JingleMI, 92);
+        assert_size!(JingleMI, 76);
     }
 
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
-        assert_size!(JingleMI, 184);
+        assert_size!(JingleMI, 152);
     }
 
     #[test]

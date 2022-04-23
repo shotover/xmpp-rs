@@ -596,7 +596,7 @@ mod tests {
         assert_eq!(html, "Hello world!");
 
         let elem = Element::from(parsed2);
-        assert_eq!(String::from(&elem), "<html xmlns=\"http://jabber.org/protocol/xhtml-im\"><body xmlns=\"http://www.w3.org/1999/xhtml\">Hello world!</body></html>");
+        assert_eq!(String::from(&elem), "<html xmlns='http://jabber.org/protocol/xhtml-im'><body xmlns='http://www.w3.org/1999/xhtml'>Hello world!</body></html>");
     }
 
     #[test]

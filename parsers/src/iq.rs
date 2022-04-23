@@ -233,15 +233,15 @@ mod tests {
     #[cfg(target_pointer_width = "32")]
     #[test]
     fn test_size() {
-        assert_size!(IqType, 136);
-        assert_size!(Iq, 228);
+        assert_size!(IqType, 120);
+        assert_size!(Iq, 212);
     }
 
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
-        assert_size!(IqType, 272);
-        assert_size!(Iq, 456);
+        assert_size!(IqType, 240);
+        assert_size!(Iq, 424);
     }
 
     #[test]

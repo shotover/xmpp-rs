@@ -8,14 +8,13 @@
 
 //! Provides the `Node` struct, which represents a node in the DOM.
 
-use crate::element::{Element, ElementBuilder};
+use crate::element::{Element, ElementBuilder, ItemWriter};
 use crate::error::Result;
 
-use std::collections::BTreeMap;
-use std::io::Write;
+use rxml::writer::Item;
 
-use quick_xml::events::{BytesText, Event};
-use quick_xml::Writer as EventWriter;
+use std::convert::TryInto;
+use std::io::Write;
 
 /// A node in an element tree.
 #[derive(Clone, Debug, Eq)]
@@ -160,15 +159,11 @@ impl Node {
     }
 
     #[doc(hidden)]
-    pub(crate) fn write_to_inner<W: Write>(
-        &self,
-        writer: &mut EventWriter<W>,
-        prefixes: &mut BTreeMap<Option<String>, String>,
-    ) -> Result<()> {
+    pub(crate) fn write_to_inner<W: Write>(&self, writer: &mut ItemWriter<W>) -> Result<()> {
         match *self {
-            Node::Element(ref elmt) => elmt.write_to_inner(writer, prefixes)?,
+            Node::Element(ref elmt) => elmt.write_to_inner(writer)?,
             Node::Text(ref s) => {
-                writer.write_event(Event::Text(BytesText::from_plain_str(s)))?;
+                writer.write(Item::Text((&**s).try_into()?))?;
             }
         }
 

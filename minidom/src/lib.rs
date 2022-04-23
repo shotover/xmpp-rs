@@ -75,8 +75,6 @@
 //! minidom = "*"
 //! ```
 
-pub use quick_xml;
-
 pub mod convert;
 pub mod element;
 pub mod error;

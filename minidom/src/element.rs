@@ -20,18 +20,57 @@ use crate::prefixes::{Namespace, Prefix, Prefixes};
 use crate::tree_builder::TreeBuilder;
 
 use std::collections::{btree_map, BTreeMap};
+use std::convert::{TryFrom, TryInto};
 use std::io::{BufRead, Write};
+use std::sync::Arc;
 
 use std::borrow::Cow;
 use std::str;
 
-use quick_xml::events::{BytesDecl, BytesEnd, BytesStart, Event};
-use quick_xml::Writer as EventWriter;
-use rxml::{EventRead, Lexer, PullDriver, RawParser};
+use rxml::writer::{Encoder, Item, TrackNamespace};
+use rxml::{EventRead, Lexer, PullDriver, RawParser, XmlVersion};
 
 use std::str::FromStr;
 
 use std::slice;
+
+fn encode_and_write<W: Write, T: rxml::writer::TrackNamespace>(
+    item: Item<'_>,
+    enc: &mut Encoder<T>,
+    mut w: W,
+) -> rxml::Result<()> {
+    let mut buf = rxml::bytes::BytesMut::new();
+    enc.encode_into_bytes(item, &mut buf)
+        .expect("encoder driven incorrectly");
+    w.write_all(&buf[..])?;
+    Ok(())
+}
+
+/// Wrapper around a [`std::io::Write`] and an [`rxml::writer::Encoder`], to
+/// provide a simple function to write an rxml Item to a writer.
+pub struct CustomItemWriter<W, T> {
+    writer: W,
+    encoder: Encoder<T>,
+}
+
+impl<W: Write> CustomItemWriter<W, rxml::writer::SimpleNamespaces> {
+    pub(crate) fn new(writer: W) -> Self {
+        Self {
+            writer,
+            encoder: Encoder::new(),
+        }
+    }
+}
+
+impl<W: Write, T: rxml::writer::TrackNamespace> CustomItemWriter<W, T> {
+    pub(crate) fn write(&mut self, item: Item<'_>) -> rxml::Result<()> {
+        encode_and_write(item, &mut self.encoder, &mut self.writer)
+    }
+}
+
+/// Type alias to simplify the use for the default namespace tracking
+/// implementation.
+pub type ItemWriter<W> = CustomItemWriter<W, rxml::writer::SimpleNamespaces>;
 
 /// helper function to escape a `&[u8]` and replace all
 /// xml special characters (<, >, &, ', ") with their corresponding
@@ -81,9 +120,6 @@ pub fn escape(raw: &[u8]) -> Cow<[u8]> {
 pub struct Element {
     name: String,
     namespace: String,
-    /// This is only used when deserializing. If you have to use a custom prefix use
-    /// `ElementBuilder::prefix`.
-    pub(crate) prefix: Option<Prefix>,
     /// Namespace declarations
     pub prefixes: Prefixes,
     attributes: BTreeMap<String, String>,
@@ -123,7 +159,6 @@ impl Element {
     pub(crate) fn new<P: Into<Prefixes>>(
         name: String,
         namespace: String,
-        prefix: Option<Prefix>,
         prefixes: P,
         attributes: BTreeMap<String, String>,
         children: Vec<Node>,
@@ -131,7 +166,6 @@ impl Element {
         Element {
             name,
             namespace,
-            prefix,
             prefixes: prefixes.into(),
             attributes,
             children,
@@ -162,7 +196,6 @@ impl Element {
                 name.as_ref().to_string(),
                 namespace.into(),
                 None,
-                None,
                 BTreeMap::new(),
                 Vec::new(),
             ),
@@ -187,7 +220,6 @@ impl Element {
         Element::new(
             name.into(),
             namespace.into(),
-            None,
             None,
             BTreeMap::new(),
             Vec::new(),
@@ -316,119 +348,66 @@ impl Element {
 
     /// Output a document to a `Writer`.
     pub fn write_to<W: Write>(&self, writer: &mut W) -> Result<()> {
-        self.to_writer(&mut EventWriter::new(writer))
+        self.to_writer(&mut ItemWriter::new(writer))
     }
 
     /// Output a document to a `Writer`.
     pub fn write_to_decl<W: Write>(&self, writer: &mut W) -> Result<()> {
-        self.to_writer_decl(&mut EventWriter::new(writer))
+        self.to_writer_decl(&mut ItemWriter::new(writer))
     }
 
     /// Output the document to quick-xml `Writer`
-    pub fn to_writer<W: Write>(&self, writer: &mut EventWriter<W>) -> Result<()> {
-        self.write_to_inner(writer, &mut BTreeMap::new())
+    pub fn to_writer<W: Write>(&self, writer: &mut ItemWriter<W>) -> Result<()> {
+        self.write_to_inner(writer)
     }
 
     /// Output the document to quick-xml `Writer`
-    pub fn to_writer_decl<W: Write>(&self, writer: &mut EventWriter<W>) -> Result<()> {
-        writer.write_event(Event::Decl(BytesDecl::new(b"1.0", Some(b"utf-8"), None)))?;
-        self.write_to_inner(writer, &mut BTreeMap::new())
+    pub fn to_writer_decl<W: Write>(&self, writer: &mut ItemWriter<W>) -> Result<()> {
+        writer
+            .write(Item::XmlDeclaration(XmlVersion::V1_0))
+            .unwrap(); // TODO: error return
+        self.write_to_inner(writer)
     }
 
     /// Like `write_to()` but without the `<?xml?>` prelude
-    pub fn write_to_inner<W: Write>(
-        &self,
-        writer: &mut EventWriter<W>,
-        all_prefixes: &mut BTreeMap<Prefix, Namespace>,
-    ) -> Result<()> {
-        let local_prefixes: &BTreeMap<Option<String>, String> = self.prefixes.declared_prefixes();
-
-        // Element namespace
-        // If the element prefix hasn't been set yet via a custom prefix, add it.
-        let mut existing_self_prefix: Option<Option<String>> = None;
-        for (prefix, ns) in local_prefixes.iter().chain(all_prefixes.iter()) {
-            if ns == &self.namespace {
-                existing_self_prefix = Some(prefix.clone());
-            }
+    pub fn write_to_inner<W: Write>(&self, writer: &mut ItemWriter<W>) -> Result<()> {
+        for (prefix, namespace) in self.prefixes.declared_prefixes() {
+            assert!(writer.encoder.inner_mut().declare_fixed(
+                prefix.as_ref().map(|x| (&**x).try_into()).transpose()?,
+                Some(Arc::new(namespace.clone().try_into()?))
+            ));
         }
 
-        let mut all_keys = all_prefixes.keys().cloned();
-        let mut local_keys = local_prefixes.keys().cloned();
-        let self_prefix: (Option<String>, bool) = match existing_self_prefix {
-            // No prefix exists already for our namespace
-            None => {
-                if !local_keys.any(|p| p.is_none()) {
-                    // Use the None prefix if available
-                    (None, true)
-                } else {
-                    // Otherwise generate one. Check if it isn't already used, if so increase the
-                    // number until we find a suitable one.
-                    let mut prefix_n = 0u8;
-                    while all_keys.any(|p| p == Some(format!("ns{}", prefix_n))) {
-                        prefix_n += 1;
-                    }
-                    (Some(format!("ns{}", prefix_n)), true)
-                }
-            }
-            // Some prefix has already been declared (or is going to be) for our namespace. We
-            // don't need to declare a new one. We do however need to remember which one to use in
-            // the tag name.
-            Some(prefix) => (prefix, false),
+        let namespace = if self.namespace.len() == 0 {
+            None
+        } else {
+            Some(Arc::new(self.namespace.clone().try_into()?))
         };
+        writer.write(Item::ElementHeadStart(namespace, (*self.name).try_into()?))?;
 
-        let name = match self_prefix {
-            (Some(ref prefix), _) => Cow::Owned(format!("{}:{}", prefix, self.name)),
-            _ => Cow::Borrowed(&self.name),
-        };
-        let mut start = BytesStart::borrowed(name.as_bytes(), name.len());
+        for (key, value) in self.attributes.iter() {
+            let (prefix, name) = <&rxml::NameStr>::try_from(&**key)
+                .unwrap()
+                .split_name()
+                .unwrap();
+            let namespace = match prefix {
+                Some(prefix) => match writer.encoder.inner().lookup_prefix(Some(prefix)) {
+                    Ok(v) => Some(v),
+                    Err(rxml::writer::PrefixError::Undeclared) => return Err(Error::InvalidPrefix),
+                },
+                None => None,
+            };
+            writer.write(Item::Attribute(namespace, name, (&**value).try_into()?))?;
+        }
 
-        // Write self prefix if necessary
-        match self_prefix {
-            (Some(ref p), true) => {
-                let key = format!("xmlns:{}", p);
-                start.push_attribute((key.as_bytes(), self.namespace.as_bytes()));
-                all_prefixes.insert(self_prefix.0, self.namespace.clone());
-            }
-            (None, true) => {
-                let key = String::from("xmlns");
-                start.push_attribute((key.as_bytes(), self.namespace.as_bytes()));
-                all_prefixes.insert(self_prefix.0, self.namespace.clone());
-            }
-            _ => (),
-        };
-
-        // Custom prefixes/namespace sets
-        for (prefix, ns) in local_prefixes {
-            match all_prefixes.get(prefix) {
-                p @ Some(_) if p == prefix.as_ref() => (),
-                _ => {
-                    let key = match prefix {
-                        None => String::from("xmlns"),
-                        Some(p) => format!("xmlns:{}", p),
-                    };
-
-                    start.push_attribute((key.as_bytes(), ns.as_ref()));
-                    all_prefixes.insert(prefix.clone(), ns.clone());
-                }
+        if !self.children.is_empty() {
+            writer.write(Item::ElementHeadEnd)?;
+            for child in self.children.iter() {
+                child.write_to_inner(writer)?;
             }
         }
+        writer.write(Item::ElementFoot)?;
 
-        for (key, value) in &self.attributes {
-            start.push_attribute((key.as_bytes(), escape(value.as_bytes()).as_ref()));
-        }
-
-        if self.children.is_empty() {
-            writer.write_event(Event::Empty(start))?;
-            return Ok(());
-        }
-
-        writer.write_event(Event::Start(start))?;
-
-        for child in &self.children {
-            child.write_to_inner(writer, &mut all_prefixes.clone())?;
-        }
-
-        writer.write_event(Event::End(BytesEnd::borrowed(name.as_bytes())))?;
         Ok(())
     }
 
@@ -888,7 +867,6 @@ mod tests {
         let elem = Element::new(
             "name".to_owned(),
             "namespace".to_owned(),
-            None,
             (None, "namespace".to_owned()),
             BTreeMap::from_iter(vec![("name".to_string(), "value".to_string())].into_iter()),
             Vec::new(),

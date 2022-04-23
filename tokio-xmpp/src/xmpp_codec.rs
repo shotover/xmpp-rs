@@ -336,7 +336,7 @@ mod tests {
         assert_eq!(
             framed.get_ref().get_ref(),
             &format!(
-                "<message xmlns=\"jabber:client\"><body>{}</body></message>",
+                "<message xmlns='jabber:client'><body>{}</body></message>",
                 text
             )
             .as_bytes()

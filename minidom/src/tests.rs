@@ -13,7 +13,7 @@
 use crate::element::Element;
 use crate::error::Error;
 
-const TEST_STRING: &'static [u8] = br#"<root xmlns="root_ns" a="b" xml:lang="en">meow<child c="d"/><child xmlns="child_ns" d="e" xml:lang="fr"/>nya</root>"#;
+const TEST_STRING: &'static [u8] = br#"<root xmlns='root_ns' a="b" xml:lang="en">meow<child c="d"/><child xmlns='child_ns' d="e" xml:lang="fr"/>nya</root>"#;
 
 fn build_test_tree() -> Element {
     let mut root = Element::builder("root", "root_ns")
@@ -151,7 +151,7 @@ fn writer_with_decl_works() {
         root.write_to_decl(&mut writer).unwrap();
     }
     let result = format!(
-        r#"<?xml version="1.0" encoding="utf-8"?>{}"#,
+        "<?xml version='1.0' encoding='utf-8'?>\n{}",
         String::from_utf8(TEST_STRING.to_owned()).unwrap()
     );
     assert_eq!(String::from_utf8(writer).unwrap(), result);
@@ -167,7 +167,7 @@ fn writer_with_prefix() {
         .build();
     assert_eq!(
         String::from(&root),
-        r#"<p1:root xmlns="ns2" xmlns:p1="ns1"/>"#,
+        r#"<p1:root xmlns='ns2' xmlns:p1='ns1'/>"#,
     );
 }
 
@@ -177,7 +177,7 @@ fn writer_no_prefix_namespace() {
     // TODO: Note that this isn't exactly equal to a None prefix. it's just that the None prefix is
     // the most obvious when it's not already used. Maybe fix tests so that it only checks that the
     // prefix used equals the one declared for the namespace.
-    assert_eq!(String::from(&root), r#"<root xmlns="ns1"/>"#);
+    assert_eq!(String::from(&root), r#"<root xmlns='ns1'/>"#);
 }
 
 #[test]
@@ -185,7 +185,7 @@ fn writer_no_prefix_namespace_child() {
     let child = Element::builder("child", "ns1").build();
     let root = Element::builder("root", "ns1").append(child).build();
     // TODO: Same remark as `writer_no_prefix_namespace`.
-    assert_eq!(String::from(&root), r#"<root xmlns="ns1"><child/></root>"#);
+    assert_eq!(String::from(&root), r#"<root xmlns='ns1'><child/></root>"#);
 
     let child = Element::builder("child", "ns2")
         .prefix(None, "ns3")
@@ -195,7 +195,7 @@ fn writer_no_prefix_namespace_child() {
     // TODO: Same remark as `writer_no_prefix_namespace`.
     assert_eq!(
         String::from(&root),
-        r#"<root xmlns="ns1"><ns0:child xmlns:ns0="ns2" xmlns="ns3"/></root>"#
+        r#"<root xmlns='ns1'><tns0:child xmlns='ns3' xmlns:tns0='ns2'/></root>"#
     );
 }
 
@@ -209,7 +209,7 @@ fn writer_prefix_namespace_child() {
         .build();
     assert_eq!(
         String::from(&root),
-        r#"<p1:root xmlns:p1="ns1"><p1:child/></p1:root>"#
+        r#"<p1:root xmlns:p1='ns1'><p1:child/></p1:root>"#
     );
 }
 
@@ -227,7 +227,7 @@ fn writer_with_prefix_deduplicate() {
         .build();
     assert_eq!(
         String::from(&root),
-        r#"<p1:root xmlns="ns2" xmlns:p1="ns1"><p1:child/></p1:root>"#,
+        r#"<p1:root xmlns='ns2' xmlns:p1='ns1'><p1:child/></p1:root>"#,
     );
 
     // Ensure descendants don't just reuse ancestors' prefixes that have been shadowed in between
@@ -236,7 +236,7 @@ fn writer_with_prefix_deduplicate() {
     let root = Element::builder("root", "ns1").append(child).build();
     assert_eq!(
         String::from(&root),
-        r#"<root xmlns="ns1"><child xmlns="ns2"><grandchild xmlns="ns1"/></child></root>"#,
+        r#"<root xmlns='ns1'><child xmlns='ns2'><grandchild xmlns='ns1'/></child></root>"#,
     );
 }
 
@@ -251,7 +251,7 @@ fn writer_escapes_attributes() {
     }
     assert_eq!(
         String::from_utf8(writer).unwrap(),
-        r#"<root xmlns="ns1" a="&quot;Air&quot; quotes"/>"#
+        r#"<root xmlns='ns1' a="&#34;Air&#34; quotes"/>"#
     );
 }
 
@@ -264,7 +264,7 @@ fn writer_escapes_text() {
     }
     assert_eq!(
         String::from_utf8(writer).unwrap(),
-        r#"<root xmlns="ns1">&lt;3</root>"#
+        r#"<root xmlns='ns1'>&lt;3</root>"#
     );
 }
 
@@ -431,15 +431,15 @@ fn fail_comments() {
 #[test]
 fn xml_error() {
     match "<a xmlns='ns1'></b>".parse::<Element>() {
-        Err(crate::error::Error::ParserError(rxml::Error::NotWellFormed(
-            rxml::error::WFError::ElementMismatch,
+        Err(crate::error::Error::XmlError(rxml::Error::Xml(
+            rxml::error::XmlError::ElementMismatch,
         ))) => (),
         err => panic!("No or wrong error: {:?}", err),
     }
 
     match "<a xmlns='ns1'></".parse::<Element>() {
-        Err(crate::error::Error::ParserError(rxml::Error::NotWellFormed(
-            rxml::error::WFError::InvalidEof(_),
+        Err(crate::error::Error::XmlError(rxml::Error::Xml(
+            rxml::error::XmlError::InvalidEof(_),
         ))) => (),
         err => panic!("No or wrong error: {:?}", err),
     }

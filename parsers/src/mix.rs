@@ -346,46 +346,46 @@ mod tests {
     fn serialise() {
         let elem: Element = Join::from_nick_and_nodes("coucou", &["foo", "bar"]).into();
         let xml = String::from(&elem);
-        assert_eq!(xml, "<join xmlns=\"urn:xmpp:mix:core:1\"><nick>coucou</nick><subscribe node=\"foo\"/><subscribe node=\"bar\"/></join>");
+        assert_eq!(xml, "<join xmlns='urn:xmpp:mix:core:1'><nick>coucou</nick><subscribe node=\"foo\"/><subscribe node=\"bar\"/></join>");
 
         let elem: Element = UpdateSubscription::from_nodes(&["foo", "bar"]).into();
         let xml = String::from(&elem);
-        assert_eq!(xml, "<update-subscription xmlns=\"urn:xmpp:mix:core:1\"><subscribe node=\"foo\"/><subscribe node=\"bar\"/></update-subscription>");
+        assert_eq!(xml, "<update-subscription xmlns='urn:xmpp:mix:core:1'><subscribe node=\"foo\"/><subscribe node=\"bar\"/></update-subscription>");
 
         let elem: Element = Leave.into();
         let xml = String::from(&elem);
-        assert_eq!(xml, "<leave xmlns=\"urn:xmpp:mix:core:1\"/>");
+        assert_eq!(xml, "<leave xmlns='urn:xmpp:mix:core:1'/>");
 
         let elem: Element = SetNick::new("coucou").into();
         let xml = String::from(&elem);
         assert_eq!(
             xml,
-            "<setnick xmlns=\"urn:xmpp:mix:core:1\"><nick>coucou</nick></setnick>"
+            "<setnick xmlns='urn:xmpp:mix:core:1'><nick>coucou</nick></setnick>"
         );
 
         let elem: Element = Mix::new("coucou", "coucou@example").into();
         let xml = String::from(&elem);
         assert_eq!(
             xml,
-            "<mix xmlns=\"urn:xmpp:mix:core:1\"><nick>coucou</nick><jid>coucou@example</jid></mix>"
+            "<mix xmlns='urn:xmpp:mix:core:1'><nick>coucou</nick><jid>coucou@example</jid></mix>"
         );
 
         let elem: Element = Create::new().into();
         let xml = String::from(&elem);
-        assert_eq!(xml, "<create xmlns=\"urn:xmpp:mix:core:1\"/>");
+        assert_eq!(xml, "<create xmlns='urn:xmpp:mix:core:1'/>");
 
         let elem: Element = Create::from_channel_id("coucou").into();
         let xml = String::from(&elem);
         assert_eq!(
             xml,
-            "<create xmlns=\"urn:xmpp:mix:core:1\" channel=\"coucou\"/>"
+            "<create xmlns='urn:xmpp:mix:core:1' channel=\"coucou\"/>"
         );
 
         let elem: Element = Destroy::new("coucou").into();
         let xml = String::from(&elem);
         assert_eq!(
             xml,
-            "<destroy xmlns=\"urn:xmpp:mix:core:1\" channel=\"coucou\"/>"
+            "<destroy xmlns='urn:xmpp:mix:core:1' channel=\"coucou\"/>"
         );
     }
 }
