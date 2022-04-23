@@ -335,10 +335,10 @@ mod tests {
     #[cfg(target_pointer_width = "32")]
     #[test]
     fn test_size() {
-        assert_size!(Range, 40);
-        assert_size!(File, 128);
-        assert_size!(Description, 128);
-        assert_size!(Checksum, 144);
+        assert_size!(Range, 32);
+        assert_size!(File, 112);
+        assert_size!(Description, 112);
+        assert_size!(Checksum, 128);
         assert_size!(Received, 16);
     }
 

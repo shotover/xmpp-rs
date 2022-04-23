@@ -247,6 +247,18 @@ mod tests {
     use super::*;
     use std::convert::TryInto;
 
+    #[cfg(target_pointer_width = "32")]
+    #[test]
+    fn test_size() {
+        assert_size!(Event, 1);
+        assert_size!(Insert, 20);
+        assert_size!(Erase, 12);
+        assert_size!(Wait, 4);
+        assert_size!(Action, 24);
+        assert_size!(Rtt, 32);
+    }
+
+    #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
         assert_size!(Event, 1);
