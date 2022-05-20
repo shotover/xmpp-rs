@@ -24,7 +24,7 @@
 //!
 //! ## More complex usage
 //!
-//! ```rust
+//! ```rust,ignore
 //! #[macro_use] extern crate sasl;
 //!
 //! use sasl::server::{Validator, Provider, Mechanism as ServerMechanism, Response};
