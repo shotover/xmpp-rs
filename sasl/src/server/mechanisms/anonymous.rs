@@ -1,5 +1,6 @@
 use crate::common::Identity;
 use crate::server::{Mechanism, MechanismError, Response};
+
 use getrandom::getrandom;
 
 pub struct Anonymous;

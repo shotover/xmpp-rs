@@ -1,7 +1,11 @@
-use crate::common::scram::DeriveError;
-use crate::common::Credentials;
-use hmac::digest::InvalidLength;
 use std::fmt;
+
+use crate::common::Credentials;
+
+#[cfg(feature = "scram")]
+use crate::common::scram::DeriveError;
+#[cfg(feature = "scram")]
+use hmac::digest::InvalidLength;
 
 #[derive(Debug, PartialEq)]
 pub enum MechanismError {
@@ -18,7 +22,9 @@ pub enum MechanismError {
     NoServerNonce,
     NoServerSalt,
     NoServerIterations,
+    #[cfg(feature = "scram")]
     DeriveError(DeriveError),
+    #[cfg(feature = "scram")]
     InvalidKeyLength(InvalidLength),
     InvalidState,
 
@@ -27,12 +33,14 @@ pub enum MechanismError {
     NoSignatureInSuccessResponse,
 }
 
+#[cfg(feature = "scram")]
 impl From<DeriveError> for MechanismError {
     fn from(err: DeriveError) -> MechanismError {
         MechanismError::DeriveError(err)
     }
 }
 
+#[cfg(feature = "scram")]
 impl From<InvalidLength> for MechanismError {
     fn from(err: InvalidLength) -> MechanismError {
         MechanismError::InvalidKeyLength(err)
@@ -60,7 +68,9 @@ impl fmt::Display for MechanismError {
                 MechanismError::NoServerNonce => "no server nonce",
                 MechanismError::NoServerSalt => "no server salt",
                 MechanismError::NoServerIterations => "no server iterations",
+                #[cfg(feature = "scram")]
                 MechanismError::DeriveError(err) => return write!(fmt, "derive error: {}", err),
+                #[cfg(feature = "scram")]
                 MechanismError::InvalidKeyLength(err) =>
                     return write!(fmt, "invalid key length: {}", err),
                 MechanismError::InvalidState => "not in the right state to receive this response",

@@ -1,7 +1,9 @@
-use crate::common::scram::DeriveError;
 use crate::common::Identity;
 use crate::secret::Secret;
 use std::fmt;
+
+#[cfg(feature = "scram")]
+use crate::common::scram::DeriveError;
 
 #[macro_export]
 macro_rules! impl_validator_using_provider {
@@ -33,6 +35,7 @@ pub trait Validator<S: Secret> {
 #[derive(Debug, PartialEq)]
 pub enum ProviderError {
     AuthenticationFailed,
+    #[cfg(feature = "scram")]
     DeriveError(DeriveError),
 }
 
@@ -61,7 +64,9 @@ pub enum MechanismError {
     ProviderError(ProviderError),
 
     CannotDecodeResponse,
+    #[cfg(feature = "scram")]
     InvalidKeyLength(hmac::digest::InvalidLength),
+    #[cfg(any(feature = "scram", feature = "anonymous"))]
     RandomFailure(getrandom::Error),
     NoProof,
     CannotDecodeProof,
@@ -69,6 +74,7 @@ pub enum MechanismError {
     SaslSessionAlreadyOver,
 }
 
+#[cfg(feature = "scram")]
 impl From<DeriveError> for ProviderError {
     fn from(err: DeriveError) -> ProviderError {
         ProviderError::DeriveError(err)
@@ -93,12 +99,14 @@ impl From<ValidatorError> for MechanismError {
     }
 }
 
+#[cfg(feature = "scram")]
 impl From<hmac::digest::InvalidLength> for MechanismError {
     fn from(err: hmac::digest::InvalidLength) -> MechanismError {
         MechanismError::InvalidKeyLength(err)
     }
 }
 
+#[cfg(any(feature = "scram", feature = "anonymous"))]
 impl From<getrandom::Error> for MechanismError {
     fn from(err: getrandom::Error) -> MechanismError {
         MechanismError::RandomFailure(err)
@@ -145,7 +153,9 @@ impl fmt::Display for MechanismError {
             MechanismError::ProviderError(err) => write!(fmt, "provider error: {}", err),
 
             MechanismError::CannotDecodeResponse => write!(fmt, "can’t decode response"),
+            #[cfg(feature = "scram")]
             MechanismError::InvalidKeyLength(err) => write!(fmt, "invalid key length: {}", err),
+            #[cfg(any(feature = "scram", feature = "anonymous"))]
             MechanismError::RandomFailure(err) => {
                 write!(fmt, "failure to get random data: {}", err)
             }

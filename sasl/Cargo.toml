@@ -15,8 +15,9 @@ edition = "2018"
 gitlab = { repository = "lumi/sasl-rs" }
 
 [features]
-default = ["scram"]
+default = ["scram", "anonymous"]
 scram = ["base64", "getrandom", "sha-1", "sha2", "hmac", "pbkdf2"]
+anonymous = ["getrandom"]
 
 [dependencies]
 base64 = { version = "0.13", optional = true }
