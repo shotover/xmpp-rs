@@ -1,6 +1,6 @@
 [package]
 name = "tokio-xmpp"
-version = "3.1.0"
+version = "3.2.0"
 authors = ["Astro <astro@spaceboyz.net>", "Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>", "pep <pep+code@bouah.net>", "O01eg <o01eg@yandex.ru>", "SonnyX <randy@vonderweide.nl>", "Paul Fariello <paul@fariello.eu>"]
 description = "Asynchronous XMPP for Rust with tokio"
 license = "MPL-2.0"
@@ -26,7 +26,7 @@ tokio-util = { version = "0.6", features = ["codec"] }
 trust-dns-proto = "0.20"
 trust-dns-resolver = "0.20"
 xmpp-parsers = "0.19"
-minidom = "0.14"
+minidom = "0.15"
 rxml = "^0.8.0"
 webpki-roots = { version = "0.22", optional = true }
 
