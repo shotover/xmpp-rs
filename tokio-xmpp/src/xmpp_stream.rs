@@ -2,6 +2,7 @@
 
 use futures::sink::Send;
 use futures::{sink::SinkExt, task::Poll, Sink, Stream};
+use rand::{thread_rng, Rng};
 use std::pin::Pin;
 use std::task::Context;
 use tokio::io::{AsyncRead, AsyncWrite};
@@ -12,6 +13,11 @@ use crate::stream_features::StreamFeatures;
 use crate::stream_start;
 use crate::xmpp_codec::{Packet, XMPPCodec};
 use crate::Error;
+
+fn make_id() -> String {
+    let id: u64 = thread_rng().gen();
+    format!("{}", id)
+}
 
 /// Wraps a binary stream (tokio's `AsyncRead + AsyncWrite`) to decode
 /// and encode XMPP packets.
@@ -72,7 +78,11 @@ impl<S: AsyncRead + AsyncWrite + Unpin> XMPPStream<S> {
 impl<S: AsyncRead + AsyncWrite + Unpin> XMPPStream<S> {
     /// Convenience method
     pub fn send_stanza<E: Into<Element>>(&mut self, e: E) -> Send<Self, Packet> {
-        self.send(Packet::Stanza(e.into()))
+        let mut el: Element = e.into();
+        if el.attr("id").is_none() {
+            el.set_attr("id", make_id());
+        }
+        self.send(Packet::Stanza(el))
     }
 }
 
