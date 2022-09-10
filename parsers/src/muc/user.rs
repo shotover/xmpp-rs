@@ -8,6 +8,8 @@
 use crate::ns;
 use crate::util::error::Error;
 use crate::Element;
+use crate::presence::PresencePayload;
+
 use jid::FullJid;
 use std::convert::TryFrom;
 
@@ -233,9 +235,12 @@ generate_element!(
     ]
 );
 
+impl PresencePayload for MucUser {}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::presence::{Presence, Type as PresenceType};
 
     #[test]
     fn test_simple() {
@@ -664,5 +669,15 @@ mod tests {
 
         let serialized: Element = item.into();
         assert_eq!(serialized, reference);
+    }
+
+    #[test]
+    fn presence_payload() {
+        let elem: Element = "<x xmlns='http://jabber.org/protocol/muc#user'/>"
+            .parse()
+            .unwrap();
+        let presence = Presence::new(PresenceType::None)
+            .with_payloads(vec![elem]);
+        assert_eq!(presence.payloads.len(), 1);
     }
 }
