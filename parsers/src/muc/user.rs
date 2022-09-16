@@ -6,9 +6,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::ns;
+use crate::presence::PresencePayload;
 use crate::util::error::Error;
 use crate::Element;
-use crate::presence::PresencePayload;
 
 use jid::FullJid;
 use std::convert::TryFrom;
@@ -676,8 +676,7 @@ mod tests {
         let elem: Element = "<x xmlns='http://jabber.org/protocol/muc#user'/>"
             .parse()
             .unwrap();
-        let presence = Presence::new(PresenceType::None)
-            .with_payloads(vec![elem]);
+        let presence = Presence::new(PresenceType::None).with_payloads(vec![elem]);
         assert_eq!(presence.payloads.len(), 1);
     }
 }
