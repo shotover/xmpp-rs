@@ -34,7 +34,7 @@ rustfmt:
   stage: lint
   script:
     - rustup component add rustfmt
-    - find -type f -iname '*.rs' -not -path './target/*' | xargs rustfmt --check --edition 2018
+    - cargo fmt --check
   extends:
     - .stable
 
