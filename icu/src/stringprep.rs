@@ -11,7 +11,7 @@ use crate::Strict;
 use std::ptr::null_mut;
 
 /// Struct representing a given stringprep profile.
-pub struct Stringprep {
+pub(crate) struct Stringprep {
     inner: *mut UStringPrepProfile,
 }
 
@@ -30,7 +30,7 @@ impl Stringprep {
     ///
     /// # Panics
     /// Panics if ICU doesn’t return a valid UTF-16 string, which should never happen.
-    pub fn stringprep(&self, input: &str, strict: Strict) -> Result<String, Error> {
+    pub(crate) fn stringprep(&self, input: &str, strict: Strict) -> Result<String, Error> {
         if input.len() > 1023 {
             return Err(Error::TooLong);
         }

@@ -18,7 +18,7 @@ use crate::bindings::{
 pub use crate::error::Error;
 pub use crate::idna2008::Idna;
 pub use crate::spoof::SpoofChecker;
-pub use crate::stringprep::Stringprep;
+use crate::stringprep::Stringprep;
 
 /// How unassigned codepoints should be handled.
 pub enum Strict {
@@ -31,25 +31,10 @@ pub enum Strict {
 
 /// Main struct of this module, exposing the needed ICU functions to JID.
 pub struct Icu {
-    /// Perform stringprep using the Nameprep profile.
-    ///
-    /// See [RFC3491](https://tools.ietf.org/html/rfc3491).
-    pub nameprep: Stringprep,
-
-    /// Perform stringprep using the Nodeprep profile.
-    ///
-    /// See [RFC6122 appendix A](https://tools.ietf.org/html/rfc6122#appendix-A).
-    pub nodeprep: Stringprep,
-
-    /// Perform stringprep using the Resourceprep profile.
-    ///
-    /// See [RFC6122 appendix A](https://tools.ietf.org/html/rfc6122#appendix-A).
-    pub resourceprep: Stringprep,
-
-    /// Perform stringprep using the Saslprep profile.
-    ///
-    /// See [RFC4013](https://tools.ietf.org/html/rfc4013).
-    pub saslprep: Stringprep,
+    nameprep: Stringprep,
+    nodeprep: Stringprep,
+    resourceprep: Stringprep,
+    saslprep: Stringprep,
 
     /// IDNA2008 support.
     ///
@@ -85,6 +70,34 @@ impl Icu {
             idna2008,
             spoofchecker,
         })
+    }
+
+    /// Perform stringprep using the Nameprep profile.
+    ///
+    /// See [RFC3491](https://tools.ietf.org/html/rfc3491).
+    pub fn nameprep(&self, string: &str, strict: Strict) -> Result<String, Error> {
+        self.nameprep.stringprep(string, strict)
+    }
+
+    /// Perform stringprep using the Nodeprep profile.
+    ///
+    /// See [RFC6122 appendix A](https://tools.ietf.org/html/rfc6122#appendix-A).
+    pub fn nodeprep(&self, string: &str, strict: Strict) -> Result<String, Error> {
+        self.nodeprep.stringprep(string, strict)
+    }
+
+    /// Perform stringprep using the Resourceprep profile.
+    ///
+    /// See [RFC6122 appendix A](https://tools.ietf.org/html/rfc6122#appendix-A).
+    pub fn resourceprep(&self, string: &str, strict: Strict) -> Result<String, Error> {
+        self.resourceprep.stringprep(string, strict)
+    }
+
+    /// Perform stringprep using the Saslprep profile.
+    ///
+    /// See [RFC4013](https://tools.ietf.org/html/rfc4013).
+    pub fn saslprep(&self, string: &str, strict: Strict) -> Result<String, Error> {
+        self.saslprep.stringprep(string, strict)
     }
 }
 
