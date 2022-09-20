@@ -1,6 +1,6 @@
 //! Crate wrapping what we need from ICU’s C API for JIDs.
 //!
-//! See http://site.icu-project.org/
+//! See <http://site.icu-project.org/>
 
 use crate::bindings::{
     icu_spoof_get_skeleton, icu_spoof_open, icu_spoof_set_checks, UErrorCode, USpoofChecker,

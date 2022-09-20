@@ -1,6 +1,6 @@
 //! Crate wrapping what we need from ICU’s C API for JIDs.
 //!
-//! See http://site.icu-project.org/
+//! See <http://site.icu-project.org/>
 
 use crate::bindings::{
     icu_stringprep_open, icu_stringprep_prepare, UChar, UErrorCode, UStringPrepProfile,
