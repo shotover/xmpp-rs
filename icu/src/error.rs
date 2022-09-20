@@ -6,7 +6,7 @@ use crate::bindings::{icu_error_code_to_name, UErrorCode};
 use std::ffi::CStr;
 
 /// Errors this library can produce.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum Error {
     /// An error produced by one of the ICU functions.
     Icu(String),
@@ -23,22 +23,6 @@ pub enum Error {
     /// Some string was too long for its profile in JID.
     TooLong,
 }
-
-impl PartialEq for Error {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (Error::Icu(s1), Error::Icu(s2)) => s1 == s2,
-            (Error::Idna(s1), Error::Idna(s2)) => s1 == s2,
-            // TODO: compare by something here?
-            (Error::Utf8(_s1), Error::Utf8(_s2)) => true,
-            (Error::Utf16(_s1), Error::Utf16(_s2)) => true,
-            (Error::TooLong, Error::TooLong) => true,
-            _ => false,
-        }
-    }
-}
-
-impl Eq for Error {}
 
 impl Error {
     pub(crate) fn from_icu_code(err: UErrorCode) -> Error {
