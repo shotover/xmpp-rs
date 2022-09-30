@@ -513,7 +513,7 @@ mod tests {
     #[test]
     fn test_size() {
         assert_size!(XhtmlIm, 48);
-        assert_size!(Child, 112);
+        assert_size!(Child, 104);
         assert_size!(Tag, 104);
     }
 

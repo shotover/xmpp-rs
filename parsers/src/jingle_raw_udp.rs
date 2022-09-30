@@ -73,7 +73,7 @@ mod tests {
     #[test]
     fn test_size() {
         assert_size!(Transport, 24);
-        assert_size!(Candidate, 56);
+        assert_size!(Candidate, 48);
     }
 
     #[test]
