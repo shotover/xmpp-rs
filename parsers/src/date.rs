@@ -73,7 +73,7 @@ mod tests {
         assert_eq!(date.0.minute(), 08);
         assert_eq!(date.0.second(), 25);
         assert_eq!(date.0.nanosecond(), 0);
-        assert_eq!(date.0.timezone(), FixedOffset::east(0));
+        assert_eq!(date.0.timezone(), FixedOffset::east_opt(0).unwrap());
     }
 
     #[test]

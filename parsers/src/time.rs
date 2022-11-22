@@ -56,8 +56,9 @@ impl TryFrom<Element> for TimeResult {
                 check_no_children!(child, "utc");
                 check_no_attributes!(child, "utc");
                 let date_time = DateTime::from_str(&child.text())?;
-                if date_time.timezone() != FixedOffset::east(0) {
-                    return Err(Error::ParseError("Non-UTC timezone for utc element."));
+                match FixedOffset::east_opt(0) {
+                    Some(tz) if date_time.timezone() == tz => (),
+                    _ => return Err(Error::ParseError("Non-UTC timezone for utc element.")),
                 }
                 utc = Some(date_time);
             } else {
@@ -78,8 +79,11 @@ impl From<TimeResult> for Element {
         Element::builder("time", ns::TIME)
             .append(Element::builder("tzo", ns::TIME).append(format!("{}", time.0.timezone())))
             .append(
-                Element::builder("utc", ns::TIME)
-                    .append(time.0.with_timezone(FixedOffset::east(0)).format("%FT%TZ")),
+                Element::builder("utc", ns::TIME).append(
+                    time.0
+                        .with_timezone(FixedOffset::east_opt(0).unwrap())
+                        .format("%FT%TZ"),
+                ),
             )
             .build()
     }
@@ -104,7 +108,7 @@ mod tests {
                 .unwrap();
         let elem1 = elem.clone();
         let time = TimeResult::try_from(elem).unwrap();
-        assert_eq!(time.0.timezone(), FixedOffset::west(6 * 3600));
+        assert_eq!(time.0.timezone(), FixedOffset::west_opt(6 * 3600).unwrap());
         assert_eq!(
             time.0,
             DateTime::from_str("2006-12-19T12:58:35-05:00").unwrap()
