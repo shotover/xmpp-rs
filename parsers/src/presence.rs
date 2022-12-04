@@ -147,7 +147,7 @@ impl IntoAttributeValue for Type {
 }
 
 /// The main structure representing the `<presence/>` stanza.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Presence {
     /// The sender of this presence.
     pub from: Option<Jid>,
