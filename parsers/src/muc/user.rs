@@ -16,61 +16,61 @@ use std::convert::TryFrom;
 generate_attribute_enum!(
 /// Lists all of the possible status codes used in MUC presences.
 Status, "status", MUC_USER, "code", {
-    /// Inform user that any occupant is allowed to see the user's full JID
+    /// 100: Inform user that any occupant is allowed to see the user's full JID
     NonAnonymousRoom => 100,
 
-    /// Inform user that his or her affiliation changed while not in the room
+    /// 101: Inform user that his or her affiliation changed while not in the room
     AffiliationChange => 101,
 
-    /// Inform occupants that room now shows unavailable members
+    /// 102: Inform occupants that room now shows unavailable members
     ConfigShowsUnavailableMembers => 102,
 
-    /// Inform occupants that room now does not show unavailable members
+    /// 103: Inform occupants that room now does not show unavailable members
     ConfigHidesUnavailableMembers => 103,
 
-    /// Inform occupants that a non-privacy-related room configuration change has occurred
+    /// 104: Inform occupants that a non-privacy-related room configuration change has occurred
     ConfigNonPrivacyRelated => 104,
 
-    /// Inform user that presence refers to itself
+    /// 110: Inform user that presence refers to itself
     SelfPresence => 110,
 
-    /// Inform occupants that room logging is now enabled
+    /// 170: Inform occupants that room logging is now enabled
     ConfigRoomLoggingEnabled => 170,
 
-    /// Inform occupants that room logging is now disabled
+    /// 171: Inform occupants that room logging is now disabled
     ConfigRoomLoggingDisabled => 171,
 
-    /// Inform occupants that the room is now non-anonymous
+    /// 172: Inform occupants that the room is now non-anonymous
     ConfigRoomNonAnonymous => 172,
 
-    /// Inform occupants that the room is now semi-anonymous
+    /// 173: Inform occupants that the room is now semi-anonymous
     ConfigRoomSemiAnonymous => 173,
 
-    /// Inform user that a new room has been created
+    /// 201: Inform user that a new room has been created
     RoomHasBeenCreated => 201,
 
-    /// Inform user that service has assigned or modified occupant's roomnick
+    /// 210: Inform user that service has assigned or modified occupant's roomnick
     AssignedNick => 210,
 
-    /// Inform user that he or she has been banned from the room
+    /// 301: Inform user that he or she has been banned from the room
     Banned => 301,
 
-    /// Inform all occupants of new room nickname
+    /// 303: Inform all occupants of new room nickname
     NewNick => 303,
 
-    /// Inform user that he or she has been kicked from the room
+    /// 307: Inform user that he or she has been kicked from the room
     Kicked => 307,
 
-    /// Inform user that he or she is being removed from the room
+    /// 321: Inform user that he or she is being removed from the room
     /// because of an affiliation change
     RemovalFromRoom => 321,
 
-    /// Inform user that he or she is being removed from the room
+    /// 322: Inform user that he or she is being removed from the room
     /// because the room has been changed to members-only and the
     /// user is not a member
     ConfigMembersOnly => 322,
 
-    /// Inform user that he or she is being removed from the room
+    /// 332: Inform user that he or she is being removed from the room
     /// because the MUC service is being shut down
     ServiceShutdown => 332,
 });
