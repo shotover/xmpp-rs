@@ -1,5 +1,5 @@
 Version 0.19.2:
-xxxx-xx-xx
+2022-12-17  Maxime “pep” Buquet <pep@bouah.net>
     * Improvements:
         - Derive PartialEq on Presence
         - impl PresencePayload for muc::user::MucUser.
