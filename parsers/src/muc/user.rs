@@ -73,6 +73,9 @@ Status, "status", MUC_USER, "code", {
     /// 332: Inform user that he or she is being removed from the room
     /// because the MUC service is being shut down
     ServiceShutdown => 332,
+
+    /// 333: Inform a user that they are being removed from the room for technical reasons
+    ServiceErrorKick => 333,
 });
 
 /// Optional <actor/> element used in <item/> elements inside presence stanzas of type
