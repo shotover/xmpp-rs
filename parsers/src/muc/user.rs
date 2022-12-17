@@ -52,29 +52,29 @@ Status, "status", MUC_USER, "code", {
     /// 210: Inform user that service has assigned or modified occupant's roomnick
     AssignedNick => 210,
 
-    /// 301: Inform user that he or she has been banned from the room
+    /// 301: Inform user that they have been banned from the room
     Banned => 301,
 
     /// 303: Inform all occupants of new room nickname
     NewNick => 303,
 
-    /// 307: Inform user that he or she has been kicked from the room
+    /// 307: Inform user that they have been kicked from the room
     Kicked => 307,
 
-    /// 321: Inform user that he or she is being removed from the room
+    /// 321: Inform user that they are being removed from the room
     /// because of an affiliation change
     RemovalFromRoom => 321,
 
-    /// 322: Inform user that he or she is being removed from the room
+    /// 322: Inform user that they are being removed from the room
     /// because the room has been changed to members-only and the
     /// user is not a member
     ConfigMembersOnly => 322,
 
-    /// 332: Inform user that he or she is being removed from the room
+    /// 332: Inform user that they are being removed from the room
     /// because the MUC service is being shut down
     ServiceShutdown => 332,
 
-    /// 333: Inform a user that they are being removed from the room for technical reasons
+    /// 333: Inform user that they are being removed from the room for technical reasons
     ServiceErrorKick => 333,
 });
 
