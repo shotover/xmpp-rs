@@ -1,3 +1,21 @@
+Version 0.19.2:
+xxxx-xx-xx
+    * Improvements:
+        - Derive PartialEq on Presence
+        - impl PresencePayload for muc::user::MucUser.
+        - New muc::user::Status::ServiceErrorKick variant for the 333 status
+          code.
+        - Update deprecated chrono code (FixedOffset::{east,west} to
+          {east,west}_opt).
+
+Version 0.19.1:
+2022-07-13  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
+    * New parsers/serialisers:
+      - Add In-Band Real Time Text support
+      - Add OMEMO support
+    * Improvements:
+      - bookmarks 2: uncomment test
+
 Version 0.19.0:
 2022-03-07  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
@@ -14,12 +32,6 @@ Version 0.19.0:
         - Run clippy.
         - Rename the directory to parsers, to avoid colliding prefix with
           xmpp-rs.
-        - Derive PartialEq on Presence
-        - impl PresencePayload for muc::user::MucUser.
-        - New muc::user::Status::ServiceErrorKick variant for the 333 status
-          code.
-        - Update deprecated chrono code (FixedOffset::{east,west} to
-          {east,west}_opt).
     * Breaking changes:
         - Bump bookmarks 2 to version 1.1.3.
         - Use proper types in Jingle specs (XEP-0294 and XEP-0339).
