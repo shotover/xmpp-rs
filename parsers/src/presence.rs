@@ -75,7 +75,8 @@ pub enum Type {
 
     /// An error has occurred regarding processing of a previously sent
     /// presence stanza; if the presence stanza is of type "error", it MUST
-    /// include an <error/> child element (refer to [XMPP‑CORE]).
+    /// include an \<error/\> child element (refer to
+    /// [XMPP‑CORE](https://xmpp.org/rfcs/rfc6120.html)).
     Error,
 
     /// A request for an entity's current presence; SHOULD be generated only by

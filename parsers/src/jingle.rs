@@ -103,7 +103,7 @@ generate_attribute!(
     /// defined in RFC 2183 and applied to SIP by RFC 3261.
     ///
     /// Possible values are defined here:
-    /// https://www.iana.org/assignments/cont-disp/cont-disp.xhtml
+    /// <https://www.iana.org/assignments/cont-disp/cont-disp.xhtml>
     Disposition, "disposition", {
         /// Displayed automatically.
         Inline => "inline",
@@ -131,14 +131,14 @@ generate_attribute!(
         RecipientListHistory => "recipient-list-history",
 
         /// The body describes a communications session, for example, an
-        /// RFC2327 SDP body.
+        /// [RFC2327](https://tools.ietf.org/html/rfc2327) SDP body.
         Session => "session",
 
         /// Authenticated Identity Body.
         Aib => "aib",
 
         /// The body describes an early communications session, for example,
-        /// and [RFC2327] SDP body.
+        /// and [RFC2327](https://tools.ietf.org/html/rfc2327) SDP body.
         EarlySession => "early-session",
 
         /// The body includes a list of URIs to which URI-list services are to
@@ -347,7 +347,7 @@ impl Content {
 pub enum Reason {
     /// The party prefers to use an existing session with the peer rather than
     /// initiate a new session; the Jingle session ID of the alternative
-    /// session SHOULD be provided as the XML character data of the <sid/>
+    /// session SHOULD be provided as the XML character data of the \<sid/\>
     /// child.
     AlternativeSession, //(String),
 

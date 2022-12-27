@@ -76,7 +76,7 @@ generate_element!(
         /// registered types, but unregistered or yet-to-be-registered are
         /// accepted too.
         ///
-        /// [1]: https://www.iana.org/assignments/media-types/media-types.xhtml
+        /// [1]: <https://www.iana.org/assignments/media-types/media-types.xhtml>
         type_: Option<String> = "type"
     ],
     text: (

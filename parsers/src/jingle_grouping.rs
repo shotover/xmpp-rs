@@ -27,7 +27,7 @@ generate_element!(
 );
 
 impl Content {
-    /// Creates a new <content/> element.
+    /// Creates a new \<content/\> element.
     pub fn new(name: &str) -> Content {
         Content {
             name: ContentId(name.to_string()),

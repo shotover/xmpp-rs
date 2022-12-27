@@ -64,14 +64,14 @@ generate_element_enum!(
         Forbidden => "forbidden",
 
         /// The recipient or server can no longer be contacted at this address,
-        /// typically on a permanent basis (as opposed to the <redirect/> error
+        /// typically on a permanent basis (as opposed to the \<redirect/\> error
         /// condition, which is used for temporary addressing failures); the
         /// associated error type SHOULD be "cancel" and the error stanza
         /// SHOULD include a new address (if available) as the XML character
-        /// data of the <gone/> element (which MUST be a Uniform Resource
-        /// Identifier [URI] or Internationalized Resource Identifier [IRI] at
+        /// data of the \<gone/\> element (which MUST be a Uniform Resource
+        /// Identifier (URI) or Internationalized Resource Identifier (IRI) at
         /// which the entity can be contacted, typically an XMPP IRI as
-        /// specified in [XMPP‑URI]).
+        /// specified in [XMPP‑URI](https://tools.ietf.org/html/rfc5122)).
         Gone => "gone",
 
         /// The server has experienced a misconfiguration or other internal
@@ -105,7 +105,7 @@ generate_element_enum!(
         /// The sender needs to provide credentials before being allowed to
         /// perform the action, or has provided improper credentials (the name
         /// "not-authorized", which was borrowed from the "401 Unauthorized"
-        /// error of [HTTP], might lead the reader to think that this condition
+        /// error of HTTP, might lead the reader to think that this condition
         /// relates to authorization, but instead it is typically used in
         /// relation to authentication); the associated error type SHOULD be
         /// "auth".
@@ -113,7 +113,7 @@ generate_element_enum!(
 
         /// The entity has violated some local service policy (e.g., a message
         /// contains words that are prohibited by the service) and the server
-        /// MAY choose to specify the policy in the <text/> element or in an
+        /// MAY choose to specify the policy in the \<text/\> element or in an
         /// application-specific condition element; the associated error type
         /// SHOULD be "modify" or "wait" depending on the policy being
         /// violated.
@@ -125,12 +125,12 @@ generate_element_enum!(
 
         /// The recipient or server is redirecting requests for this
         /// information to another entity, typically in a temporary fashion (as
-        /// opposed to the <gone/> error condition, which is used for permanent
+        /// opposed to the \<gone/\> error condition, which is used for permanent
         /// addressing failures); the associated error type SHOULD be "modify"
         /// and the error stanza SHOULD contain the alternate address in the
-        /// XML character data of the <redirect/> element (which MUST be a URI
+        /// XML character data of the \<redirect/\> element (which MUST be a URI
         /// or IRI with which the sender can communicate, typically an XMPP IRI
-        /// as specified in [XMPP‑URI]).
+        /// as specified in [XMPP‑URI](https://xmpp.org/rfcs/rfc5122.html)).
         Redirect => "redirect",
 
         /// The requesting entity is not authorized to access the requested

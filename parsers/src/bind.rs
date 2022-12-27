@@ -15,7 +15,7 @@ use std::str::FromStr;
 /// The request for resource binding, which is the process by which a client
 /// can obtain a full JID and start exchanging on the XMPP network.
 ///
-/// See https://xmpp.org/rfcs/rfc6120.html#bind
+/// See <https://xmpp.org/rfcs/rfc6120.html#bind>
 #[derive(Debug, Clone, PartialEq)]
 pub struct BindQuery {
     /// Requests this resource, the server may associate another one though.
@@ -72,7 +72,7 @@ impl From<BindQuery> for Element {
 
 /// The response for resource binding, containing the client’s full JID.
 ///
-/// See https://xmpp.org/rfcs/rfc6120.html#bind
+/// See <https://xmpp.org/rfcs/rfc6120.html#bind>
 #[derive(Debug, Clone, PartialEq)]
 pub struct BindResponse {
     /// The full JID returned by the server for this client.

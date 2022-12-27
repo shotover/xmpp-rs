@@ -141,7 +141,7 @@ generate_element!(
     Parameter, "parameter", JINGLE_RTP,
     attributes: [
         /// The name of the parameter, from the list at
-        /// https://www.iana.org/assignments/sdp-parameters/sdp-parameters.xhtml
+        /// <https://www.iana.org/assignments/sdp-parameters/sdp-parameters.xhtml>
         name: Required<String> = "name",
 
         /// The value of this parameter.
