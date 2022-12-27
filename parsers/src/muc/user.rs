@@ -225,6 +225,38 @@ impl Item {
             reason: None,
         }
     }
+
+    /// Set a jid for this Item
+    pub fn with_jid<J: Into<FullJid>>(mut self, jid: J) -> Item {
+        self.jid = Some(jid.into());
+        self
+    }
+
+    /// Set a nick for this Item
+    pub fn with_nick<S: Into<String>>(mut self, nick: S) -> Item {
+        self.nick = Some(nick.into());
+        self
+    }
+
+    /// Set an actor for this Item
+    pub fn with_actor(mut self, actor: Actor) -> Item {
+        self.actor = Some(actor);
+        self
+    }
+
+    /// Set a continue value for this Item
+    pub fn with_continue<S: Into<String>>(mut self, continue_: S) -> Item {
+        self.continue_ = Some(Continue {
+            thread: Some(continue_.into()),
+        });
+        self
+    }
+
+    /// Set a reason for this Item
+    pub fn with_reason<S: Into<String>>(mut self, reason: S) -> Item {
+        self.reason = Some(Reason(reason.into()));
+        self
+    }
 }
 
 generate_element!(
