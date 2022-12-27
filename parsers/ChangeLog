@@ -1,3 +1,8 @@
+Version xxx:
+xxx
+    * Improvements:
+      - muc::user::Item: Added with_ helpers
+
 Version 0.19.2:
 2022-12-17  Maxime “pep” Buquet <pep@bouah.net>
     * Improvements:
