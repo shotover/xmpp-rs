@@ -17,17 +17,17 @@ use std::str::FromStr;
 pub enum Algo {
     /// The Secure Hash Algorithm 1, with known vulnerabilities, do not use it.
     ///
-    /// See <https://tools.ietf.org/html/rfc3174>
+    /// See <https://www.rfc-editor.org/rfc/rfc3174>
     Sha_1,
 
     /// The Secure Hash Algorithm 2, in its 256-bit version.
     ///
-    /// See <https://tools.ietf.org/html/rfc6234>
+    /// See <https://www.rfc-editor.org/rfc/rfc6234>
     Sha_256,
 
     /// The Secure Hash Algorithm 2, in its 512-bit version.
     ///
-    /// See <https://tools.ietf.org/html/rfc6234>
+    /// See <https://www.rfc-editor.org/rfc/rfc6234>
     Sha_512,
 
     /// The Secure Hash Algorithm 3, based on Keccak, in its 256-bit version.
@@ -42,12 +42,12 @@ pub enum Algo {
 
     /// The BLAKE2 hash algorithm, for a 256-bit output.
     ///
-    /// See <https://tools.ietf.org/html/rfc7693>
+    /// See <https://www.rfc-editor.org/rfc/rfc7693>
     Blake2b_256,
 
     /// The BLAKE2 hash algorithm, for a 512-bit output.
     ///
-    /// See <https://tools.ietf.org/html/rfc7693>
+    /// See <https://www.rfc-editor.org/rfc/rfc7693>
     Blake2b_512,
 
     /// An unknown hash not in this list, you can probably reject it.

@@ -131,14 +131,14 @@ generate_attribute!(
         RecipientListHistory => "recipient-list-history",
 
         /// The body describes a communications session, for example, an
-        /// [RFC2327](https://tools.ietf.org/html/rfc2327) SDP body.
+        /// [RFC2327](https://www.rfc-editor.org/rfc/rfc2327) SDP body.
         Session => "session",
 
         /// Authenticated Identity Body.
         Aib => "aib",
 
         /// The body describes an early communications session, for example,
-        /// and [RFC2327](https://tools.ietf.org/html/rfc2327) SDP body.
+        /// and [RFC2327](https://www.rfc-editor.org/rfc/rfc2327) SDP body.
         EarlySession => "early-session",
 
         /// The body includes a list of URIs to which URI-list services are to

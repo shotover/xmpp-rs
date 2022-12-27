@@ -22,7 +22,7 @@ generate_attribute!(
         /// client and the server to avoid having to store the password in
         /// clear.
         ///
-        /// See <https://tools.ietf.org/html/rfc5802>
+        /// See <https://www.rfc-editor.org/rfc/rfc5802>
         ScramSha1 => "SCRAM-SHA-1",
 
         /// Same as [ScramSha1](#structfield.ScramSha1), with the addition of

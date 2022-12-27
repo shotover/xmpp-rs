@@ -71,7 +71,7 @@ generate_element_enum!(
         /// data of the \<gone/\> element (which MUST be a Uniform Resource
         /// Identifier (URI) or Internationalized Resource Identifier (IRI) at
         /// which the entity can be contacted, typically an XMPP IRI as
-        /// specified in [XMPP‑URI](https://tools.ietf.org/html/rfc5122)).
+        /// specified in [XMPP‑URI](https://www.rfc-editor.org/rfc/rfc5122)).
         Gone => "gone",
 
         /// The server has experienced a misconfiguration or other internal
