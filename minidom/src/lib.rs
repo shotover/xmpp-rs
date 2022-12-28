@@ -10,7 +10,7 @@
 
 #![deny(missing_docs)]
 
-//! A minimal DOM crate built on top of quick-xml, targeting exclusively the subset of XML useful
+//! A minimal DOM crate built on top of rxml, targeting exclusively the subset of XML useful
 //! for XMPP.
 //!
 //! This library exports an `Element` struct which represents a DOM tree.

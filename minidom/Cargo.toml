@@ -8,7 +8,7 @@ authors = [
   "Astro <astro@spaceboyz.net>",
   "Maxime “pep” Buquet <pep@bouah.net>",
 ]
-description = "A small, simple DOM implementation on top of quick-xml, targeting the subset of XML useful for XMPP"
+description = "A small, simple DOM implementation on top of rxml, targeting the subset of XML useful for XMPP"
 homepage = "https://gitlab.com/xmpp-rs/xmpp-rs"
 repository = "https://gitlab.com/xmpp-rs/xmpp-rs"
 documentation = "https://docs.rs/minidom"

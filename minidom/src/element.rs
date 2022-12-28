@@ -356,12 +356,12 @@ impl Element {
         self.to_writer_decl(&mut ItemWriter::new(writer))
     }
 
-    /// Output the document to quick-xml `Writer`
+    /// Output the document to an `ItemWriter`
     pub fn to_writer<W: Write>(&self, writer: &mut ItemWriter<W>) -> Result<()> {
         self.write_to_inner(writer)
     }
 
-    /// Output the document to quick-xml `Writer`
+    /// Output the document to an `ItemWriter`
     pub fn to_writer_decl<W: Write>(&self, writer: &mut ItemWriter<W>) -> Result<()> {
         writer
             .write(Item::XmlDeclaration(XmlVersion::V1_0))

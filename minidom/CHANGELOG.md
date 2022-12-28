@@ -1,3 +1,7 @@
+Version 0.15.0, released 2022-07-13:
+  * Changes
+    * Drop quick-xml dependency (astro1, jssfr)
+
 Version 0.14.0, released 2022-03-07:
   * Changes
     * Bump quick-xml dependency (thanks eijebong!)
