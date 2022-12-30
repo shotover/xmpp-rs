@@ -239,3 +239,6 @@ pub mod occupant_id;
 
 /// XEP-0441: Message Archive Management Preferences
 pub mod mam_prefs;
+
+/// XEP-0444: Message Reactions
+pub mod reactions;

@@ -1,8 +1,10 @@
 Version xxx:
 xxx
+    * New parsers/serialisers:
+        - Message Reactions (XEP-0444)
     * Improvements:
-      - muc::user::Item: Added with_ helpers
-      - Correct cargo doc warnings
+        - muc::user::Item: Added with_ helpers
+        - Correct cargo doc warnings
 
 Version 0.19.2:
 2022-12-17  Maxime “pep” Buquet <pep@bouah.net>
@@ -17,10 +19,10 @@ Version 0.19.2:
 Version 0.19.1:
 2022-07-13  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
-      - Add In-Band Real Time Text support
-      - Add OMEMO support
+        - Add In-Band Real Time Text support
+        - Add OMEMO support
     * Improvements:
-      - bookmarks 2: uncomment test
+        - bookmarks 2: uncomment test
 
 Version 0.19.0:
 2022-03-07  Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>

@@ -272,6 +272,9 @@ pub const BOOKMARKS2_COMPAT_PEP: &str = "urn:xmpp:bookmarks:1#compat-pep";
 /// XEP-0421: Anonymous unique occupant identifiers for MUCs
 pub const OID: &str = "urn:xmpp:occupant-id:0";
 
+/// XEP-0444: Message Reactions
+pub const REACTIONS: &str = "urn:xmpp:reactions:0";
+
 /// Alias for the main namespace of the stream, that is "jabber:client" when
 /// the component feature isn’t enabled.
 #[cfg(not(feature = "component"))]
