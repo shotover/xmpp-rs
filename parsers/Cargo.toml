@@ -16,7 +16,7 @@ edition = "2018"
 [dependencies]
 minidom = "0.15"
 jid = { version = "0.9", features = ["minidom"] }
-base64 = "0.13"
+base64 = "0.20"
 digest = "0.10"
 sha-1 = "0.10"
 sha2 = "0.10"
