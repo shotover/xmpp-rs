@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="../style.xsl" type="text/xsl"?>
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-<Project xmlns="http://usefulinc.com/ns/doap#" xmlns:foaf="http://xmlns.com/foaf/0.1/" xmlns:xmpp="https://linkmauve.fr/ns/xmpp-doap#">
+<Project xmlns="http://usefulinc.com/ns/doap#" xmlns:foaf="http://xmlns.com/foaf/0.1/" xmlns:xmpp="https://linkmauve.fr/ns/xmpp-doap#" xmlns:schema="https://schema.org/">
     <name>xmpp-parsers</name>
 
     <created>2017-04-18</created>
@@ -13,8 +13,7 @@
     <description xml:lang="fr">TODO</description>
 
     <homepage rdf:resource="https://gitlab.com/xmpp-rs/xmpp-parsers"/>
-    <!-- TODO: https://github.com/ewilderj/doap/issues/51 -->
-    <!--<doc rdf:resource="https://docs.rs/xmpp-parsers/"/>-->
+    <documentation rdf:resource="https://docs.rs/xmpp-parsers/"/>
     <download-page rdf:resource="https://crates.io/crates/xmpp-parsers"/>
     <bug-database rdf:resource="https://gitlab.com/xmpp-rs/xmpp-parsers/issues"/>
     <!-- See https://github.com/ewilderj/doap/issues/53 -->
@@ -23,8 +22,8 @@
 
     <license rdf:resource="https://gitlab.com/xmpp-rs/xmpp-parsers/raw/master/LICENSE"/>
 
-    <!-- TODO: https://github.com/ewilderj/doap/issues/40 -->
-    <!--<logo rdf:resource="https://poez.io/img/logo.png"/>-->
+    <!-- Until https://github.com/ewilderj/doap/pull/68 is merged, we’ll use schema.org instead. -->
+    <schema:logo rdf:resource="https://xmpp.rs/logo.svg"/>
 
     <programming-language>Rust</programming-language>
 
