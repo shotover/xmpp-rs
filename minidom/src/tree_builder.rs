@@ -29,6 +29,15 @@ impl TreeBuilder {
         }
     }
 
+    /// Allow setting prefixes stack.
+    ///
+    /// Useful to provide knowledge of namespaces that would have been declared on parent elements
+    /// not present in the reader.
+    pub fn with_prefixes_stack(mut self, prefixes_stack: Vec<Prefixes>) -> Self {
+        self.prefixes_stack = prefixes_stack;
+        self
+    }
+
     /// Stack depth
     pub fn depth(&self) -> usize {
         self.stack.len()

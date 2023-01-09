@@ -346,6 +346,25 @@ impl Element {
         Err(Error::EndOfDocument)
     }
 
+    /// Parse a document from a `BufRead`, allowing Prefixes to be specified. Useful to provide
+    /// knowledge of namespaces that would have been declared on parent elements not present in the
+    /// reader.
+    pub fn from_reader_with_prefixes<R: BufRead, P: Into<Prefixes>>(
+        reader: R,
+        prefixes: P,
+    ) -> Result<Element> {
+        let mut tree_builder = TreeBuilder::new().with_prefixes_stack(vec![prefixes.into()]);
+        let mut driver = PullDriver::wrap(reader, Lexer::new(), RawParser::new());
+        while let Some(event) = driver.read()? {
+            tree_builder.process_event(event)?;
+
+            if let Some(root) = tree_builder.root.take() {
+                return Ok(root);
+            }
+        }
+        Err(Error::EndOfDocument)
+    }
+
     /// Output a document to a `Writer`.
     pub fn write_to<W: Write>(&self, writer: &mut W) -> Result<()> {
         self.to_writer(&mut ItemWriter::new(writer))
@@ -957,5 +976,17 @@ mod tests {
         assert_eq!(elem, elem2);
         assert_eq!(elem, elem3);
         assert_eq!(elem, elem4);
+    }
+
+    #[test]
+    fn test_from_reader_with_prefixes() {
+        let xml = b"<foo><bar xmlns='baz'/></foo>";
+        let elem =
+            Element::from_reader_with_prefixes(&xml[..], String::from("jabber:client")).unwrap();
+
+        let xml2 = b"<foo xmlns='jabber:client'><bar xmlns='baz'/></foo>";
+        let elem2 = Element::from_reader(&xml2[..]).unwrap();
+
+        assert_eq!(elem, elem2);
     }
 }
