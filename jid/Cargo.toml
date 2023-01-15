@@ -22,3 +22,6 @@ gitlab = { repository = "xmpp-rs/xmpp-rs" }
 icu = { version = "0.1", optional = true }
 minidom = { version = "0.15", optional = true }
 serde = { version = "1.0", features = ["derive"], optional = true }
+
+[features]
+stringprep = ["icu"]
