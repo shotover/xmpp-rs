@@ -992,7 +992,7 @@ mod tests {
 
     #[test]
     fn failure_with_duplicate_namespace() {
-        let elem: Element = r###"<?xml version="1.0" encoding="UTF-8"?>
+        let _: Element = r###"<?xml version="1.0" encoding="UTF-8"?>
             <wsdl:definitions
                     xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
                     xmlns:xsd="http://www.w3.org/2001/XMLSchema">
