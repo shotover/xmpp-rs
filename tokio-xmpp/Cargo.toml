@@ -38,4 +38,3 @@ rustc_version = "0.4"
 default = ["tls-native"]
 tls-rust = ["tokio-rustls", "webpki-roots"]
 tls-native = ["tokio-native-tls", "native-tls"]
-serde = ["xmpp-parsers/serde"]
