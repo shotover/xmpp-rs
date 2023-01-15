@@ -1,3 +1,8 @@
+Version 0.15.1, released 2023-01-15:
+  * Changes
+    * Add `Element::from_reader_with_prefixes`
+    * (#44) Add test ensuring parsing two namespaces resolv
+
 Version 0.15.0, released 2022-07-13:
   * Changes
     * Drop quick-xml dependency (astro1, jssfr)
