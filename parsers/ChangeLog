@@ -5,6 +5,9 @@ xxx
     * Improvements:
         - muc::user::Item: Added with_ helpers
         - Correct cargo doc warnings
+    * Breaking changes:
+        - Removed the 'serde' feature. Add it directly by using 'jid'.
+        `jid = { version = "*", features = ["serde"] }`.
 
 Version 0.19.2:
 2022-12-17  Maxime “pep” Buquet <pep@bouah.net>
