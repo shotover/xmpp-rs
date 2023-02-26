@@ -90,6 +90,7 @@ pub enum Event {
     RoomJoined(BareJid),
     RoomLeft(BareJid),
     RoomMessage(BareJid, RoomNick, Body),
+    ServiceMessage(BareJid, Body),
     HttpUploadedFile(String),
 }
 
@@ -333,11 +334,14 @@ impl Agent {
         match message.get_best_body(langs) {
             Some((_lang, body)) => match message.type_ {
                 MessageType::Groupchat => {
-                    let event = Event::RoomMessage(
-                        from.clone().into(),
-                        FullJid::try_from(from.clone()).unwrap().resource,
-                        body.clone(),
-                    );
+                    let event = match from.clone() {
+                        Jid::Full(full) => Event::RoomMessage(
+                            from.clone().into(),
+                            full.resource,
+                            body.clone(),
+                        ),
+                        Jid::Bare(bare) => Event::ServiceMessage(bare, body.clone()),
+                    };
                     events.push(event)
                 }
                 MessageType::Chat | MessageType::Normal => {
