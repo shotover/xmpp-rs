@@ -28,5 +28,4 @@ env_logger = "0.8"
 [features]
 default = ["avatars"]
 avatars = []
-serde = ["tokio-xmpp/serde", "xmpp-parsers/serde"]
 tls-rust = ["tokio-xmpp/tls-rust"]
