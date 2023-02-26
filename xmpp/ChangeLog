@@ -1,7 +1,11 @@
 xmpp (NEXT)
-    [ Authors ]
+    [ Maxime “pep” Buquet <pep@bouah.net>, Emmanuel Gil Peyrot <linkmauve@linkmauve.fr> ]
+    * Breaking changes:
+      - Event::ChatMessage and Event::RoomMessage now include an optional
+        message id.
     * Improvements:
-        - Add "serde" feature to enable "jid/serde"
+      - New Event::ServiceMessage.
+      - New Event::HttpUploadedFile.
 
 xmpp-rs (0.3.0)
     [ Emmanuel Gil Peyrot <linkmauve@linkmauve.fr> ]
