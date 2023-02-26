@@ -342,20 +342,15 @@ impl Agent {
                             full.resource,
                             body.clone(),
                         ),
-                        Jid::Bare(bare) => Event::ServiceMessage(
-                            message.id.clone(),
-                            bare,
-                            body.clone(),
-                        ),
+                        Jid::Bare(bare) => {
+                            Event::ServiceMessage(message.id.clone(), bare, body.clone())
+                        }
                     };
                     events.push(event)
                 }
                 MessageType::Chat | MessageType::Normal => {
-                    let event = Event::ChatMessage(
-                        message.id.clone(),
-                        from.clone().into(),
-                        body.clone(),
-                    );
+                    let event =
+                        Event::ChatMessage(message.id.clone(), from.clone().into(), body.clone());
                     events.push(event)
                 }
                 _ => (),
