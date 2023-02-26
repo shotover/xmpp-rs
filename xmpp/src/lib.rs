@@ -72,6 +72,7 @@ pub enum ClientFeature {
     JoinRooms,
 }
 
+pub type Id = Option<String>;
 pub type RoomNick = String;
 
 #[derive(Debug)]
@@ -83,14 +84,14 @@ pub enum Event {
     ContactChanged(RosterItem),
     #[cfg(feature = "avatars")]
     AvatarRetrieved(Jid, String),
-    ChatMessage(BareJid, Body),
+    ChatMessage(Id, BareJid, Body),
     JoinRoom(BareJid, Conference),
     LeaveRoom(BareJid),
     LeaveAllRooms,
     RoomJoined(BareJid),
     RoomLeft(BareJid),
-    RoomMessage(BareJid, RoomNick, Body),
-    ServiceMessage(BareJid, Body),
+    RoomMessage(Id, BareJid, RoomNick, Body),
+    ServiceMessage(Id, BareJid, Body),
     HttpUploadedFile(String),
 }
 
@@ -336,16 +337,25 @@ impl Agent {
                 MessageType::Groupchat => {
                     let event = match from.clone() {
                         Jid::Full(full) => Event::RoomMessage(
+                            message.id.clone(),
                             from.clone().into(),
                             full.resource,
                             body.clone(),
                         ),
-                        Jid::Bare(bare) => Event::ServiceMessage(bare, body.clone()),
+                        Jid::Bare(bare) => Event::ServiceMessage(
+                            message.id.clone(),
+                            bare,
+                            body.clone(),
+                        ),
                     };
                     events.push(event)
                 }
                 MessageType::Chat | MessageType::Normal => {
-                    let event = Event::ChatMessage(from.clone().into(), body.clone());
+                    let event = Event::ChatMessage(
+                        message.id.clone(),
+                        from.clone().into(),
+                        body.clone(),
+                    );
                     events.push(event)
                 }
                 _ => (),
