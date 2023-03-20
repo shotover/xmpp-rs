@@ -35,21 +35,29 @@ pub struct Client {
 }
 
 /// XMPP server connection configuration
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum ServerConfig {
+    /// Use SRV record to find server host
     UseSrv,
     #[allow(unused)]
+    /// Manually define server host and port
     Manual {
+        /// Server host name
         host: String,
+        /// Server port
         port: u16,
     },
 }
 
 /// XMMPP client configuration
+#[derive(Clone, Debug)]
 pub struct Config {
-    jid: Jid,
-    password: String,
-    server: ServerConfig,
+    /// jid of the account
+    pub jid: Jid,
+    /// password of the account
+    pub password: String,
+    /// server configuration for the account
+    pub server: ServerConfig,
 }
 
 type XMPPStream = xmpp_stream::XMPPStream<TlsStream<TcpStream>>;

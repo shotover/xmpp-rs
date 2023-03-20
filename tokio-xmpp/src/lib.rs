@@ -12,7 +12,10 @@ mod client;
 mod happy_eyeballs;
 pub mod stream_features;
 pub mod xmpp_stream;
-pub use client::{async_client::Client as AsyncClient, simple_client::Client as SimpleClient};
+pub use client::{
+    async_client::Client as AsyncClient, async_client::Config as AsyncConfig,
+    async_client::ServerConfig as AsyncServerConfig, simple_client::Client as SimpleClient,
+};
 mod component;
 pub use crate::component::Component;
 mod error;
