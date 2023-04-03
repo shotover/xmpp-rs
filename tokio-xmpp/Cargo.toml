@@ -20,7 +20,7 @@ native-tls = { version = "0.2", optional = true }
 sasl = "0.5"
 tokio = { version = "1", features = ["net", "rt", "rt-multi-thread", "macros"] }
 tokio-native-tls = { version = "0.3", optional = true }
-tokio-rustls = { version = "0.23", optional = true }
+tokio-rustls = { version = "0.24", optional = true }
 tokio-stream = { version = "0.1", features = [] }
 tokio-util = { version = "0.7", features = ["codec"] }
 trust-dns-proto = "0.22"
@@ -28,7 +28,7 @@ trust-dns-resolver = "0.22"
 xmpp-parsers = "0.19"
 minidom = "0.15"
 rxml = "0.9.1"
-webpki-roots = { version = "0.22", optional = true }
+webpki-roots = { version = "0.23", optional = true }
 rand = "^0.8"
 
 [build-dependencies]
