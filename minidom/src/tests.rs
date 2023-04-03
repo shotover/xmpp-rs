@@ -452,3 +452,15 @@ fn missing_namespace_error() {
         err => panic!("No or wrong error: {:?}", err),
     }
 }
+
+#[test]
+fn misserialisation() {
+    let xml =
+        "<jitsi_participant_codecType xmlns='jabber:client'>vp9</jitsi_participant_codecType>";
+    //let elem = xml.parse::<Element>().unwrap();
+    let elem = Element::builder("jitsi_participant_codecType", "jabber:client")
+        .append("vp9")
+        .build();
+    let data = String::from(&elem);
+    assert_eq!(xml, data);
+}

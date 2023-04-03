@@ -21,4 +21,4 @@ edition = "2018"
 gitlab = { repository = "xmpp-rs/xmpp-rs" }
 
 [dependencies]
-rxml = "^0.8.0"
+rxml = "0.9.1"
