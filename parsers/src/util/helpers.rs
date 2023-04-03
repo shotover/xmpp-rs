@@ -5,6 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::util::error::Error;
+use base64::{engine::general_purpose::STANDARD as Base64Engine, Engine};
 use jid::Jid;
 use std::str::FromStr;
 
@@ -58,11 +59,11 @@ pub struct Base64;
 
 impl Base64 {
     pub fn decode(s: &str) -> Result<Vec<u8>, Error> {
-        Ok(base64::decode(s)?)
+        Ok(Base64Engine.decode(s)?)
     }
 
     pub fn encode(b: &[u8]) -> Option<String> {
-        Some(base64::encode(b))
+        Some(Base64Engine.encode(b))
     }
 }
 
@@ -75,11 +76,11 @@ impl WhitespaceAwareBase64 {
             .chars()
             .filter(|ch| *ch != ' ' && *ch != '\n' && *ch != '\t')
             .collect();
-        Ok(base64::decode(&s)?)
+        Ok(Base64Engine.decode(&s)?)
     }
 
     pub fn encode(b: &[u8]) -> Option<String> {
-        Some(base64::encode(b))
+        Some(Base64Engine.encode(b))
     }
 }
 

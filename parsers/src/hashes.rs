@@ -6,6 +6,7 @@
 
 use crate::util::error::Error;
 use crate::util::helpers::Base64;
+use base64::{engine::general_purpose::STANDARD as Base64Engine, Engine};
 use minidom::IntoAttributeValue;
 use std::num::ParseIntError;
 use std::ops::{Deref, DerefMut};
@@ -117,7 +118,7 @@ impl Hash {
     /// Like [new](#method.new) but takes base64-encoded data before decoding
     /// it.
     pub fn from_base64(algo: Algo, hash: &str) -> Result<Hash, Error> {
-        Ok(Hash::new(algo, base64::decode(hash)?))
+        Ok(Hash::new(algo, Base64Engine.decode(hash)?))
     }
 
     /// Like [new](#method.new) but takes hex-encoded data before decoding it.
@@ -145,7 +146,7 @@ impl Hash {
 
     /// Formats this hash into base64.
     pub fn to_base64(&self) -> String {
-        base64::encode(&self.hash[..])
+        Base64Engine.encode(&self.hash[..])
     }
 
     /// Formats this hash into hexadecimal.
@@ -227,7 +228,9 @@ mod tests {
         assert_eq!(hash.algo, Algo::Sha_256);
         assert_eq!(
             hash.hash,
-            base64::decode("2XarmwTlNxDAMkvymloX3S5+VbylNrJt/l5QyPa+YoU=").unwrap()
+            Base64Engine
+                .decode("2XarmwTlNxDAMkvymloX3S5+VbylNrJt/l5QyPa+YoU=")
+                .unwrap()
         );
     }
 

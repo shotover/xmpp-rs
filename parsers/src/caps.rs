@@ -11,6 +11,7 @@ use crate::ns;
 use crate::presence::PresencePayload;
 use crate::util::error::Error;
 use crate::Element;
+use base64::{engine::general_purpose::STANDARD as Base64, Engine};
 use blake2::Blake2bVar;
 use digest::{Digest, Update, VariableOutput};
 use sha1::Sha1;
@@ -48,7 +49,7 @@ impl TryFrom<Element> for Caps {
         let ver: String = get_attr!(elem, "ver", Required);
         let hash = Hash {
             algo: get_attr!(elem, "hash", Required),
-            hash: base64::decode(&ver)?,
+            hash: Base64.decode(&ver)?,
         };
         Ok(Caps {
             ext: get_attr!(elem, "ext", Option),
@@ -64,7 +65,7 @@ impl From<Caps> for Element {
             .attr("ext", caps.ext)
             .attr("hash", caps.hash.algo)
             .attr("node", caps.node)
-            .attr("ver", base64::encode(&caps.hash.hash))
+            .attr("ver", Base64.encode(&caps.hash.hash))
             .build()
     }
 }
@@ -210,7 +211,7 @@ pub fn hash_caps(data: &[u8], algo: Algo) -> Result<Hash, String> {
 /// caps hash.
 pub fn query_caps(caps: Caps) -> DiscoInfoQuery {
     DiscoInfoQuery {
-        node: Some(format!("{}#{}", caps.node, base64::encode(&caps.hash.hash))),
+        node: Some(format!("{}#{}", caps.node, Base64.encode(&caps.hash.hash))),
     }
 }
 
@@ -239,7 +240,9 @@ mod tests {
         assert_eq!(caps.hash.algo, Algo::Sha_256);
         assert_eq!(
             caps.hash.hash,
-            base64::decode("K1Njy3HZBThlo4moOD5gBGhn0U0oK7/CbfLlIUDi6o4=").unwrap()
+            Base64
+                .decode("K1Njy3HZBThlo4moOD5gBGhn0U0oK7/CbfLlIUDi6o4=")
+                .unwrap()
         );
     }
 
@@ -287,7 +290,7 @@ mod tests {
         let sha_1 = caps::hash_caps(&caps, Algo::Sha_1).unwrap();
         assert_eq!(
             sha_1.hash,
-            base64::decode("QgayPKawpkPSDYmwT/WM94uAlu0=").unwrap()
+            Base64.decode("QgayPKawpkPSDYmwT/WM94uAlu0=").unwrap()
         );
     }
 
@@ -334,7 +337,7 @@ mod tests {
         let sha_1 = caps::hash_caps(&caps, Algo::Sha_1).unwrap();
         assert_eq!(
             sha_1.hash,
-            base64::decode("q07IKJEyjvHSyhy//CH0CxmKi8w=").unwrap()
+            Base64.decode("q07IKJEyjvHSyhy//CH0CxmKi8w=").unwrap()
         );
     }
 }

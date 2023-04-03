@@ -331,6 +331,7 @@ generate_element!(
 mod tests {
     use super::*;
     use crate::hashes::Algo;
+    use base64::{engine::general_purpose::STANDARD as Base64, Engine};
 
     // Apparently, i686 and AArch32/PowerPC seem to disagree here. So instead
     // of trying to figure this out now, we just ignore the test.
@@ -383,7 +384,7 @@ mod tests {
         assert_eq!(desc.file.hashes[0].algo, Algo::Sha_1);
         assert_eq!(
             desc.file.hashes[0].hash,
-            base64::decode("w0mcJylzCn+AfvuGdqkty2+KP48=").unwrap()
+            Base64.decode("w0mcJylzCn+AfvuGdqkty2+KP48=").unwrap()
         );
     }
 
@@ -408,7 +409,7 @@ mod tests {
         assert_eq!(desc.file.hashes[0].algo, Algo::Sha_1);
         assert_eq!(
             desc.file.hashes[0].hash,
-            base64::decode("w0mcJylzCn+AfvuGdqkty2+KP48=").unwrap()
+            Base64.decode("w0mcJylzCn+AfvuGdqkty2+KP48=").unwrap()
         );
     }
 

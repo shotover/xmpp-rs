@@ -10,6 +10,7 @@ use crate::hashes::{Algo, Hash};
 use crate::ns;
 use crate::presence::PresencePayload;
 use crate::util::error::Error;
+use base64::{engine::general_purpose::STANDARD as Base64, Engine};
 use blake2::Blake2bVar;
 use digest::{Digest, Update, VariableOutput};
 use sha2::{Sha256, Sha512};
@@ -174,7 +175,7 @@ pub fn query_ecaps2(hash: Hash) -> DiscoInfoQuery {
             "{}#{}.{}",
             ns::ECAPS2,
             String::from(hash.algo),
-            base64::encode(&hash.hash)
+            Base64.encode(&hash.hash)
         )),
     }
 }
@@ -206,12 +207,16 @@ mod tests {
         assert_eq!(ecaps2.hashes[0].algo, Algo::Sha_256);
         assert_eq!(
             ecaps2.hashes[0].hash,
-            base64::decode("K1Njy3HZBThlo4moOD5gBGhn0U0oK7/CbfLlIUDi6o4=").unwrap()
+            Base64
+                .decode("K1Njy3HZBThlo4moOD5gBGhn0U0oK7/CbfLlIUDi6o4=")
+                .unwrap()
         );
         assert_eq!(ecaps2.hashes[1].algo, Algo::Sha3_256);
         assert_eq!(
             ecaps2.hashes[1].hash,
-            base64::decode("+sDTQqBmX6iG/X3zjt06fjZMBBqL/723knFIyRf0sg8=").unwrap()
+            Base64
+                .decode("+sDTQqBmX6iG/X3zjt06fjZMBBqL/723knFIyRf0sg8=")
+                .unwrap()
         );
     }
 
@@ -295,12 +300,16 @@ mod tests {
         let sha_256 = hash_ecaps2(&ecaps2, Algo::Sha_256).unwrap();
         assert_eq!(
             sha_256.hash,
-            base64::decode("kzBZbkqJ3ADrj7v08reD1qcWUwNGHaidNUgD7nHpiw8=").unwrap()
+            Base64
+                .decode("kzBZbkqJ3ADrj7v08reD1qcWUwNGHaidNUgD7nHpiw8=")
+                .unwrap()
         );
         let sha3_256 = hash_ecaps2(&ecaps2, Algo::Sha3_256).unwrap();
         assert_eq!(
             sha3_256.hash,
-            base64::decode("79mdYAfU9rEdTOcWDO7UEAt6E56SUzk/g6TnqUeuD9Q=").unwrap()
+            Base64
+                .decode("79mdYAfU9rEdTOcWDO7UEAt6E56SUzk/g6TnqUeuD9Q=")
+                .unwrap()
         );
     }
 
@@ -455,12 +464,16 @@ mod tests {
         let sha_256 = hash_ecaps2(&ecaps2, Algo::Sha_256).unwrap();
         assert_eq!(
             sha_256.hash,
-            base64::decode("u79ZroNJbdSWhdSp311mddz44oHHPsEBntQ5b1jqBSY=").unwrap()
+            Base64
+                .decode("u79ZroNJbdSWhdSp311mddz44oHHPsEBntQ5b1jqBSY=")
+                .unwrap()
         );
         let sha3_256 = hash_ecaps2(&ecaps2, Algo::Sha3_256).unwrap();
         assert_eq!(
             sha3_256.hash,
-            base64::decode("XpUJzLAc93258sMECZ3FJpebkzuyNXDzRNwQog8eycg=").unwrap()
+            Base64
+                .decode("XpUJzLAc93258sMECZ3FJpebkzuyNXDzRNwQog8eycg=")
+                .unwrap()
         );
     }
 
