@@ -1,6 +1,6 @@
 [package]
 name = "minidom"
-version = "0.15.1"
+version = "0.15.2"
 authors = [
   "lumi <lumi@pew.im>",
   "Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>",
@@ -21,4 +21,4 @@ edition = "2018"
 gitlab = { repository = "xmpp-rs/xmpp-rs" }
 
 [dependencies]
-rxml = "0.9.1"
+rxml = { version = "0.9.1", default-features = false, features = ["mt"] }

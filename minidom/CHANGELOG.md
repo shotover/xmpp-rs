@@ -1,3 +1,9 @@
+Version 0.15.2, released 2023-05-13:
+  * Changes
+    * Fix a memory corruption on closing tags for elements with a name longer
+      than 24 bytes
+    * Only enable the mt features of rxml, we don’t need any additional one
+
 Version 0.15.1, released 2023-01-15:
   * Changes
     * Add `Element::from_reader_with_prefixes`
