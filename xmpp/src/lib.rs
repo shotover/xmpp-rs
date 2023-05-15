@@ -299,7 +299,7 @@ impl Agent {
         } else if let IqType::Result(Some(payload)) = iq.payload {
             // TODO: move private iqs like this one somewhere else, for
             // security reasons.
-            if payload.is("query", ns::ROSTER) && iq.from.is_none() {
+            if payload.is("query", ns::ROSTER) && Some(from.clone()) == iq.from {
                 let roster = Roster::try_from(payload).unwrap();
                 for item in roster.items.into_iter() {
                     events.push(Event::ContactAdded(item));
