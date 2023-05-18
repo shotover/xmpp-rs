@@ -1,5 +1,5 @@
-xmpp (NEXT)
-    [ Maxime “pep” Buquet <pep@bouah.net>, Emmanuel Gil Peyrot <linkmauve@linkmauve.fr> ]
+Version 0.4.0:
+2023-05-18 [ Maxime “pep” Buquet <pep@bouah.net>, Emmanuel Gil Peyrot <linkmauve@linkmauve.fr> ]
     * Breaking changes:
       - Event::ChatMessage and Event::RoomMessage now include an optional
         message id.
