@@ -28,4 +28,3 @@ env_logger = "0.10"
 [features]
 default = ["avatars"]
 avatars = []
-tls-rust = ["tokio-xmpp/tls-rust"]
