@@ -6,6 +6,13 @@ xmpp (NEXT)
     * Improvements:
       - New Event::ServiceMessage.
       - New Event::HttpUploadedFile.
+      - Add a disconnect method on Agent
+      - ContactAdded event now fires properly. Thanks Doggo.
+      - Update dependencies versions
+    * Changes:
+      - Split wait_for_events method, make it easier to edit.
+      - hello_bot: add catch-all for Event
+      - Remove -rs suffix in folder name
 
 xmpp-rs (0.3.0)
     [ Emmanuel Gil Peyrot <linkmauve@linkmauve.fr> ]
