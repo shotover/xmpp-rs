@@ -6,7 +6,7 @@ authors = [
   "Maxime “pep” Buquet <pep@bouah.net>",
 ]
 description = "High-level XMPP library"
-homepage = "https://gitlab.com/xmpp-rs/xmpp-rs"
+homepage = "https://xmpp.rs"
 repository = "https://gitlab.com/xmpp-rs/xmpp-rs"
 keywords = ["xmpp", "jabber", "chat", "messaging", "bot"]
 categories = ["network-programming"]
