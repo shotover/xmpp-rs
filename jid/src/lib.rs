@@ -105,6 +105,15 @@ impl From<Jid> for String {
     }
 }
 
+impl From<&Jid> for String {
+    fn from(jid: &Jid) -> String {
+        match jid {
+            Jid::Bare(bare) => String::from(bare),
+            Jid::Full(full) => String::from(full),
+        }
+    }
+}
+
 impl From<BareJid> for Jid {
     fn from(bare_jid: BareJid) -> Jid {
         Jid::Bare(bare_jid)
