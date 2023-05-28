@@ -67,6 +67,7 @@ impl fmt::Display for JidParseError {
 
 /// An enum representing a Jabber ID. It can be either a `FullJid` or a `BareJid`.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(untagged))]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Jid {
     /// Bare Jid

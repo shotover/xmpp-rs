@@ -1,3 +1,8 @@
+Unreleased
+
+  * Breaking
+    - serde: Jid is now using untagged enum representation (#66)
+
 Version 0.9.3, release 2022-03-07:
   * Updates
     - Bumped minidom to 0.14
