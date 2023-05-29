@@ -88,16 +88,19 @@ impl Decoder for XMPPCodec {
                             },
                         ))
                         .collect();
+                debug!("<< {}", String::from(root));
                 return Ok(Some(Packet::StreamStart(attrs)));
             } else if self.stanza_builder.depth() == 1 {
                 self.driver.release_temporaries();
 
                 if let Some(stanza) = self.stanza_builder.unshift_child() {
+                    debug!("<< {}", String::from(&stanza));
                     return Ok(Some(Packet::Stanza(stanza)));
                 }
             } else if let Some(_) = self.stanza_builder.root.take() {
                 self.driver.release_temporaries();
 
+                debug!("<< </stream:stream>");
                 return Ok(Some(Packet::StreamEnd));
             }
         }
