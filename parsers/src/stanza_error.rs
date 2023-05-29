@@ -194,7 +194,7 @@ generate_element_enum!(
 type Lang = String;
 
 /// The representation of a stanza error.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct StanzaError {
     /// The type of this error.
     pub type_: ErrorType,

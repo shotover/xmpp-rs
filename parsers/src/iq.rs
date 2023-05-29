@@ -23,7 +23,7 @@ pub trait IqSetPayload: TryFrom<Element> + Into<Element> {}
 pub trait IqResultPayload: TryFrom<Element> + Into<Element> {}
 
 /// Represents one of the four possible iq types.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum IqType {
     /// This is a request for accessing some data.
     Get(Element),
@@ -53,7 +53,7 @@ impl<'a> IntoAttributeValue for &'a IqType {
 }
 
 /// The main structure representing the `<iq/>` stanza.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Iq {
     /// The JID emitting this stanza.
     pub from: Option<Jid>,
