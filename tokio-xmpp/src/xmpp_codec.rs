@@ -114,7 +114,7 @@ impl Decoder for XMPPCodec {
 }
 
 impl Encoder<Packet> for XMPPCodec {
-    type Error = io::Error;
+    type Error = Error;
 
     fn encode(&mut self, item: Packet, dst: &mut BytesMut) -> Result<(), Self::Error> {
         let remaining = dst.capacity() - dst.len();
@@ -139,24 +139,28 @@ impl Encoder<Packet> for XMPPCodec {
                 }
                 write!(buf, ">\n").map_err(to_io_err)?;
 
-                debug!(">> {:?}", buf);
-                write!(dst, "{}", buf).map_err(to_io_err)
+                let utf8 = std::str::from_utf8(dst)?;
+                debug!(">> {}", utf8);
+                write!(dst, "{}", buf)?
             }
-            Packet::Stanza(stanza) => stanza
-                .write_to(&mut WriteBytes::new(dst))
-                .and_then(|_| {
-                    debug!(">> {:?}", dst);
-                    Ok(())
-                })
-                .map_err(|e| to_io_err(format!("{}", e))),
-            Packet::Text(text) => write_text(&text, dst)
-                .and_then(|_| {
-                    debug!(">> {:?}", dst);
-                    Ok(())
-                })
-                .map_err(to_io_err),
-            Packet::StreamEnd => write!(dst, "</stream:stream>\n").map_err(to_io_err),
+            Packet::Stanza(stanza) => {
+                let _ = stanza
+                    .write_to(&mut WriteBytes::new(dst))
+                    .map_err(|e| to_io_err(format!("{}", e)))?;
+                let utf8 = std::str::from_utf8(dst)?;
+                debug!(">> {}", utf8);
+            }
+            Packet::Text(text) => {
+                let _ = write_text(&text, dst).map_err(to_io_err)?;
+                let utf8 = std::str::from_utf8(dst)?;
+                debug!(">> {}", utf8);
+            }
+            Packet::StreamEnd => {
+                let _ = write!(dst, "</stream:stream>\n").map_err(to_io_err);
+            }
         }
+
+        Ok(())
     }
 }
 

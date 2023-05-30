@@ -5,6 +5,7 @@ use std::borrow::Cow;
 use std::error::Error as StdError;
 use std::fmt;
 use std::io::Error as IoError;
+use std::str::Utf8Error;
 #[cfg(feature = "tls-rust")]
 use tokio_rustls::rustls::client::InvalidDnsNameError;
 #[cfg(feature = "tls-rust")]
@@ -40,6 +41,10 @@ pub enum Error {
     Disconnected,
     /// Shoud never happen
     InvalidState,
+    /// Fmt error
+    Fmt(fmt::Error),
+    /// Utf8 error
+    Utf8(Utf8Error),
 }
 
 impl fmt::Display for Error {
@@ -56,6 +61,8 @@ impl fmt::Display for Error {
             Error::DnsNameError(e) => write!(fmt, "DNS name error: {}", e),
             Error::Disconnected => write!(fmt, "disconnected"),
             Error::InvalidState => write!(fmt, "invalid state"),
+            Error::Fmt(e) => write!(fmt, "Fmt error: {}", e),
+            Error::Utf8(e) => write!(fmt, "Utf8 error: {}", e),
         }
     }
 }
@@ -95,6 +102,18 @@ impl From<AuthError> for Error {
 impl From<TlsError> for Error {
     fn from(e: TlsError) -> Self {
         Error::Tls(e)
+    }
+}
+
+impl From<fmt::Error> for Error {
+    fn from(e: fmt::Error) -> Self {
+        Error::Fmt(e)
+    }
+}
+
+impl From<Utf8Error> for Error {
+    fn from(e: Utf8Error) -> Self {
+        Error::Utf8(e)
     }
 }
 
