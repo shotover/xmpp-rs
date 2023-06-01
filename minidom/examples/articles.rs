@@ -27,8 +27,8 @@ const ARTICLE_NS: &str = "article";
 
 #[derive(Debug)]
 pub struct Article {
-    title: String,
-    body: String,
+    pub title: String,
+    pub body: String,
 }
 
 fn main() {
