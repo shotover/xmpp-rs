@@ -2,7 +2,6 @@ use futures::{sink::SinkExt, task::Poll, Future, Sink, Stream};
 use sasl::common::{ChannelBinding, Credentials};
 use std::mem::replace;
 use std::pin::Pin;
-use std::str::FromStr;
 use std::task::Context;
 use tokio::net::TcpStream;
 use tokio::task::JoinHandle;
@@ -10,7 +9,7 @@ use tokio::task::JoinHandle;
 use tokio_native_tls::TlsStream;
 #[cfg(feature = "tls-rust")]
 use tokio_rustls::client::TlsStream;
-use xmpp_parsers::{ns, Element, Jid, JidParseError};
+use xmpp_parsers::{ns, Element, Jid};
 
 use super::auth::auth;
 use super::bind::bind;
@@ -74,15 +73,13 @@ impl Client {
     ///
     /// Start polling the returned instance so that it will connect
     /// and yield events.
-    pub fn new<P: Into<String>>(jid: &str, password: P) -> Result<Self, JidParseError> {
-        let jid = Jid::from_str(jid)?;
+    pub fn new<J: Into<Jid>, P: Into<String>>(jid: J, password: P) -> Self {
         let config = Config {
-            jid: jid.clone(),
+            jid: jid.into(),
             password: password.into(),
             server: ServerConfig::UseSrv,
         };
-        let client = Self::new_with_config(config);
-        Ok(client)
+        Self::new_with_config(config)
     }
 
     /// Start a new client given that the JID is already parsed.

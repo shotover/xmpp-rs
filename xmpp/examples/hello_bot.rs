@@ -6,8 +6,9 @@
 
 use env_logger;
 use std::env::args;
+use std::str::FromStr;
 use xmpp::{ClientBuilder, ClientFeature, ClientType, Event};
-use xmpp_parsers::{message::MessageType, Jid};
+use xmpp_parsers::{message::MessageType, BareJid, Jid};
 
 #[tokio::main]
 async fn main() -> Result<(), Option<()>> {
@@ -18,7 +19,8 @@ async fn main() -> Result<(), Option<()>> {
         println!("Usage: {} <jid> <password>", args[0]);
         return Err(None);
     }
-    let jid = &args[1];
+
+    let jid = BareJid::from_str(&args[1]).expect(&format!("Invalid JID: {}", &args[1]));
     let password = &args[2];
 
     // Client instance
@@ -29,8 +31,7 @@ async fn main() -> Result<(), Option<()>> {
         .enable_feature(ClientFeature::Avatars)
         .enable_feature(ClientFeature::ContactList)
         .enable_feature(ClientFeature::JoinRooms)
-        .build()
-        .unwrap();
+        .build();
 
     while let Some(events) = client.wait_for_events().await {
         for event in events {

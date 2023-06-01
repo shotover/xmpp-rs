@@ -22,7 +22,7 @@ use xmpp_parsers::{
         NodeName,
     },
     stanza_error::{DefinedCondition, ErrorType, StanzaError},
-    Element, Jid,
+    BareJid, Element, Jid,
 };
 
 #[tokio::main]
@@ -32,11 +32,11 @@ async fn main() {
         println!("Usage: {} <jid> <password>", args[0]);
         exit(1);
     }
-    let jid = &args[1];
+    let jid = BareJid::from_str(&args[1]).expect(&format!("Invalid JID: {}", &args[1]));
     let password = args[2].clone();
 
     // Client instance
-    let mut client = Client::new(jid, password).unwrap();
+    let mut client = Client::new(jid.clone(), password);
 
     let disco_info = make_disco();
 
@@ -94,7 +94,7 @@ async fn main() {
                     } else if let IqType::Result(Some(payload)) = iq.payload {
                         if payload.is("pubsub", ns::PUBSUB) {
                             let pubsub = PubSub::try_from(payload).unwrap();
-                            let from = iq.from.clone().unwrap_or(Jid::from_str(jid).unwrap());
+                            let from = iq.from.clone().unwrap_or(jid.clone().into());
                             handle_iq_result(pubsub, &from);
                         }
                     } else if let IqType::Set(_) = iq.payload {

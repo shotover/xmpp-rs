@@ -2,11 +2,12 @@ use futures::stream::StreamExt;
 use std::convert::TryFrom;
 use std::env::args;
 use std::process::exit;
+use std::str::FromStr;
 use tokio;
 use tokio_xmpp::AsyncClient as Client;
 use xmpp_parsers::message::{Body, Message, MessageType};
 use xmpp_parsers::presence::{Presence, Show as PresenceShow, Type as PresenceType};
-use xmpp_parsers::{Element, Jid};
+use xmpp_parsers::{BareJid, Element, Jid};
 
 #[tokio::main]
 async fn main() {
@@ -15,11 +16,11 @@ async fn main() {
         println!("Usage: {} <jid> <password>", args[0]);
         exit(1);
     }
-    let jid = &args[1];
+    let jid = BareJid::from_str(&args[1]).expect(&format!("Invalid JID: {}", &args[1]));
     let password = &args[2];
 
     // Client instance
-    let mut client = Client::new(jid, password.to_owned()).unwrap();
+    let mut client = Client::new(jid, password.to_owned());
     client.set_reconnect(true);
 
     // Main loop, processes events

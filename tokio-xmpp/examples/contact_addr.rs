@@ -2,13 +2,14 @@ use futures::stream::StreamExt;
 use std::convert::TryFrom;
 use std::env::args;
 use std::process::exit;
+use std::str::FromStr;
 use tokio_xmpp::AsyncClient as Client;
 use xmpp_parsers::{
     disco::{DiscoInfoQuery, DiscoInfoResult},
     iq::{Iq, IqType},
     ns,
     server_info::ServerInfo,
-    Element, Jid,
+    BareJid, Element, Jid,
 };
 
 #[tokio::main]
@@ -18,12 +19,12 @@ async fn main() {
         println!("Usage: {} <jid> <password> <target>", args[0]);
         exit(1);
     }
-    let jid = &args[1];
+    let jid = BareJid::from_str(&args[1]).expect(&format!("Invalid JID: {}", &args[1]));
     let password = args[2].clone();
     let target = &args[3];
 
     // Client instance
-    let mut client = Client::new(jid, password).unwrap();
+    let mut client = Client::new(jid, password);
 
     // Main loop, processes events
     let mut wait_for_stream_end = false;

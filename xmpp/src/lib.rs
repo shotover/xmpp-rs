@@ -94,19 +94,19 @@ pub enum Event {
     HttpUploadedFile(String),
 }
 
-#[derive(Default)]
 pub struct ClientBuilder<'a> {
-    jid: &'a str,
+    jid: BareJid,
     password: &'a str,
     website: String,
     default_nick: String,
     lang: Vec<String>,
     disco: (ClientType, String),
     features: Vec<ClientFeature>,
+    resource: Option<String>,
 }
 
 impl ClientBuilder<'_> {
-    pub fn new<'a>(jid: &'a str, password: &'a str) -> ClientBuilder<'a> {
+    pub fn new<'a>(jid: BareJid, password: &'a str) -> ClientBuilder<'a> {
         ClientBuilder {
             jid,
             password,
@@ -115,7 +115,14 @@ impl ClientBuilder<'_> {
             lang: vec![String::from("en")],
             disco: (ClientType::default(), String::from("tokio-xmpp")),
             features: vec![],
+            resource: None,
         }
+    }
+
+    /// Optionally set a resource associated to this device on the client
+    pub fn set_resource(mut self, resource: &str) -> Self {
+        self.resource = Some(resource.to_string());
+        self
     }
 
     pub fn set_client(mut self, type_: ClientType, name: &str) -> Self {
@@ -168,26 +175,30 @@ impl ClientBuilder<'_> {
         }
     }
 
-    pub fn build(self) -> Result<Agent, Error> {
-        let client = TokioXmppClient::new(self.jid, self.password)?;
-        Ok(self.build_impl(client)?)
+    pub fn build(self) -> Agent {
+        let jid: Jid = if let Some(resource) = &self.resource {
+            self.jid.clone().with_resource(resource.to_string()).into()
+        } else {
+            self.jid.clone().into()
+        };
+
+        let client = TokioXmppClient::new(jid, self.password);
+        self.build_impl(client)
     }
 
     // This function is meant to be used for testing build
-    pub(crate) fn build_impl(self, client: TokioXmppClient) -> Result<Agent, Error> {
+    pub(crate) fn build_impl(self, client: TokioXmppClient) -> Agent {
         let disco = self.make_disco();
         let node = self.website;
 
-        let agent = Agent {
+        Agent {
             client,
             default_nick: Arc::new(RwLock::new(self.default_nick)),
             lang: Arc::new(self.lang),
             disco,
             node,
             uploads: Vec::new(),
-        };
-
-        Ok(agent)
+        }
     }
 }
 
@@ -509,22 +520,25 @@ async fn handle_upload_result(
 
 #[cfg(test)]
 mod tests {
-    use super::{Agent, ClientBuilder, ClientFeature, ClientType, Event};
+    use super::{Agent, BareJid, ClientBuilder, ClientFeature, ClientType, Event};
+    use std::str::FromStr;
     use tokio_xmpp::AsyncClient as TokioXmppClient;
 
     #[tokio::test]
     async fn test_simple() {
-        let client = TokioXmppClient::new("foo@bar", "meh").unwrap();
+        let jid = BareJid::from_str("foo@bar").unwrap();
+
+        let client = TokioXmppClient::new(jid.clone(), "meh");
 
         // Client instance
-        let client_builder = ClientBuilder::new("foo@bar", "meh")
+        let client_builder = ClientBuilder::new(jid, "meh")
             .set_client(ClientType::Bot, "xmpp-rs")
             .set_website("https://gitlab.com/xmpp-rs/xmpp-rs")
             .set_default_nick("bot")
             .enable_feature(ClientFeature::Avatars)
             .enable_feature(ClientFeature::ContactList);
 
-        let mut agent: Agent = client_builder.build_impl(client).unwrap();
+        let mut agent: Agent = client_builder.build_impl(client);
 
         while let Some(events) = agent.wait_for_events().await {
             assert!(match events[0] {

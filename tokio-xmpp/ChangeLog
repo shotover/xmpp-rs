@@ -1,0 +1,3 @@
+xxxxxxxxxx
+    * Breaking changes:
+          - AsyncClient::new takes a parsed Jid instead of string (#72)
