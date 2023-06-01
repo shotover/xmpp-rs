@@ -10,16 +10,17 @@ variables:
 
 .show-version:
   before_script:
+    - apt-get update; apt-get install -y --no-install-recommends pkg-config libssl-dev
     - rustc --version
     - cargo --version
 
 .stable:
-  image: rust:latest
+  image: rust:slim
   extends:
     - .show-version
 
 .nightly:
-  image: rustlang/rust:nightly
+  image: rustlang/rust:nightly-slim
   # It's not often, but it happens nightly breaks, surprisingly.
   allow_failure: true
   extends:
