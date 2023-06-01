@@ -1,3 +1,8 @@
+Unreleased:
+xxxxxxxxxx
+    * Improvements:
+      - Agent is now Send, by replacing Rc with Arc and RefCell with RwLock (#64)
+
 Version 0.4.0:
 2023-05-18 [ Maxime “pep” Buquet <pep@bouah.net>, Emmanuel Gil Peyrot <linkmauve@linkmauve.fr> ]
     * Breaking changes:

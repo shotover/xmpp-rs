@@ -10,10 +10,9 @@ use futures::stream::StreamExt;
 use reqwest::{
     header::HeaderMap as ReqwestHeaderMap, Body as ReqwestBody, Client as ReqwestClient,
 };
-use std::cell::RefCell;
 use std::convert::TryFrom;
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
+use std::sync::{Arc, RwLock};
 use tokio::fs::File;
 use tokio_util::codec::{BytesCodec, FramedRead};
 use tokio_xmpp::{AsyncClient as TokioXmppClient, Event as TokioXmppEvent};
@@ -181,8 +180,8 @@ impl ClientBuilder<'_> {
 
         let agent = Agent {
             client,
-            default_nick: Rc::new(RefCell::new(self.default_nick)),
-            lang: Rc::new(self.lang),
+            default_nick: Arc::new(RwLock::new(self.default_nick)),
+            lang: Arc::new(self.lang),
             disco,
             node,
             uploads: Vec::new(),
@@ -194,8 +193,8 @@ impl ClientBuilder<'_> {
 
 pub struct Agent {
     client: TokioXmppClient,
-    default_nick: Rc<RefCell<String>>,
-    lang: Rc<Vec<String>>,
+    default_nick: Arc<RwLock<String>>,
+    lang: Arc<Vec<String>>,
     disco: DiscoInfoResult,
     node: String,
     uploads: Vec<(String, Jid, PathBuf)>,
@@ -219,7 +218,7 @@ impl Agent {
             muc = muc.with_password(password);
         }
 
-        let nick = nick.unwrap_or_else(|| self.default_nick.borrow().clone());
+        let nick = nick.unwrap_or_else(|| self.default_nick.read().unwrap().clone());
         let room_jid = room.with_resource(nick);
         let mut presence = Presence::new(PresenceType::None).with_to(Jid::Full(room_jid));
         presence.add_payload(muc);
