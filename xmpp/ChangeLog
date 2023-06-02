@@ -2,6 +2,7 @@ Unreleased:
 xxxxxxxxxx
     * Breaking changes:
 	  - ClientBuilder::new takes a parsed BareJid instead of string (#72)
+	  - ClientBuilder::new doesn't return a Result anymore
     * Improvements:
       - Agent is now Send, by replacing Rc with Arc and RefCell with RwLock (#64)
 	  - ClientBuilder now has a set_resource method for manual resource management (#72)
