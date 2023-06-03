@@ -191,6 +191,41 @@ impl Presence {
         }
     }
 
+    /// Create a presence without a type, which means available
+    pub fn available() -> Presence {
+        Self::new(Type::None)
+    }
+
+    /// Builds a presence of type Error
+    pub fn error() -> Presence {
+        Self::new(Type::Error)
+    }
+
+    /// Builds a presence of type Probe
+    pub fn probe() -> Presence {
+        Self::new(Type::Probe)
+    }
+
+    /// Builds a presence of type Subscribe
+    pub fn subscribe() -> Presence {
+        Self::new(Type::Subscribe)
+    }
+
+    /// Builds a presence of type Subscribed
+    pub fn subscribed() -> Presence {
+        Self::new(Type::Subscribed)
+    }
+
+    /// Builds a presence of type Unavailable
+    pub fn unavailable() -> Presence {
+        Self::new(Type::Unavailable)
+    }
+
+    /// Builds a presence of type Unsubscribe
+    pub fn unsubscribe() -> Presence {
+        Self::new(Type::Unsubscribe)
+    }
+
     /// Set the emitter of this presence, this should only be useful for
     /// servers and components, as clients can only send presences from their
     /// own resource (which is implicit).
@@ -221,6 +256,12 @@ impl Presence {
     /// Set the priority of this presence.
     pub fn with_priority(mut self, priority: i8) -> Presence {
         self.priority = priority;
+        self
+    }
+
+    /// Set a payload inside this presence.
+    pub fn with_payload<P: PresencePayload>(mut self, payload: P) -> Presence {
+        self.payloads.push(payload.into());
         self
     }
 
