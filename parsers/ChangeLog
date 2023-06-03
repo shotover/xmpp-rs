@@ -7,6 +7,8 @@ xxx
         - Correct cargo doc warnings
         - Presence now has constructors for each variant so you don't have to import presence::Type, where Presence::available represents type None (#79)
         - Presence::with_payload builds a payload into the presence (#79)
+        - Message now has constructors for each type ; Message::new still builds a Chat type (#78)
+        - Message::with_body builder method appends a body in a given language to the message (#78)
     * Breaking changes:
         - Removed the 'serde' feature. Add it directly by using 'jid'.
         `jid = { version = "*", features = ["serde"] }`.

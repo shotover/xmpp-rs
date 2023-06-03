@@ -94,7 +94,8 @@ pub struct Message {
 }
 
 impl Message {
-    /// Creates a new `<message/>` stanza for the given recipient.
+    /// Creates a new `<message/>` stanza of type Chat for the given recipient.
+    /// This is equivalent to the [`Message::chat`] method.
     pub fn new<J: Into<Option<Jid>>>(to: J) -> Message {
         Message {
             from: None,
@@ -106,6 +107,51 @@ impl Message {
             thread: None,
             payloads: vec![],
         }
+    }
+
+    /// Creates a new `<message/>` stanza of a certain type for the given recipient.
+    pub fn new_with_type<J: Into<Option<Jid>>>(type_: MessageType, to: J) -> Message {
+        Message {
+            from: None,
+            to: to.into(),
+            id: None,
+            type_,
+            bodies: BTreeMap::new(),
+            subjects: BTreeMap::new(),
+            thread: None,
+            payloads: vec![],
+        }
+    }
+
+    /// Creates a Message of type Chat
+    pub fn chat<J: Into<Option<Jid>>>(to: J) -> Message {
+        Self::new_with_type(MessageType::Chat, to)
+    }
+
+    /// Creates a Message of type Error
+    pub fn error<J: Into<Option<Jid>>>(to: J) -> Message {
+        Self::new_with_type(MessageType::Error, to)
+    }
+
+    /// Creates a Message of type Groupchat
+    pub fn groupchat<J: Into<Option<Jid>>>(to: J) -> Message {
+        Self::new_with_type(MessageType::Groupchat, to)
+    }
+
+    /// Creates a Message of type Headline
+    pub fn headline<J: Into<Option<Jid>>>(to: J) -> Message {
+        Self::new_with_type(MessageType::Headline, to)
+    }
+
+    /// Creates a Message of type Normal
+    pub fn normal<J: Into<Option<Jid>>>(to: J) -> Message {
+        Self::new_with_type(MessageType::Normal, to)
+    }
+
+    /// Appends a body in given lang to the Message
+    pub fn with_body(mut self, lang: Lang, body: String) -> Message {
+        self.bodies.insert(lang, Body(body));
+        self
     }
 
     fn get_best<'a, T>(
