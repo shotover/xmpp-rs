@@ -14,9 +14,22 @@ use crate::stream_start;
 use crate::xmpp_codec::{Packet, XMPPCodec};
 use crate::Error;
 
-pub(crate) fn make_id() -> String {
+fn make_id() -> String {
     let id: u64 = thread_rng().gen();
     format!("{}", id)
+}
+
+pub(crate) fn add_stanza_id(mut stanza: Element, default_ns: &str) -> Element {
+    if stanza.is("iq", default_ns)
+        || stanza.is("message", default_ns)
+        || stanza.is("presence", default_ns)
+    {
+        if stanza.attr("id").is_none() {
+            stanza.set_attr("id", make_id());
+        }
+    }
+
+    stanza
 }
 
 /// Wraps a binary stream (tokio's `AsyncRead + AsyncWrite`) to decode

@@ -12,7 +12,7 @@ use super::happy_eyeballs::connect_to_host;
 use super::xmpp_codec::Packet;
 use super::xmpp_stream;
 use super::Error;
-use crate::xmpp_stream::make_id;
+use crate::xmpp_stream::add_stanza_id;
 
 mod auth;
 
@@ -54,11 +54,7 @@ impl Component {
 
     /// Send stanza
     pub async fn send_stanza(&mut self, stanza: Element) -> Result<(), Error> {
-        let mut el: Element = stanza;
-        if el.attr("id").is_none() {
-            el.set_attr("id", make_id());
-        }
-        self.send(el).await
+        self.send(add_stanza_id(stanza, ns::COMPONENT_ACCEPT)).await
     }
 
     /// End connection

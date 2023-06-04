@@ -17,7 +17,7 @@ use super::bind::bind;
 use crate::happy_eyeballs::connect_with_srv;
 use crate::starttls::starttls;
 use crate::xmpp_codec::Packet;
-use crate::xmpp_stream::{self, make_id};
+use crate::xmpp_stream::{self, add_stanza_id};
 use crate::{Error, ProtocolError};
 
 /// A simple XMPP client connection
@@ -98,11 +98,11 @@ impl Client {
     where
         E: Into<Element>,
     {
-        let mut el: Element = stanza.into();
-        if el.attr("id").is_none() {
-            el.set_attr("id", make_id());
-        }
-        self.send(Packet::Stanza(el.into())).await
+        self.send(Packet::Stanza(add_stanza_id(
+            stanza.into(),
+            ns::JABBER_CLIENT,
+        )))
+        .await
     }
 
     /// End connection by sending `</stream:stream>`
