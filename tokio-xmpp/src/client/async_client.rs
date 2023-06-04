@@ -17,7 +17,7 @@ use crate::event::Event;
 use crate::happy_eyeballs::{connect_to_host, connect_with_srv};
 use crate::starttls::starttls;
 use crate::xmpp_codec::Packet;
-use crate::xmpp_stream;
+use crate::xmpp_stream::{self, make_id};
 use crate::{Error, ProtocolError};
 
 /// XMPP client connection and state
@@ -161,7 +161,11 @@ impl Client {
 
     /// Send stanza
     pub async fn send_stanza(&mut self, stanza: Element) -> Result<(), Error> {
-        self.send(Packet::Stanza(stanza)).await
+        let mut el: Element = stanza;
+        if el.attr("id").is_none() {
+            el.set_attr("id", make_id());
+        }
+        self.send(Packet::Stanza(el)).await
     }
 
     /// End connection by sending `</stream:stream>`

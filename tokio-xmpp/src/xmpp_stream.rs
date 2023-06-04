@@ -14,7 +14,7 @@ use crate::stream_start;
 use crate::xmpp_codec::{Packet, XMPPCodec};
 use crate::Error;
 
-fn make_id() -> String {
+pub(crate) fn make_id() -> String {
     let id: u64 = thread_rng().gen();
     format!("{}", id)
 }
@@ -78,11 +78,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin> XMPPStream<S> {
 impl<S: AsyncRead + AsyncWrite + Unpin> XMPPStream<S> {
     /// Convenience method
     pub fn send_stanza<E: Into<Element>>(&mut self, e: E) -> Send<Self, Packet> {
-        let mut el: Element = e.into();
-        if el.attr("id").is_none() {
-            el.set_attr("id", make_id());
-        }
-        self.send(Packet::Stanza(el))
+        self.send(Packet::Stanza(e.into()))
     }
 }
 
