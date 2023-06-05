@@ -10,7 +10,7 @@ variables:
 
 .show-version:
   before_script:
-    - apt-get update; apt-get install -y --no-install-recommends pkg-config libssl-dev
+    - apt-get update; apt-get install -y --no-install-recommends pkg-config libssl-dev libicu-dev
     - rustc --version
     - cargo --version
 
