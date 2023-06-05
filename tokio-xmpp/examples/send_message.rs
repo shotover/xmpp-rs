@@ -9,6 +9,8 @@ use xmpp_parsers::Jid;
 
 #[tokio::main]
 async fn main() {
+    env_logger::init();
+
     let args: Vec<String> = args().collect();
     if args.len() != 4 {
         println!("Usage: {} <jid> <password> <recipient>", args[0]);

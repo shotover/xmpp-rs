@@ -31,6 +31,9 @@ rxml = "0.9.1"
 webpki-roots = { version = "0.23", optional = true }
 rand = "^0.8"
 
+[dev-dependencies]
+env_logger = "0.10"
+
 [build-dependencies]
 rustc_version = "0.4"
 

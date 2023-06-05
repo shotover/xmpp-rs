@@ -14,6 +14,8 @@ use xmpp_parsers::{
 
 #[tokio::main]
 async fn main() {
+    env_logger::init();
+
     let args: Vec<String> = args().collect();
     if args.len() != 4 {
         println!("Usage: {} <jid> <password> <target>", args[0]);

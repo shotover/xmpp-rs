@@ -10,6 +10,8 @@ use xmpp_parsers::{Element, Jid};
 
 #[tokio::main]
 async fn main() {
+    env_logger::init();
+
     let args: Vec<String> = args().collect();
     if args.len() < 3 || args.len() > 5 {
         println!("Usage: {} <jid> <password> [server] [port]", args[0]);
