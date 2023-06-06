@@ -298,6 +298,9 @@ mod tests {
         assert_size!(Mode, 1);
         assert_size!(CandidateId, 24);
         assert_size!(StreamId, 24);
+        #[cfg(rustc_nightly)]
+        assert_size!(Candidate, 128);
+        #[cfg(not(rustc_nightly))]
         assert_size!(Candidate, 136);
         assert_size!(TransportPayload, 32);
         assert_size!(Transport, 88);

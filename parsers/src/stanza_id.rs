@@ -52,6 +52,9 @@ mod tests {
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
+        #[cfg(rustc_nightly)]
+        assert_size!(StanzaId, 96);
+        #[cfg(not(rustc_nightly))]
         assert_size!(StanzaId, 104);
         assert_size!(OriginId, 24);
     }

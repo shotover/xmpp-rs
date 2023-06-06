@@ -24,6 +24,9 @@ sha3 = "0.10"
 blake2 = "0.10.4"
 chrono = { version = "0.4.5", default-features = false, features = ["std"] }
 
+[build-dependencies]
+rustc_version = "0.4"
+
 [features]
 # Build xmpp-parsers to make components instead of clients.
 component = []
