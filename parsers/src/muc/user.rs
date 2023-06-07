@@ -272,6 +272,7 @@ generate_element!(
 );
 
 impl MucUser {
+    /// Creates an empty MucUser
     pub fn new() -> MucUser {
         MucUser {
             status: vec![],
@@ -279,11 +280,13 @@ impl MucUser {
         }
     }
 
+    /// Set statuses for this MucUser
     pub fn with_statuses(mut self, status: Vec<Status>) -> MucUser {
         self.status = status;
         self
     }
 
+    /// Set items for this MucUser
     pub fn with_items(mut self, items: Vec<Item>) -> MucUser {
         self.items = items;
         self
