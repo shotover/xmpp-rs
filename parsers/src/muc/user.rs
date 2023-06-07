@@ -279,7 +279,7 @@ impl MucUser {
         }
     }
 
-    pub fn with_status(mut self, status: Vec<Status>) -> MucUser {
+    pub fn with_statuses(mut self, status: Vec<Status>) -> MucUser {
         self.status = status;
         self
     }
