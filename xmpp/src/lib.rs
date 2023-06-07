@@ -91,8 +91,8 @@ pub enum Event {
     RoomLeft(BareJid),
     RoomMessage(Id, BareJid, RoomNick, Body),
     /// A private message received from a room, containing the message ID, the room's BareJid,
-    /// the sender's FullJid, the corresponding nickname, and the message body.
-    RoomPrivateMessage(Id, BareJid, FullJid, RoomNick, Body),
+    /// the sender's nickname, and the message body.
+    RoomPrivateMessage(Id, BareJid, RoomNick, Body),
     ServiceMessage(Id, BareJid, Body),
     HttpUploadedFile(String),
 }
@@ -255,6 +255,18 @@ impl Agent {
         let _ = self.client.send_stanza(message.into()).await;
     }
 
+    pub async fn send_room_private_message(
+        &mut self,
+        room: BareJid,
+        recipient: RoomNick,
+        type_: MessageType,
+        lang: &str,
+        text: &str,
+    ) {
+        let recipient = room.with_resource(recipient);
+        self.send_message(recipient.into(), type_, lang, text).await
+    }
+
     fn make_initial_presence(disco: &DiscoInfoResult, node: &str) -> Presence {
         let caps_data = compute_disco(disco);
         let hash = hash_caps(&caps_data, Algo::Sha_1).unwrap();
@@ -272,7 +284,7 @@ impl Agent {
             .clone()
             .unwrap_or_else(|| self.client.bound_jid().unwrap().clone());
         if let IqType::Get(payload) = iq.payload {
-            if payload.is("query", ns::DISCO_INFO) {
+            if MucUser::try_from(payload.clone()).is_ok() {
                 let query = DiscoInfoQuery::try_from(payload);
                 match query {
                     Ok(query) => {
@@ -375,7 +387,6 @@ impl Agent {
                                 Jid::Full(full) => Event::RoomPrivateMessage(
                                     message.id.clone(),
                                     full.clone().into(),
-                                    full.clone(),
                                     full.resource,
                                     body.clone(),
                                 ),
