@@ -271,6 +271,25 @@ generate_element!(
     ]
 );
 
+impl MucUser {
+    pub fn new() -> MucUser {
+        MucUser {
+            status: vec![],
+            items: vec![],
+        }
+    }
+
+    pub fn with_status(mut self, status: Vec<Status>) -> MucUser {
+        self.status = status;
+        self
+    }
+
+    pub fn with_items(mut self, items: Vec<Item>) -> MucUser {
+        self.items = items;
+        self
+    }
+}
+
 impl MessagePayload for MucUser {}
 impl PresencePayload for MucUser {}
 
