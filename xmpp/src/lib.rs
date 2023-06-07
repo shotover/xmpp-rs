@@ -259,12 +259,16 @@ impl Agent {
         &mut self,
         room: BareJid,
         recipient: RoomNick,
-        type_: MessageType,
         lang: &str,
         text: &str,
     ) {
-        let recipient = room.with_resource(recipient);
-        self.send_message(recipient.into(), type_, lang, text).await
+        let recipient: Jid = room.with_resource(recipient).into();
+        let mut message = Message::new(Some(recipient)).with_payload(MucUser::new());
+        message.type_ = MessageType::Chat;
+        message
+            .bodies
+            .insert(String::from(lang), Body(String::from(text)));
+        let _ = self.client.send_stanza(message.into()).await;
     }
 
     fn make_initial_presence(disco: &DiscoInfoResult, node: &str) -> Presence {
