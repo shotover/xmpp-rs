@@ -288,7 +288,7 @@ impl Agent {
             .clone()
             .unwrap_or_else(|| self.client.bound_jid().unwrap().clone());
         if let IqType::Get(payload) = iq.payload {
-            if MucUser::try_from(payload.clone()).is_ok() {
+            if payload.is("query", ns::DISCO_INFO) {
                 let query = DiscoInfoQuery::try_from(payload);
                 match query {
                     Ok(query) => {
@@ -381,7 +381,7 @@ impl Agent {
                     let mut found_special_message = false;
 
                     for payload in &message.payloads {
-                        if payload.is("x", xmpp_parsers::ns::MUC_USER) {
+                        if let Ok(_) = MucUser::try_from(payload.clone()) {
                             let event = match from.clone() {
                                 Jid::Bare(bare) => {
                                     // TODO: Can a service message be of type Chat/Normal and not Groupchat?
