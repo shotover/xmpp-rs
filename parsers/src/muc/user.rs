@@ -5,6 +5,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use crate::message::MessagePayload;
 use crate::ns;
 use crate::presence::PresencePayload;
 use crate::util::error::Error;
@@ -270,12 +271,15 @@ generate_element!(
     ]
 );
 
+impl MessagePayload for MucUser {}
 impl PresencePayload for MucUser {}
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::message::Message;
     use crate::presence::{Presence, Type as PresenceType};
+    use crate::{BareJid, Jid};
 
     #[test]
     fn test_simple() {
@@ -713,5 +717,15 @@ mod tests {
             .unwrap();
         let presence = Presence::new(PresenceType::None).with_payloads(vec![elem]);
         assert_eq!(presence.payloads.len(), 1);
+    }
+
+    #[test]
+    fn message_payload() {
+        let jid: Jid = Jid::Bare(BareJid::new("louise", "example.com"));
+        let elem: Element = "<x xmlns='http://jabber.org/protocol/muc#user'/>"
+            .parse()
+            .unwrap();
+        let message = Message::new(jid).with_payloads(vec![elem]);
+        assert_eq!(message.payloads.len(), 1);
     }
 }
