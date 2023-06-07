@@ -4,6 +4,8 @@ Unreleased
     - serde: Jid is now using untagged enum representation (#66)
   * Additions
     - From<&Jid> is now implemented for String (#69)
+    - Parsing invalid JIDs with stringprep feature no longer results in panic,
+    returning JidParseError::IcuError instead (#84)
 
 Version 0.9.3, release 2022-03-07:
   * Updates

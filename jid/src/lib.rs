@@ -42,8 +42,16 @@ pub enum JidParseError {
     EmptyResource,
 
     #[cfg(feature = "icu")]
-    /// TODO
+    /// Happens when the JID is invalid according to stringprep. TODO: make errors
+    /// meaningful.
     IcuError(icu::Error),
+}
+
+#[cfg(feature = "icu")]
+impl From<icu::Error> for JidParseError {
+    fn from(e: icu::Error) -> JidParseError {
+        JidParseError::IcuError(e)
+    }
 }
 
 impl StdError for JidParseError {}
@@ -410,13 +418,19 @@ fn _from_str(s: &str) -> Result<StringJid, JidParseError> {
     let domain = domain.ok_or(JidParseError::NoDomain)?;
     #[cfg(feature = "icu")]
     let (node, domain, resource) = {
-        let icu = Icu::new().unwrap();
-        let node = node.map(|node| icu.nodeprep(&node, Strict::AllowUnassigned).unwrap());
-        let domain = icu.idna2008.to_unicode(&domain).unwrap();
-        let resource = resource.map(|resource| {
-            icu.resourceprep(&resource, Strict::AllowUnassigned)
-                .unwrap()
-        });
+        let icu = Icu::new()?;
+        let node = if let Some(node) = node {
+            Some(icu.nodeprep(&node, Strict::AllowUnassigned)?)
+        } else {
+            None
+        };
+        let domain = icu.idna2008.to_unicode(&domain)?;
+        let resource = if let Some(resource) = resource {
+            Some(icu.resourceprep(&resource, Strict::AllowUnassigned)?)
+        } else {
+            None
+        };
+
         (node, domain, resource)
     };
     Ok((node, domain, resource))
