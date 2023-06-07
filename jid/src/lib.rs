@@ -44,13 +44,13 @@ pub enum JidParseError {
     #[cfg(feature = "icu")]
     /// Happens when the JID is invalid according to stringprep. TODO: make errors
     /// meaningful.
-    IcuError(icu::Error),
+    Stringprep(icu::Error),
 }
 
 #[cfg(feature = "icu")]
 impl From<icu::Error> for JidParseError {
     fn from(e: icu::Error) -> JidParseError {
-        JidParseError::IcuError(e)
+        JidParseError::Stringprep(e)
     }
 }
 
@@ -67,7 +67,7 @@ impl fmt::Display for JidParseError {
                 JidParseError::EmptyNode => "nodepart empty despite the presence of a @",
                 JidParseError::EmptyResource => "resource empty despite the presence of a /",
                 #[cfg(feature = "icu")]
-                JidParseError::IcuError(_err) => "TODO",
+                JidParseError::Stringprep(_err) => "TODO",
             }
         )
     }
