@@ -154,6 +154,18 @@ impl Message {
         self
     }
 
+    /// Set a payload inside this message.
+    pub fn with_payload<P: MessagePayload>(mut self, payload: P) -> Message {
+        self.payloads.push(payload.into());
+        self
+    }
+
+    /// Set the payloads of this message.
+    pub fn with_payloads(mut self, payloads: Vec<Element>) -> Message {
+        self.payloads = payloads;
+        self
+    }
+
     fn get_best<'a, T>(
         map: &'a BTreeMap<Lang, T>,
         preferred_langs: Vec<&str>,
