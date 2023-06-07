@@ -90,6 +90,9 @@ pub enum Event {
     RoomJoined(BareJid),
     RoomLeft(BareJid),
     RoomMessage(Id, BareJid, RoomNick, Body),
+    /// A private message received from a room, containing the message ID, the room's BareJid,
+    /// the sender's FullJid, the corresponding nickname, and the message body.
+    RoomPrivateMessage(Id, BareJid, FullJid, RoomNick, Body),
     ServiceMessage(Id, BareJid, Body),
     HttpUploadedFile(String),
 }
@@ -359,9 +362,38 @@ impl Agent {
                     events.push(event)
                 }
                 MessageType::Chat | MessageType::Normal => {
-                    let event =
-                        Event::ChatMessage(message.id.clone(), from.clone().into(), body.clone());
-                    events.push(event)
+                    let mut found_special_message = false;
+
+                    for payload in &message.payloads {
+                        if payload.is("x", xmpp_parsers::ns::MUC_USER) {
+                            let event = match from.clone() {
+                                Jid::Bare(bare) => {
+                                    // TODO: Can a service message be of type Chat/Normal and not Groupchat?
+                                    warn!("Received misformed MessageType::Chat in muc#user namespace from a bare JID.");
+                                    Event::ServiceMessage(message.id.clone(), bare, body.clone())
+                                }
+                                Jid::Full(full) => Event::RoomPrivateMessage(
+                                    message.id.clone(),
+                                    full.clone().into(),
+                                    full.clone(),
+                                    full.resource,
+                                    body.clone(),
+                                ),
+                            };
+
+                            found_special_message = true;
+                            events.push(event);
+                        }
+                    }
+
+                    if !found_special_message {
+                        let event = Event::ChatMessage(
+                            message.id.clone(),
+                            from.clone().into(),
+                            body.clone(),
+                        );
+                        events.push(event)
+                    }
                 }
                 _ => (),
             },
