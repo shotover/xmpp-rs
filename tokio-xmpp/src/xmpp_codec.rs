@@ -10,8 +10,42 @@ use std::collections::HashMap;
 use std::default::Default;
 use std::fmt::Write;
 use std::io;
+#[cfg(feature = "syntax-highlighting")]
+use std::sync::OnceLock;
 use tokio_util::codec::{Decoder, Encoder};
 use xmpp_parsers::Element;
+
+#[cfg(feature = "syntax-highlighting")]
+static PS: OnceLock<syntect::parsing::SyntaxSet> = OnceLock::new();
+#[cfg(feature = "syntax-highlighting")]
+static SYNTAX: OnceLock<syntect::parsing::SyntaxReference> = OnceLock::new();
+#[cfg(feature = "syntax-highlighting")]
+static THEME: OnceLock<syntect::highlighting::Theme> = OnceLock::new();
+
+#[cfg(feature = "syntax-highlighting")]
+fn init_syntect() {
+    let ps = syntect::parsing::SyntaxSet::load_defaults_newlines();
+    let syntax = ps.find_syntax_by_extension("xml").unwrap();
+    let ts = syntect::highlighting::ThemeSet::load_defaults();
+    let theme = ts.themes["Solarized (dark)"].clone();
+
+    SYNTAX.set(syntax.clone()).unwrap();
+    PS.set(ps).unwrap();
+    THEME.set(theme).unwrap();
+}
+
+#[cfg(feature = "syntax-highlighting")]
+fn highlight_xml(xml: &str) -> String {
+    let mut h = syntect::easy::HighlightLines::new(SYNTAX.get().unwrap(), THEME.get().unwrap());
+    let ranges: Vec<_> = h.highlight_line(&xml, PS.get().unwrap()).unwrap();
+    let escaped = syntect::util::as_24_bit_terminal_escaped(&ranges[..], false);
+    format!("{}\x1b[0m", escaped)
+}
+
+#[cfg(not(feature = "syntax-highlighting"))]
+fn highlight_xml(xml: &str) -> &str {
+    xml
+}
 
 /// Anything that can be sent or received on an XMPP/XML stream
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -40,6 +74,10 @@ impl XMPPCodec {
     pub fn new() -> Self {
         let stanza_builder = TreeBuilder::new();
         let driver = PushDriver::wrap(Lexer::new(), RawParser::new());
+        #[cfg(feature = "syntax-highlighting")]
+        if log::log_enabled!(log::Level::Debug) && PS.get().is_none() {
+            init_syntect();
+        }
         XMPPCodec {
             ns: None,
             driver,
@@ -88,19 +126,19 @@ impl Decoder for XMPPCodec {
                             },
                         ))
                         .collect();
-                debug!("<< {}", String::from(root));
+                debug!("<< {}", highlight_xml(&String::from(root)));
                 return Ok(Some(Packet::StreamStart(attrs)));
             } else if self.stanza_builder.depth() == 1 {
                 self.driver.release_temporaries();
 
                 if let Some(stanza) = self.stanza_builder.unshift_child() {
-                    debug!("<< {}", String::from(&stanza));
+                    debug!("<< {}", highlight_xml(&String::from(&stanza)));
                     return Ok(Some(Packet::Stanza(stanza)));
                 }
             } else if let Some(_) = self.stanza_builder.root.take() {
                 self.driver.release_temporaries();
 
-                debug!("<< </stream:stream>");
+                debug!("<< {}", highlight_xml("</stream:stream>"));
                 return Ok(Some(Packet::StreamEnd));
             }
         }
@@ -140,7 +178,7 @@ impl Encoder<Packet> for XMPPCodec {
                 write!(buf, ">\n").map_err(to_io_err)?;
 
                 let utf8 = std::str::from_utf8(dst)?;
-                debug!(">> {}", utf8);
+                debug!(">> {}", highlight_xml(utf8));
                 write!(dst, "{}", buf)?
             }
             Packet::Stanza(stanza) => {
@@ -148,15 +186,16 @@ impl Encoder<Packet> for XMPPCodec {
                     .write_to(&mut WriteBytes::new(dst))
                     .map_err(|e| to_io_err(format!("{}", e)))?;
                 let utf8 = std::str::from_utf8(dst)?;
-                debug!(">> {}", utf8);
+                debug!(">> {}", highlight_xml(utf8));
             }
             Packet::Text(text) => {
                 let _ = write_text(&text, dst).map_err(to_io_err)?;
                 let utf8 = std::str::from_utf8(dst)?;
-                debug!(">> {}", utf8);
+                debug!(">> {}", highlight_xml(utf8));
             }
             Packet::StreamEnd => {
                 let _ = write!(dst, "</stream:stream>\n").map_err(to_io_err);
+                debug!(">> {}", highlight_xml("</stream:stream>"));
             }
         }
 

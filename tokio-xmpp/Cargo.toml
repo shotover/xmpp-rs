@@ -30,6 +30,7 @@ minidom = "0.15"
 rxml = "0.9.1"
 webpki-roots = { version = "0.23", optional = true }
 rand = "^0.8"
+syntect = { version = "5", optional = true }
 
 [dev-dependencies]
 env_logger = "0.10"
@@ -41,3 +42,4 @@ rustc_version = "0.4"
 default = ["tls-native"]
 tls-rust = ["tokio-rustls", "webpki-roots"]
 tls-native = ["tokio-native-tls", "native-tls"]
+syntax-highlighting = ["syntect"]
