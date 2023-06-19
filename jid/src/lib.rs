@@ -18,15 +18,13 @@ use std::convert::{Into, TryFrom};
 use std::error::Error as StdError;
 use std::fmt;
 use std::str::FromStr;
+use stringprep::{nameprep, nodeprep, resourceprep};
 
 #[cfg(feature = "serde")]
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 
-#[cfg(feature = "icu")]
-use icu::{Icu, Strict};
-
 /// An error that signifies that a `Jid` cannot be parsed from a string.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug)]
 pub enum JidParseError {
     /// Happens when there is no domain, that is either the string is empty,
     /// starts with a /, or contains the @/ sequence.
@@ -41,18 +39,32 @@ pub enum JidParseError {
     /// Happens when the resource is empty, that is the string ends with a /.
     EmptyResource,
 
-    #[cfg(feature = "icu")]
     /// Happens when the JID is invalid according to stringprep. TODO: make errors
     /// meaningful.
-    Stringprep(icu::Error),
+    Stringprep(stringprep::Error),
 }
 
-#[cfg(feature = "icu")]
-impl From<icu::Error> for JidParseError {
-    fn from(e: icu::Error) -> JidParseError {
+impl From<stringprep::Error> for JidParseError {
+    fn from(e: stringprep::Error) -> JidParseError {
         JidParseError::Stringprep(e)
     }
 }
+
+impl PartialEq for JidParseError {
+    fn eq(&self, other: &JidParseError) -> bool {
+        use JidParseError as E;
+        match (self, other) {
+            (E::NoDomain, E::NoDomain) => true,
+            (E::NoResource, E::NoResource) => true,
+            (E::EmptyNode, E::EmptyNode) => true,
+            (E::EmptyResource, E::EmptyResource) => true,
+            (E::Stringprep(_), E::Stringprep(_)) => false, // TODO: fix that.
+            _ => false,
+        }
+    }
+}
+
+impl Eq for JidParseError {}
 
 impl StdError for JidParseError {}
 
@@ -66,7 +78,6 @@ impl fmt::Display for JidParseError {
                 JidParseError::NoResource => "no resource found in this full JID",
                 JidParseError::EmptyNode => "nodepart empty despite the presence of a @",
                 JidParseError::EmptyResource => "resource empty despite the presence of a /",
-                #[cfg(feature = "icu")]
                 JidParseError::Stringprep(_err) => "TODO",
             }
         )
@@ -416,17 +427,15 @@ fn _from_str(s: &str) -> Result<StringJid, JidParseError> {
         return Err(JidParseError::EmptyResource);
     }
     let domain = domain.ok_or(JidParseError::NoDomain)?;
-    #[cfg(feature = "icu")]
     let (node, domain, resource) = {
-        let icu = Icu::new()?;
         let node = if let Some(node) = node {
-            Some(icu.nodeprep(&node, Strict::AllowUnassigned)?)
+            Some(nodeprep(&node)?.into_owned())
         } else {
             None
         };
-        let domain = icu.idna2008.to_unicode(&domain)?;
+        let domain = nameprep(&domain)?.into_owned();
         let resource = if let Some(resource) = resource {
-            Some(icu.resourceprep(&resource, Strict::AllowUnassigned)?)
+            Some(resourceprep(&resource)?.into_owned())
         } else {
             None
         };
@@ -973,9 +982,8 @@ mod tests {
         assert_eq!(elem.attr("from"), Some(String::from(bare).as_ref()));
     }
 
-    #[cfg(feature = "icu")]
     #[test]
-    fn icu_jid() {
+    fn stringprep() {
         let full = FullJid::from_str("Test@☃.coM/Test™").unwrap();
         let equiv = FullJid::new("test", "☃.com", "TestTM");
         assert_eq!(full, equiv);
