@@ -769,6 +769,28 @@ mod tests {
     use std::collections::HashMap;
     use std::str::FromStr;
 
+    macro_rules! assert_size (
+        ($t:ty, $sz:expr) => (
+            assert_eq!(::std::mem::size_of::<$t>(), $sz);
+        );
+    );
+
+    #[cfg(target_pointer_width = "32")]
+    #[test]
+    fn test_size() {
+        assert_size!(BareJid, 24);
+        assert_size!(FullJid, 36);
+        assert_size!(Jid, 36);
+    }
+
+    #[cfg(target_pointer_width = "64")]
+    #[test]
+    fn test_size() {
+        assert_size!(BareJid, 48);
+        assert_size!(FullJid, 72);
+        assert_size!(Jid, 72);
+    }
+
     #[test]
     fn can_parse_full_jids() {
         assert_eq!(
