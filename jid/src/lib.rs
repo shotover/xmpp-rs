@@ -15,7 +15,6 @@
 //! For usage, check the documentation on the `Jid` struct.
 
 use std::convert::{Into, TryFrom};
-use std::error::Error as StdError;
 use std::fmt;
 use std::str::FromStr;
 use stringprep::{nameprep, nodeprep, resourceprep};
@@ -23,66 +22,8 @@ use stringprep::{nameprep, nodeprep, resourceprep};
 #[cfg(feature = "serde")]
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 
-/// An error that signifies that a `Jid` cannot be parsed from a string.
-#[derive(Debug)]
-pub enum JidParseError {
-    /// Happens when there is no domain, that is either the string is empty,
-    /// starts with a /, or contains the @/ sequence.
-    NoDomain,
-
-    /// Happens when there is no resource, that is string contains no /.
-    NoResource,
-
-    /// Happens when the node is empty, that is the string starts with a @.
-    EmptyNode,
-
-    /// Happens when the resource is empty, that is the string ends with a /.
-    EmptyResource,
-
-    /// Happens when the JID is invalid according to stringprep. TODO: make errors
-    /// meaningful.
-    Stringprep(stringprep::Error),
-}
-
-impl From<stringprep::Error> for JidParseError {
-    fn from(e: stringprep::Error) -> JidParseError {
-        JidParseError::Stringprep(e)
-    }
-}
-
-impl PartialEq for JidParseError {
-    fn eq(&self, other: &JidParseError) -> bool {
-        use JidParseError as E;
-        match (self, other) {
-            (E::NoDomain, E::NoDomain) => true,
-            (E::NoResource, E::NoResource) => true,
-            (E::EmptyNode, E::EmptyNode) => true,
-            (E::EmptyResource, E::EmptyResource) => true,
-            (E::Stringprep(_), E::Stringprep(_)) => false, // TODO: fix that.
-            _ => false,
-        }
-    }
-}
-
-impl Eq for JidParseError {}
-
-impl StdError for JidParseError {}
-
-impl fmt::Display for JidParseError {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            fmt,
-            "{}",
-            match self {
-                JidParseError::NoDomain => "no domain found in this JID",
-                JidParseError::NoResource => "no resource found in this full JID",
-                JidParseError::EmptyNode => "nodepart empty despite the presence of a @",
-                JidParseError::EmptyResource => "resource empty despite the presence of a /",
-                JidParseError::Stringprep(_err) => "TODO",
-            }
-        )
-    }
-}
+mod error;
+pub use crate::error::JidParseError;
 
 /// An enum representing a Jabber ID. It can be either a `FullJid` or a `BareJid`.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
