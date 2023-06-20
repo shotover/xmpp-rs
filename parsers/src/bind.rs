@@ -143,7 +143,7 @@ mod tests {
     #[test]
     fn test_size() {
         assert_size!(BindQuery, 12);
-        assert_size!(BindResponse, 36);
+        assert_size!(BindResponse, 16);
     }
 
     #[cfg(target_pointer_width = "64")]

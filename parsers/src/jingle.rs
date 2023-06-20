@@ -689,11 +689,11 @@ mod tests {
         assert_size!(Senders, 1);
         assert_size!(Disposition, 1);
         assert_size!(ContentId, 12);
-        assert_size!(Content, 228);
+        assert_size!(Content, 220);
         assert_size!(Reason, 1);
         assert_size!(ReasonElement, 16);
         assert_size!(SessionId, 12);
-        assert_size!(Jingle, 152);
+        assert_size!(Jingle, 112);
     }
 
     #[cfg(target_pointer_width = "64")]

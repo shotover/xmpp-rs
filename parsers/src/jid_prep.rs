@@ -48,7 +48,7 @@ mod tests {
     #[test]
     fn test_size() {
         assert_size!(JidPrepQuery, 12);
-        assert_size!(JidPrepResponse, 40);
+        assert_size!(JidPrepResponse, 20);
     }
 
     #[cfg(target_pointer_width = "64")]

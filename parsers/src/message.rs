@@ -308,7 +308,7 @@ mod tests {
         assert_size!(Body, 12);
         assert_size!(Subject, 12);
         assert_size!(Thread, 12);
-        assert_size!(Message, 144);
+        assert_size!(Message, 104);
     }
 
     #[cfg(target_pointer_width = "64")]

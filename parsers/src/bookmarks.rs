@@ -76,7 +76,7 @@ mod tests {
     #[cfg(target_pointer_width = "32")]
     #[test]
     fn test_size() {
-        assert_size!(Conference, 64);
+        assert_size!(Conference, 56);
         assert_size!(Url, 24);
         assert_size!(Storage, 24);
     }

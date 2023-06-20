@@ -254,7 +254,7 @@ mod tests {
         assert_size!(Insert, 20);
         assert_size!(Erase, 12);
         assert_size!(Wait, 4);
-        assert_size!(Action, 24);
+        assert_size!(Action, 20);
         assert_size!(Rtt, 32);
     }
 

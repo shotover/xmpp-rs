@@ -285,7 +285,7 @@ mod tests {
         assert_size!(Mode, 1);
         assert_size!(CandidateId, 12);
         assert_size!(StreamId, 12);
-        assert_size!(Candidate, 84);
+        assert_size!(Candidate, 60);
         assert_size!(TransportPayload, 16);
         assert_size!(Transport, 44);
     }

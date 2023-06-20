@@ -79,7 +79,7 @@ mod tests {
     #[cfg(target_pointer_width = "32")]
     #[test]
     fn test_size() {
-        assert_size!(Stream, 84);
+        assert_size!(Stream, 68);
     }
 
     #[cfg(target_pointer_width = "64")]
