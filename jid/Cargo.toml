@@ -19,6 +19,7 @@ edition = "2018"
 gitlab = { repository = "xmpp-rs/xmpp-rs" }
 
 [dependencies]
+memchr = "2.5"
 minidom = { version = "0.15", optional = true }
 serde = { version = "1.0", features = ["derive"], optional = true }
 stringprep = "0.1.2"

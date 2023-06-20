@@ -12,7 +12,7 @@ use std::error::Error as StdError;
 use std::fmt;
 
 /// An error that signifies that a `Jid` cannot be parsed from a string.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum JidParseError {
     /// Happens when there is no domain, that is either the string is empty,
     /// starts with a /, or contains the @/ sequence.
@@ -27,47 +27,44 @@ pub enum JidParseError {
     /// Happens when the resource is empty, that is the string ends with a /.
     EmptyResource,
 
-    /// Happens when the JID is invalid according to stringprep. TODO: make errors
-    /// meaningful.
-    Stringprep(stringprep::Error),
-}
+    /// Happens when the localpart is longer than 1023 bytes.
+    NodeTooLong,
 
-impl From<stringprep::Error> for JidParseError {
-    fn from(e: stringprep::Error) -> JidParseError {
-        JidParseError::Stringprep(e)
-    }
-}
+    /// Happens when the domain is longer than 1023 bytes.
+    DomainTooLong,
 
-impl PartialEq for JidParseError {
-    fn eq(&self, other: &JidParseError) -> bool {
-        use JidParseError as E;
-        match (self, other) {
-            (E::NoDomain, E::NoDomain) => true,
-            (E::NoResource, E::NoResource) => true,
-            (E::EmptyNode, E::EmptyNode) => true,
-            (E::EmptyResource, E::EmptyResource) => true,
-            (E::Stringprep(_), E::Stringprep(_)) => true, // TODO: fix that upstream.
-            _ => false,
-        }
-    }
-}
+    /// Happens when the resource is longer than 1023 bytes.
+    ResourceTooLong,
 
-impl Eq for JidParseError {}
+    /// Happens when the localpart is invalid according to nodeprep.
+    NodePrep,
+
+    /// Happens when the domain is invalid according to nameprep.
+    NamePrep,
+
+    /// Happens when the resource is invalid according to resourceprep.
+    ResourcePrep,
+
+    /// Happens when parsing a bare JID and there is a resource.
+    ResourceInBareJid,
+}
 
 impl StdError for JidParseError {}
 
 impl fmt::Display for JidParseError {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            fmt,
-            "{}",
-            match self {
-                JidParseError::NoDomain => "no domain found in this JID",
-                JidParseError::NoResource => "no resource found in this full JID",
-                JidParseError::EmptyNode => "nodepart empty despite the presence of a @",
-                JidParseError::EmptyResource => "resource empty despite the presence of a /",
-                JidParseError::Stringprep(_err) => "TODO",
-            }
-        )
+        fmt.write_str(match self {
+            JidParseError::NoDomain => "no domain found in this JID",
+            JidParseError::NoResource => "no resource found in this full JID",
+            JidParseError::EmptyNode => "nodepart empty despite the presence of a @",
+            JidParseError::EmptyResource => "resource empty despite the presence of a /",
+            JidParseError::NodeTooLong => "localpart longer than 1023 bytes",
+            JidParseError::DomainTooLong => "domain longer than 1023 bytes",
+            JidParseError::ResourceTooLong => "resource longer than 1023 bytes",
+            JidParseError::NodePrep => "localpart doesn’t pass nodeprep validation",
+            JidParseError::NamePrep => "domain doesn’t pass nameprep validation",
+            JidParseError::ResourcePrep => "resource doesn’t pass resourceprep validation",
+            JidParseError::ResourceInBareJid => "resource found while parsing a bare JID",
+        })
     }
 }

@@ -14,16 +14,20 @@
 //!
 //! For usage, check the documentation on the `Jid` struct.
 
-use std::convert::{Into, TryFrom};
+use core::num::NonZeroU16;
+use std::convert::TryFrom;
 use std::fmt;
 use std::str::FromStr;
-use stringprep::{nameprep, nodeprep, resourceprep};
+use stringprep::resourceprep;
 
 #[cfg(feature = "serde")]
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 
 mod error;
 pub use crate::error::JidParseError;
+
+mod inner;
+use inner::InnerJid;
 
 /// An enum representing a Jabber ID. It can be either a `FullJid` or a `BareJid`.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -40,19 +44,8 @@ pub enum Jid {
 impl FromStr for Jid {
     type Err = JidParseError;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let (ns, ds, rs): StringJid = _from_str(s)?;
-        Ok(match rs {
-            Some(rs) => Jid::Full(FullJid {
-                node: ns,
-                domain: ds,
-                resource: rs,
-            }),
-            None => Jid::Bare(BareJid {
-                node: ns,
-                domain: ds,
-            }),
-        })
+    fn from_str(s: &str) -> Result<Jid, JidParseError> {
+        Jid::new(s)
     }
 }
 
@@ -93,26 +86,68 @@ impl fmt::Display for Jid {
 }
 
 impl Jid {
+    /// Constructs a Jabber ID from a string.
+    ///
+    /// This is of the form `node`@`domain`/`resource`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use jid::Jid;
+    /// # use jid::JidParseError;
+    ///
+    /// # fn main() -> Result<(), JidParseError> {
+    /// let jid = Jid::new("node@domain/resource")?;
+    ///
+    /// assert_eq!(jid.node(), Some("node"));
+    /// assert_eq!(jid.domain(), "domain");
+    /// assert_eq!(jid.resource(), Some("resource"));
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn new(s: &str) -> Result<Jid, JidParseError> {
+        let inner = InnerJid::new(s)?;
+        if inner.slash.is_some() {
+            Ok(Jid::Full(FullJid { inner }))
+        } else {
+            Ok(Jid::Bare(BareJid { inner }))
+        }
+    }
+
     /// The node part of the Jabber ID, if it exists, else None.
-    pub fn node(self) -> Option<String> {
+    pub fn node(&self) -> Option<&str> {
         match self {
-            Jid::Bare(BareJid { node, .. }) | Jid::Full(FullJid { node, .. }) => node,
+            Jid::Bare(BareJid { inner }) | Jid::Full(FullJid { inner }) => inner.node(),
         }
     }
 
     /// The domain of the Jabber ID.
-    pub fn domain(self) -> String {
+    pub fn domain(&self) -> &str {
         match self {
-            Jid::Bare(BareJid { domain, .. }) | Jid::Full(FullJid { domain, .. }) => domain,
+            Jid::Bare(BareJid { inner }) | Jid::Full(FullJid { inner }) => inner.domain(),
         }
     }
-}
 
-impl From<Jid> for BareJid {
-    fn from(jid: Jid) -> BareJid {
-        match jid {
-            Jid::Full(full) => full.into(),
-            Jid::Bare(bare) => bare,
+    /// The resource of the Jabber ID.
+    pub fn resource(&self) -> Option<&str> {
+        match self {
+            Jid::Bare(BareJid { inner }) | Jid::Full(FullJid { inner }) => inner.resource(),
+        }
+    }
+
+    /// Extract a bare JID from this JID, throwing away the resource.
+    pub fn to_bare(&self) -> BareJid {
+        match self {
+            Jid::Full(jid) => jid.to_bare(),
+            Jid::Bare(jid) => jid.clone(),
+        }
+    }
+
+    /// Transforms this JID into a bare JID, throwing away the resource.
+    pub fn into_bare(self) -> BareJid {
+        match self {
+            Jid::Full(jid) => jid.into_bare(),
+            Jid::Bare(jid) => jid,
         }
     }
 }
@@ -176,12 +211,7 @@ impl PartialEq<BareJid> for Jid {
 /// there is no case where a resource can be missing.  Otherwise, use a `Jid` enum.
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct FullJid {
-    /// The node part of the Jabber ID, if it exists, else None.
-    pub node: Option<String>,
-    /// The domain of the Jabber ID.
-    pub domain: String,
-    /// The resource of the Jabber ID.
-    pub resource: String,
+    inner: InnerJid,
 }
 
 /// A struct representing a bare Jabber ID.
@@ -195,10 +225,7 @@ pub struct FullJid {
 /// there is no case where a resource can be set.  Otherwise, use a `Jid` enum.
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct BareJid {
-    /// The node part of the Jabber ID, if it exists, else None.
-    pub node: Option<String>,
-    /// The domain of the Jabber ID.
-    pub domain: String,
+    inner: InnerJid,
 }
 
 impl From<FullJid> for String {
@@ -209,15 +236,7 @@ impl From<FullJid> for String {
 
 impl From<&FullJid> for String {
     fn from(jid: &FullJid) -> String {
-        let mut string = String::new();
-        if let Some(ref node) = jid.node {
-            string.push_str(node);
-            string.push('@');
-        }
-        string.push_str(&jid.domain);
-        string.push('/');
-        string.push_str(&jid.resource);
-        string
+        jid.inner.normalized.clone()
     }
 }
 
@@ -229,22 +248,7 @@ impl From<BareJid> for String {
 
 impl From<&BareJid> for String {
     fn from(jid: &BareJid) -> String {
-        let mut string = String::new();
-        if let Some(ref node) = jid.node {
-            string.push_str(node);
-            string.push('@');
-        }
-        string.push_str(&jid.domain);
-        string
-    }
-}
-
-impl From<FullJid> for BareJid {
-    fn from(full: FullJid) -> BareJid {
-        BareJid {
-            node: full.node,
-            domain: full.domain,
-        }
+        jid.inner.normalized.clone()
     }
 }
 
@@ -292,110 +296,11 @@ impl Serialize for BareJid {
     }
 }
 
-enum ParserState {
-    Node,
-    Domain,
-    Resource,
-}
-
-type StringJid = (Option<String>, String, Option<String>);
-fn _from_str(s: &str) -> Result<StringJid, JidParseError> {
-    // TODO: very naive, may need to do it differently
-    let iter = s.chars();
-    let mut buf = String::with_capacity(s.len());
-    let mut state = ParserState::Node;
-    let mut node = None;
-    let mut domain = None;
-    let mut resource = None;
-    for c in iter {
-        match state {
-            ParserState::Node => {
-                match c {
-                    '@' => {
-                        if buf.is_empty() {
-                            return Err(JidParseError::EmptyNode);
-                        }
-                        state = ParserState::Domain;
-                        node = Some(buf.clone()); // TODO: performance tweaks, do not need to copy it
-                        buf.clear();
-                    }
-                    '/' => {
-                        if buf.is_empty() {
-                            return Err(JidParseError::NoDomain);
-                        }
-                        state = ParserState::Resource;
-                        domain = Some(buf.clone()); // TODO: performance tweaks
-                        buf.clear();
-                    }
-                    c => {
-                        buf.push(c);
-                    }
-                }
-            }
-            ParserState::Domain => {
-                match c {
-                    '/' => {
-                        if buf.is_empty() {
-                            return Err(JidParseError::NoDomain);
-                        }
-                        state = ParserState::Resource;
-                        domain = Some(buf.clone()); // TODO: performance tweaks
-                        buf.clear();
-                    }
-                    c => {
-                        buf.push(c);
-                    }
-                }
-            }
-            ParserState::Resource => {
-                buf.push(c);
-            }
-        }
-    }
-    if !buf.is_empty() {
-        match state {
-            ParserState::Node => {
-                domain = Some(buf);
-            }
-            ParserState::Domain => {
-                domain = Some(buf);
-            }
-            ParserState::Resource => {
-                resource = Some(buf);
-            }
-        }
-    } else if let ParserState::Resource = state {
-        return Err(JidParseError::EmptyResource);
-    }
-    let domain = domain.ok_or(JidParseError::NoDomain)?;
-    let (node, domain, resource) = {
-        let node = if let Some(node) = node {
-            Some(nodeprep(&node)?.into_owned())
-        } else {
-            None
-        };
-        let domain = nameprep(&domain)?.into_owned();
-        let resource = if let Some(resource) = resource {
-            Some(resourceprep(&resource)?.into_owned())
-        } else {
-            None
-        };
-
-        (node, domain, resource)
-    };
-    Ok((node, domain, resource))
-}
-
 impl FromStr for FullJid {
     type Err = JidParseError;
 
     fn from_str(s: &str) -> Result<FullJid, JidParseError> {
-        let (ns, ds, rs): StringJid = _from_str(s)?;
-        Ok(FullJid {
-            node: ns,
-            domain: ds,
-            resource: rs.ok_or(JidParseError::NoResource)?,
-        })
+        FullJid::new(s)
     }
 }
 
@@ -430,102 +335,60 @@ impl FullJid {
     ///
     /// ```
     /// use jid::FullJid;
+    /// # use jid::JidParseError;
     ///
-    /// let jid = FullJid::new("node", "domain", "resource");
+    /// # fn main() -> Result<(), JidParseError> {
+    /// let jid = FullJid::new("node@domain/resource")?;
     ///
-    /// assert_eq!(jid.node, Some("node".to_owned()));
-    /// assert_eq!(jid.domain, "domain".to_owned());
-    /// assert_eq!(jid.resource, "resource".to_owned());
+    /// assert_eq!(jid.node(), Some("node"));
+    /// assert_eq!(jid.domain(), "domain");
+    /// assert_eq!(jid.resource(), "resource");
+    /// # Ok(())
+    /// # }
     /// ```
-    pub fn new<NS, DS, RS>(node: NS, domain: DS, resource: RS) -> FullJid
-    where
-        NS: Into<String>,
-        DS: Into<String>,
-        RS: Into<String>,
-    {
-        FullJid {
-            node: Some(node.into()),
-            domain: domain.into(),
-            resource: resource.into(),
+    pub fn new(s: &str) -> Result<FullJid, JidParseError> {
+        let inner = InnerJid::new(s)?;
+        if inner.slash.is_some() {
+            Ok(FullJid { inner })
+        } else {
+            Err(JidParseError::NoResource)
         }
     }
 
-    /// Constructs a new Jabber ID from an existing one, with the node swapped out with a new one.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use jid::FullJid;
-    ///
-    /// let jid = FullJid::new("node", "domain", "resource");
-    ///
-    /// assert_eq!(jid.node, Some("node".to_owned()));
-    ///
-    /// let new_jid = jid.with_node("new_node");
-    ///
-    /// assert_eq!(new_jid.node, Some("new_node".to_owned()));
-    /// ```
-    pub fn with_node<NS>(&self, node: NS) -> FullJid
-    where
-        NS: Into<String>,
-    {
-        FullJid {
-            node: Some(node.into()),
-            domain: self.domain.clone(),
-            resource: self.resource.clone(),
-        }
+    /// The node part of the Jabber ID, if it exists, else None.
+    pub fn node(&self) -> Option<&str> {
+        self.inner.node()
     }
 
-    /// Constructs a new Jabber ID from an existing one, with the domain swapped out with a new one.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use jid::FullJid;
-    ///
-    /// let jid = FullJid::new("node", "domain", "resource");
-    ///
-    /// assert_eq!(jid.domain, "domain".to_owned());
-    ///
-    /// let new_jid = jid.with_domain("new_domain");
-    ///
-    /// assert_eq!(new_jid.domain, "new_domain");
-    /// ```
-    pub fn with_domain<DS>(&self, domain: DS) -> FullJid
-    where
-        DS: Into<String>,
-    {
-        FullJid {
-            node: self.node.clone(),
-            domain: domain.into(),
-            resource: self.resource.clone(),
-        }
+    /// The domain part of the Jabber ID.
+    pub fn domain(&self) -> &str {
+        self.inner.domain()
     }
 
-    /// Constructs a full Jabber ID from a bare Jabber ID, specifying a `resource`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use jid::FullJid;
-    ///
-    /// let jid = FullJid::new("node", "domain", "resource");
-    ///
-    /// assert_eq!(jid.resource, "resource".to_owned());
-    ///
-    /// let new_jid = jid.with_resource("new_resource");
-    ///
-    /// assert_eq!(new_jid.resource, "new_resource");
-    /// ```
-    pub fn with_resource<RS>(&self, resource: RS) -> FullJid
-    where
-        RS: Into<String>,
-    {
-        FullJid {
-            node: self.node.clone(),
-            domain: self.domain.clone(),
-            resource: resource.into(),
-        }
+    /// The resource of the Jabber ID.  Since this is a full JID it is always present.
+    pub fn resource(&self) -> &str {
+        self.inner.resource().unwrap()
+    }
+
+    /// Extract a bare JID from this full JID, throwing away the resource.
+    pub fn to_bare(&self) -> BareJid {
+        let slash = self.inner.slash.unwrap().get() as usize;
+        let normalized = self.inner.normalized[..slash].to_string();
+        let inner = InnerJid {
+            normalized,
+            at: self.inner.at,
+            slash: None,
+        };
+        BareJid { inner }
+    }
+
+    /// Transforms this full JID into a bare JID, throwing away the resource.
+    pub fn into_bare(mut self) -> BareJid {
+        let slash = self.inner.slash.unwrap().get() as usize;
+        self.inner.normalized.truncate(slash);
+        self.inner.normalized.shrink_to_fit();
+        self.inner.slash = None;
+        BareJid { inner: self.inner }
     }
 }
 
@@ -533,11 +396,7 @@ impl FromStr for BareJid {
     type Err = JidParseError;
 
     fn from_str(s: &str) -> Result<BareJid, JidParseError> {
-        let (ns, ds, _rs): StringJid = _from_str(s)?;
-        Ok(BareJid {
-            node: ns,
-            domain: ds,
-        })
+        BareJid::new(s)
     }
 }
 
@@ -550,95 +409,33 @@ impl BareJid {
     ///
     /// ```
     /// use jid::BareJid;
+    /// # use jid::JidParseError;
     ///
-    /// let jid = BareJid::new("node", "domain");
+    /// # fn main() -> Result<(), JidParseError> {
+    /// let jid = BareJid::new("node@domain")?;
     ///
-    /// assert_eq!(jid.node, Some("node".to_owned()));
-    /// assert_eq!(jid.domain, "domain".to_owned());
+    /// assert_eq!(jid.node(), Some("node"));
+    /// assert_eq!(jid.domain(), "domain");
+    /// # Ok(())
+    /// # }
     /// ```
-    pub fn new<NS, DS>(node: NS, domain: DS) -> BareJid
-    where
-        NS: Into<String>,
-        DS: Into<String>,
-    {
-        BareJid {
-            node: Some(node.into()),
-            domain: domain.into(),
+    pub fn new(s: &str) -> Result<BareJid, JidParseError> {
+        let inner = InnerJid::new(s)?;
+        if inner.slash.is_none() {
+            Ok(BareJid { inner })
+        } else {
+            Err(JidParseError::ResourceInBareJid)
         }
     }
 
-    /// Constructs a bare Jabber ID containing only a `domain`.
-    ///
-    /// This is of the form `domain`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use jid::BareJid;
-    ///
-    /// let jid = BareJid::domain("domain");
-    ///
-    /// assert_eq!(jid.node, None);
-    /// assert_eq!(jid.domain, "domain".to_owned());
-    /// ```
-    pub fn domain<DS>(domain: DS) -> BareJid
-    where
-        DS: Into<String>,
-    {
-        BareJid {
-            node: None,
-            domain: domain.into(),
-        }
+    /// The node part of the Jabber ID, if it exists, else None.
+    pub fn node(&self) -> Option<&str> {
+        self.inner.node()
     }
 
-    /// Constructs a new Jabber ID from an existing one, with the node swapped out with a new one.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use jid::BareJid;
-    ///
-    /// let jid = BareJid::domain("domain");
-    ///
-    /// assert_eq!(jid.node, None);
-    ///
-    /// let new_jid = jid.with_node("node");
-    ///
-    /// assert_eq!(new_jid.node, Some("node".to_owned()));
-    /// ```
-    pub fn with_node<NS>(&self, node: NS) -> BareJid
-    where
-        NS: Into<String>,
-    {
-        BareJid {
-            node: Some(node.into()),
-            domain: self.domain.clone(),
-        }
-    }
-
-    /// Constructs a new Jabber ID from an existing one, with the domain swapped out with a new one.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use jid::BareJid;
-    ///
-    /// let jid = BareJid::domain("domain");
-    ///
-    /// assert_eq!(jid.domain, "domain");
-    ///
-    /// let new_jid = jid.with_domain("new_domain");
-    ///
-    /// assert_eq!(new_jid.domain, "new_domain");
-    /// ```
-    pub fn with_domain<DS>(&self, domain: DS) -> BareJid
-    where
-        DS: Into<String>,
-    {
-        BareJid {
-            node: self.node.clone(),
-            domain: domain.into(),
-        }
+    /// The domain part of the Jabber ID.
+    pub fn domain(&self) -> &str {
+        self.inner.domain()
     }
 
     /// Constructs a full Jabber ID from a bare Jabber ID, specifying a `resource`.
@@ -648,22 +445,23 @@ impl BareJid {
     /// ```
     /// use jid::BareJid;
     ///
-    /// let bare = BareJid::new("node", "domain");
-    /// let full = bare.with_resource("resource");
+    /// let bare = BareJid::new("node@domain").unwrap();
+    /// let full = bare.with_resource("resource").unwrap();
     ///
-    /// assert_eq!(full.node, Some("node".to_owned()));
-    /// assert_eq!(full.domain, "domain".to_owned());
-    /// assert_eq!(full.resource, "resource".to_owned());
+    /// assert_eq!(full.node(), Some("node"));
+    /// assert_eq!(full.domain(), "domain");
+    /// assert_eq!(full.resource(), "resource");
     /// ```
-    pub fn with_resource<RS>(self, resource: RS) -> FullJid
-    where
-        RS: Into<String>,
-    {
-        FullJid {
-            node: self.node,
-            domain: self.domain,
-            resource: resource.into(),
-        }
+    pub fn with_resource(&self, resource: &str) -> Result<FullJid, JidParseError> {
+        let resource = resourceprep(resource).map_err(|_| JidParseError::ResourcePrep)?;
+        let slash = NonZeroU16::new(self.inner.normalized.len() as u16);
+        let normalized = format!("{}/{resource}", self.inner.normalized);
+        let inner = InnerJid {
+            normalized,
+            at: self.inner.at,
+            slash,
+        };
+        Ok(FullJid { inner })
     }
 }
 
@@ -717,7 +515,6 @@ mod tests {
     use super::*;
 
     use std::collections::HashMap;
-    use std::str::FromStr;
 
     macro_rules! assert_size (
         ($t:ty, $sz:expr) => (
@@ -728,32 +525,28 @@ mod tests {
     #[cfg(target_pointer_width = "32")]
     #[test]
     fn test_size() {
-        assert_size!(BareJid, 24);
-        assert_size!(FullJid, 36);
-        assert_size!(Jid, 36);
+        assert_size!(BareJid, 16);
+        assert_size!(FullJid, 16);
+        assert_size!(Jid, 20);
     }
 
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
-        assert_size!(BareJid, 48);
-        assert_size!(FullJid, 72);
-        assert_size!(Jid, 72);
+        assert_size!(BareJid, 32);
+        assert_size!(FullJid, 32);
+        assert_size!(Jid, 40);
     }
 
     #[test]
     fn can_parse_full_jids() {
         assert_eq!(
             FullJid::from_str("a@b.c/d"),
-            Ok(FullJid::new("a", "b.c", "d"))
+            Ok(FullJid::new("a@b.c/d").unwrap())
         );
         assert_eq!(
             FullJid::from_str("b.c/d"),
-            Ok(FullJid {
-                node: None,
-                domain: "b.c".to_owned(),
-                resource: "d".to_owned(),
-            })
+            Ok(FullJid::new("b.c/d").unwrap())
         );
 
         assert_eq!(FullJid::from_str("a@b.c"), Err(JidParseError::NoResource));
@@ -762,23 +555,11 @@ mod tests {
 
     #[test]
     fn can_parse_bare_jids() {
-        assert_eq!(BareJid::from_str("a@b.c/d"), Ok(BareJid::new("a", "b.c")));
         assert_eq!(
-            BareJid::from_str("b.c/d"),
-            Ok(BareJid {
-                node: None,
-                domain: "b.c".to_owned(),
-            })
+            BareJid::from_str("a@b.c"),
+            Ok(BareJid::new("a@b.c").unwrap())
         );
-
-        assert_eq!(BareJid::from_str("a@b.c"), Ok(BareJid::new("a", "b.c")));
-        assert_eq!(
-            BareJid::from_str("b.c"),
-            Ok(BareJid {
-                node: None,
-                domain: "b.c".to_owned(),
-            })
-        );
+        assert_eq!(BareJid::from_str("b.c"), Ok(BareJid::new("b.c").unwrap()));
     }
 
     #[test]
@@ -792,55 +573,55 @@ mod tests {
 
     #[test]
     fn full_to_bare_jid() {
-        let bare: BareJid = FullJid::new("a", "b.c", "d").into();
-        assert_eq!(bare, BareJid::new("a", "b.c"));
+        let bare: BareJid = FullJid::new("a@b.c/d").unwrap().to_bare();
+        assert_eq!(bare, BareJid::new("a@b.c").unwrap());
     }
 
     #[test]
     fn bare_to_full_jid() {
         assert_eq!(
-            BareJid::new("a", "b.c").with_resource("d"),
-            FullJid::new("a", "b.c", "d")
+            BareJid::new("a@b.c").unwrap().with_resource("d").unwrap(),
+            FullJid::new("a@b.c/d").unwrap()
         );
     }
 
     #[test]
     fn node_from_jid() {
         assert_eq!(
-            Jid::Full(FullJid::new("a", "b.c", "d")).node(),
-            Some(String::from("a")),
+            Jid::Full(FullJid::new("a@b.c/d").unwrap()).node(),
+            Some("a"),
         );
     }
 
     #[test]
     fn domain_from_jid() {
-        assert_eq!(
-            Jid::Bare(BareJid::new("a", "b.c")).domain(),
-            String::from("b.c"),
-        );
+        assert_eq!(Jid::Bare(BareJid::new("a@b.c").unwrap()).domain(), "b.c");
     }
 
     #[test]
     fn jid_to_full_bare() {
-        let full = FullJid::new("a", "b.c", "d");
-        let bare = BareJid::new("a", "b.c");
+        let full = FullJid::new("a@b.c/d").unwrap();
+        let bare = BareJid::new("a@b.c").unwrap();
 
-        assert_eq!(FullJid::try_from(Jid::Full(full.clone())), Ok(full.clone()),);
+        assert_eq!(FullJid::try_from(Jid::Full(full.clone())), Ok(full.clone()));
         assert_eq!(
             FullJid::try_from(Jid::Bare(bare.clone())),
             Err(JidParseError::NoResource),
         );
-        assert_eq!(BareJid::from(Jid::Full(full.clone())), bare.clone(),);
-        assert_eq!(BareJid::from(Jid::Bare(bare.clone())), bare,);
+        assert_eq!(Jid::Bare(full.clone().to_bare()), bare.clone());
+        assert_eq!(Jid::Bare(bare.clone()), bare);
     }
 
     #[test]
     fn serialise() {
         assert_eq!(
-            String::from(FullJid::new("a", "b", "c")),
+            String::from(FullJid::new("a@b/c").unwrap()),
             String::from("a@b/c")
         );
-        assert_eq!(String::from(BareJid::new("a", "b")), String::from("a@b"));
+        assert_eq!(
+            String::from(BareJid::new("a@b").unwrap()),
+            String::from("a@b")
+        );
     }
 
     #[test]
@@ -867,16 +648,19 @@ mod tests {
     #[test]
     fn display_jids() {
         assert_eq!(
-            format!("{}", FullJid::new("a", "b", "c")),
-            String::from("a@b/c")
-        );
-        assert_eq!(format!("{}", BareJid::new("a", "b")), String::from("a@b"));
-        assert_eq!(
-            format!("{}", Jid::Full(FullJid::new("a", "b", "c"))),
+            format!("{}", FullJid::new("a@b/c").unwrap()),
             String::from("a@b/c")
         );
         assert_eq!(
-            format!("{}", Jid::Bare(BareJid::new("a", "b"))),
+            format!("{}", BareJid::new("a@b").unwrap()),
+            String::from("a@b")
+        );
+        assert_eq!(
+            format!("{}", Jid::Full(FullJid::new("a@b/c").unwrap())),
+            String::from("a@b/c")
+        );
+        assert_eq!(
+            format!("{}", Jid::Bare(BareJid::new("a@b").unwrap())),
             String::from("a@b")
         );
     }
@@ -886,31 +670,31 @@ mod tests {
     fn minidom() {
         let elem: minidom::Element = "<message xmlns='ns1' from='a@b/c'/>".parse().unwrap();
         let to: Jid = elem.attr("from").unwrap().parse().unwrap();
-        assert_eq!(to, Jid::Full(FullJid::new("a", "b", "c")));
+        assert_eq!(to, Jid::Full(FullJid::new("a@b/c").unwrap()));
 
         let elem: minidom::Element = "<message xmlns='ns1' from='a@b'/>".parse().unwrap();
         let to: Jid = elem.attr("from").unwrap().parse().unwrap();
-        assert_eq!(to, Jid::Bare(BareJid::new("a", "b")));
+        assert_eq!(to, Jid::Bare(BareJid::new("a@b").unwrap()));
 
         let elem: minidom::Element = "<message xmlns='ns1' from='a@b/c'/>".parse().unwrap();
         let to: FullJid = elem.attr("from").unwrap().parse().unwrap();
-        assert_eq!(to, FullJid::new("a", "b", "c"));
+        assert_eq!(to, FullJid::new("a@b/c").unwrap());
 
         let elem: minidom::Element = "<message xmlns='ns1' from='a@b'/>".parse().unwrap();
         let to: BareJid = elem.attr("from").unwrap().parse().unwrap();
-        assert_eq!(to, BareJid::new("a", "b"));
+        assert_eq!(to, BareJid::new("a@b").unwrap());
     }
 
     #[cfg(feature = "minidom")]
     #[test]
     fn minidom_into_attr() {
-        let full = FullJid::new("a", "b", "c");
+        let full = FullJid::new("a@b/c").unwrap();
         let elem = minidom::Element::builder("message", "jabber:client")
             .attr("from", full.clone())
             .build();
         assert_eq!(elem.attr("from"), Some(String::from(full).as_ref()));
 
-        let bare = BareJid::new("a", "b");
+        let bare = BareJid::new("a@b").unwrap();
         let elem = minidom::Element::builder("message", "jabber:client")
             .attr("from", bare.clone())
             .build();
@@ -926,7 +710,7 @@ mod tests {
     #[test]
     fn stringprep() {
         let full = FullJid::from_str("Test@☃.coM/Test™").unwrap();
-        let equiv = FullJid::new("test", "☃.com", "TestTM");
+        let equiv = FullJid::new("test@☃.com/TestTM").unwrap();
         assert_eq!(full, equiv);
     }
 }
