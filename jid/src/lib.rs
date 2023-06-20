@@ -10,9 +10,25 @@
 
 #![deny(missing_docs)]
 
-//! Provides a type for Jabber IDs.
+//! Represents XMPP addresses, also known as JabberIDs (JIDs) for the [XMPP](https://xmpp.org/)
+//! protocol. A [`Jid`] can have between one and three parts in the form `node@domain/resource`:
+//! - the (optional) node part designates a specific account/service on a server, for example
+//!   `username@server.com`
+//! - the domain part designates a server, for example `irc.jabberfr.org`
+//! - the (optional) resource part designates a more specific client, such as a participant in a
+//!   groupchat (`jabberfr@chat.jabberfr.org/user`) or a specific client device associated with an
+//!   account (`user@example.com/dino`)
 //!
-//! For usage, check the documentation on the `Jid` struct.
+//! The [`Jid`] enum can be one of two variants, containing a more specific type:
+//! - [`BareJid`] (`Jid::Bare` variant): a JID without a resource
+//! - [`FullJid`] (`Jid::Full` variant): a JID with a resource
+//!
+//! Jids as per the XMPP protocol only ever contain valid UTF-8. However, creating any form of Jid
+//! can fail in one of the following cases:
+//! - wrong syntax: creating a Jid with an empty (yet declared) node or resource part, such as
+//!   `@example.com` or `user@example.com/`
+//! - stringprep error: some characters were invalid according to the stringprep algorithm, such as
+//!   mixing left-to-write and right-to-left characters
 
 use core::num::NonZeroU16;
 use std::convert::TryFrom;
@@ -34,10 +50,10 @@ use inner::InnerJid;
 #[cfg_attr(feature = "serde", serde(untagged))]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Jid {
-    /// Bare Jid
+    /// Contains a [`BareJid`], without a resource part
     Bare(BareJid),
 
-    /// Full Jid
+    /// Contains a [`FullJid`], with a resource part
     Full(FullJid),
 }
 
@@ -71,9 +87,8 @@ impl fmt::Display for Jid {
 }
 
 impl Jid {
-    /// Constructs a Jabber ID from a string.
-    ///
-    /// This is of the form `node`@`domain`/`resource`.
+    /// Constructs a Jabber ID from a string. This is of the form
+    /// `node`@`domain`/`resource`, where node and resource parts are optional.
     ///
     /// # Examples
     ///
@@ -99,28 +114,28 @@ impl Jid {
         }
     }
 
-    /// The node part of the Jabber ID, if it exists, else None.
+    /// The optional node part of the JID.
     pub fn node(&self) -> Option<&str> {
         match self {
             Jid::Bare(BareJid { inner }) | Jid::Full(FullJid { inner }) => inner.node(),
         }
     }
 
-    /// The domain of the Jabber ID.
+    /// The domain part of the JID.
     pub fn domain(&self) -> &str {
         match self {
             Jid::Bare(BareJid { inner }) | Jid::Full(FullJid { inner }) => inner.domain(),
         }
     }
 
-    /// The resource of the Jabber ID.
+    /// The optional resource part of the JID.
     pub fn resource(&self) -> Option<&str> {
         match self {
             Jid::Bare(BareJid { inner }) | Jid::Full(FullJid { inner }) => inner.resource(),
         }
     }
 
-    /// Extract a bare JID from this JID, throwing away the resource.
+    /// Allocate a new [`BareJid`] from this JID, discarding the resource.
     pub fn to_bare(&self) -> BareJid {
         match self {
             Jid::Full(jid) => jid.to_bare(),
@@ -128,7 +143,7 @@ impl Jid {
         }
     }
 
-    /// Transforms this JID into a bare JID, throwing away the resource.
+    /// Transforms this JID into a [`BareJid`], throwing away the resource.
     pub fn into_bare(self) -> BareJid {
         match self {
             Jid::Full(jid) => jid.into_bare(),
@@ -184,30 +199,30 @@ impl PartialEq<BareJid> for Jid {
     }
 }
 
-/// A struct representing a full Jabber ID.
+/// A struct representing a full Jabber ID, with a resource part.
 ///
-/// A full Jabber ID is composed of 3 components, of which one is optional:
+/// A full JID is composed of 3 components, of which only the node is optional:
 ///
-///  - A node/name, `node`, which is the optional part before the @.
-///  - A domain, `domain`, which is the mandatory part after the @ but before the /.
-///  - A resource, `resource`, which is the part after the /.
+/// - the (optional) node part is the part before the (optional) `@`.
+/// - the domain part is the mandatory part between the (optional) `@` and before the `/`.
+/// - the resource part after the `/`.
 ///
-/// Unlike a `BareJid`, it always contains a resource, and should only be used when you are certain
-/// there is no case where a resource can be missing.  Otherwise, use a `Jid` enum.
+/// Unlike a [`BareJid`], it always contains a resource, and should only be used when you are
+/// certain there is no case where a resource can be missing.  Otherwise, use a [`Jid`] or
+/// [`BareJid`].
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct FullJid {
     inner: InnerJid,
 }
 
-/// A struct representing a bare Jabber ID.
+/// A struct representing a bare Jabber ID, without a resource part.
 ///
-/// A bare Jabber ID is composed of 2 components, of which one is optional:
+/// A bare JID is composed of 2 components, of which only the node is optional:
+/// - the (optional) node part is the part before the (optional) `@`.
+/// - the domain part is the mandatory part between the (optional) `@` and before the `/`.
 ///
-///  - A node/name, `node`, which is the optional part before the @.
-///  - A domain, `domain`, which is the mandatory part after the @.
-///
-/// Unlike a `FullJid`, it can’t contain a resource, and should only be used when you are certain
-/// there is no case where a resource can be set.  Otherwise, use a `Jid` enum.
+/// Unlike a [`FullJid`], it can’t contain a resource, and should only be used when you are certain
+/// there is no case where a resource can be set.  Otherwise, use a [`Jid`] or [`FullJid`].
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct BareJid {
     inner: InnerJid,
@@ -288,9 +303,8 @@ impl<'de> Deserialize<'de> for BareJid {
 }
 
 impl FullJid {
-    /// Constructs a full Jabber ID containing all three components.
-    ///
-    /// This is of the form `node`@`domain`/`resource`.
+    /// Constructs a full Jabber ID containing all three components. This is of the form
+    /// `node@domain/resource`, where node part is optional.
     ///
     /// # Examples
     ///
@@ -316,22 +330,22 @@ impl FullJid {
         }
     }
 
-    /// The node part of the Jabber ID, if it exists, else None.
+    /// The optional node part of the JID.
     pub fn node(&self) -> Option<&str> {
         self.inner.node()
     }
 
-    /// The domain part of the Jabber ID.
+    /// The domain part of the JID.
     pub fn domain(&self) -> &str {
         self.inner.domain()
     }
 
-    /// The resource of the Jabber ID.  Since this is a full JID it is always present.
+    /// The optional resource of the Jabber ID.  Since this is a full JID it is always present.
     pub fn resource(&self) -> &str {
         self.inner.resource().unwrap()
     }
 
-    /// Extract a bare JID from this full JID, throwing away the resource.
+    /// Allocate a new [`BareJid`] from this full JID, discarding the resource.
     pub fn to_bare(&self) -> BareJid {
         let slash = self.inner.slash.unwrap().get() as usize;
         let normalized = self.inner.normalized[..slash].to_string();
@@ -343,7 +357,7 @@ impl FullJid {
         BareJid { inner }
     }
 
-    /// Transforms this full JID into a bare JID, throwing away the resource.
+    /// Transforms this full JID into a [`BareJid`], discarding the resource.
     pub fn into_bare(mut self) -> BareJid {
         let slash = self.inner.slash.unwrap().get() as usize;
         self.inner.normalized.truncate(slash);
@@ -362,9 +376,8 @@ impl FromStr for BareJid {
 }
 
 impl BareJid {
-    /// Constructs a bare Jabber ID, containing two components.
-    ///
-    /// This is of the form `node`@`domain`.
+    /// Constructs a bare Jabber ID, containing two components. This is of the form
+    /// `node`@`domain`, where node part is optional.
     ///
     /// # Examples
     ///
@@ -389,17 +402,17 @@ impl BareJid {
         }
     }
 
-    /// The node part of the Jabber ID, if it exists, else None.
+    /// The optional node part of the JID.
     pub fn node(&self) -> Option<&str> {
         self.inner.node()
     }
 
-    /// The domain part of the Jabber ID.
+    /// The domain part of the JID.
     pub fn domain(&self) -> &str {
         self.inner.domain()
     }
 
-    /// Constructs a full Jabber ID from a bare Jabber ID, specifying a `resource`.
+    /// Constructs a [`FullJid`] from the bare JID, by specifying a `resource`.
     ///
     /// # Examples
     ///
