@@ -13,9 +13,18 @@
 use crate::JidParseError as Error;
 use core::num::NonZeroU16;
 use memchr::memchr;
-use std::borrow::Cow;
 use std::str::FromStr;
 use stringprep::{nameprep, nodeprep, resourceprep};
+
+fn length_check(len: usize, error_empty: Error, error_too_long: Error) -> Result<(), Error> {
+    if len == 0 {
+        Err(error_empty)
+    } else if len > 1023 {
+        Err(error_too_long)
+    } else {
+        Ok(())
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub(crate) struct InnerJid {
@@ -37,93 +46,44 @@ impl InnerJid {
         let normalized = match (orig_at, orig_slash) {
             (Some(at), Some(slash)) => {
                 let node = nodeprep(&unnormalized[..at]).map_err(|_| Error::NodePrep)?;
-                if node.len() == 0 {
-                    return Err(Error::EmptyNode);
-                }
-                if node.len() > 1023 {
-                    return Err(Error::NodeTooLong);
-                }
+                length_check(node.len(), Error::EmptyNode, Error::NodeTooLong)?;
+
                 let domain = nameprep(&unnormalized[at + 1..slash]).map_err(|_| Error::NamePrep)?;
-                if domain.len() == 0 {
-                    return Err(Error::NoDomain);
-                }
-                if domain.len() > 1023 {
-                    return Err(Error::DomainTooLong);
-                }
+                length_check(domain.len(), Error::NoDomain, Error::DomainTooLong)?;
+
                 let resource =
                     resourceprep(&unnormalized[slash + 1..]).map_err(|_| Error::ResourcePrep)?;
-                if resource.len() == 0 {
-                    return Err(Error::EmptyResource);
-                }
-                if resource.len() > 1023 {
-                    return Err(Error::ResourceTooLong);
-                }
-                match (node, domain, resource) {
-                    (Cow::Borrowed(_), Cow::Borrowed(_), Cow::Borrowed(_)) => {
-                        unnormalized.to_owned()
-                    }
-                    (node, domain, resource) => {
-                        orig_at = Some(node.len());
-                        orig_slash = Some(node.len() + domain.len() + 1);
-                        format!("{node}@{domain}/{resource}")
-                    }
-                }
+                length_check(resource.len(), Error::EmptyResource, Error::ResourceTooLong)?;
+
+                orig_at = Some(node.len());
+                orig_slash = Some(node.len() + domain.len() + 1);
+                format!("{node}@{domain}/{resource}")
             }
             (Some(at), None) => {
                 let node = nodeprep(&unnormalized[..at]).map_err(|_| Error::NodePrep)?;
-                if node.len() == 0 {
-                    return Err(Error::EmptyNode);
-                }
-                if node.len() > 1023 {
-                    return Err(Error::NodeTooLong);
-                }
+                length_check(node.len(), Error::EmptyNode, Error::NodeTooLong)?;
+
                 let domain = nameprep(&unnormalized[at + 1..]).map_err(|_| Error::NamePrep)?;
-                if domain.len() == 0 {
-                    return Err(Error::NoDomain);
-                }
-                if domain.len() > 1023 {
-                    return Err(Error::DomainTooLong);
-                }
-                match (node, domain) {
-                    (Cow::Borrowed(_), Cow::Borrowed(_)) => unnormalized.to_owned(),
-                    (node, domain) => {
-                        orig_at = Some(node.len());
-                        format!("{node}@{domain}")
-                    }
-                }
+                length_check(domain.len(), Error::NoDomain, Error::DomainTooLong)?;
+
+                orig_at = Some(node.len());
+                format!("{node}@{domain}")
             }
             (None, Some(slash)) => {
                 let domain = nameprep(&unnormalized[..slash]).map_err(|_| Error::NamePrep)?;
-                if domain.len() == 0 {
-                    return Err(Error::NoDomain);
-                }
-                if domain.len() > 1023 {
-                    return Err(Error::DomainTooLong);
-                }
+                length_check(domain.len(), Error::NoDomain, Error::DomainTooLong)?;
+
                 let resource =
                     resourceprep(&unnormalized[slash + 1..]).map_err(|_| Error::ResourcePrep)?;
-                if resource.len() == 0 {
-                    return Err(Error::EmptyResource);
-                }
-                if resource.len() > 1023 {
-                    return Err(Error::ResourceTooLong);
-                }
-                match (domain, resource) {
-                    (Cow::Borrowed(_), Cow::Borrowed(_)) => unnormalized.to_owned(),
-                    (domain, resource) => {
-                        orig_slash = Some(domain.len());
-                        format!("{domain}/{resource}")
-                    }
-                }
+                length_check(resource.len(), Error::EmptyResource, Error::ResourceTooLong)?;
+
+                orig_slash = Some(domain.len());
+                format!("{domain}/{resource}")
             }
             (None, None) => {
                 let domain = nameprep(unnormalized).map_err(|_| Error::NamePrep)?;
-                if domain.len() == 0 {
-                    return Err(Error::NoDomain);
-                }
-                if domain.len() > 1023 {
-                    return Err(Error::DomainTooLong);
-                }
+                length_check(domain.len(), Error::NoDomain, Error::DomainTooLong)?;
+
                 domain.into_owned()
             }
         };
