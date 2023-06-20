@@ -33,7 +33,7 @@ use xmpp_parsers::{
     pubsub::pubsub::{Items, PubSub},
     roster::{Item as RosterItem, Roster},
     stanza_error::{DefinedCondition, ErrorType, StanzaError},
-    BareJid, Element, FullJid, Jid,
+    BareJid, Element, Jid,
 };
 #[macro_use]
 extern crate log;
@@ -180,7 +180,7 @@ impl ClientBuilder<'_> {
 
     pub fn build(self) -> Agent {
         let jid: Jid = if let Some(resource) = &self.resource {
-            self.jid.clone().with_resource(resource.to_string()).into()
+            self.jid.with_resource(resource).unwrap().into()
         } else {
             self.jid.clone().into()
         };
@@ -233,8 +233,8 @@ impl Agent {
         }
 
         let nick = nick.unwrap_or_else(|| self.default_nick.read().unwrap().clone());
-        let room_jid = room.with_resource(nick);
-        let mut presence = Presence::new(PresenceType::None).with_to(Jid::Full(room_jid));
+        let room_jid = room.with_resource(&nick).unwrap();
+        let mut presence = Presence::new(PresenceType::None).with_to(room_jid);
         presence.add_payload(muc);
         presence.set_status(String::from(lang), String::from(status));
         let _ = self.client.send_stanza(presence.into()).await;
@@ -262,8 +262,8 @@ impl Agent {
         lang: &str,
         text: &str,
     ) {
-        let recipient: Jid = room.with_resource(recipient).into();
-        let mut message = Message::new(Some(recipient)).with_payload(MucUser::new());
+        let recipient: Jid = room.with_resource(&recipient).unwrap().into();
+        let mut message = Message::new(recipient).with_payload(MucUser::new());
         message.type_ = MessageType::Chat;
         message
             .bodies
@@ -367,8 +367,8 @@ impl Agent {
                     let event = match from.clone() {
                         Jid::Full(full) => Event::RoomMessage(
                             message.id.clone(),
-                            from.clone().into(),
-                            full.resource,
+                            from.to_bare(),
+                            full.resource().to_owned(),
                             body.clone(),
                         ),
                         Jid::Bare(bare) => {
@@ -390,8 +390,8 @@ impl Agent {
                                 }
                                 Jid::Full(full) => Event::RoomPrivateMessage(
                                     message.id.clone(),
-                                    full.clone().into(),
-                                    full.resource,
+                                    full.to_bare(),
+                                    full.resource().to_owned(),
                                     body.clone(),
                                 ),
                             };
@@ -402,11 +402,8 @@ impl Agent {
                     }
 
                     if !found_special_message {
-                        let event = Event::ChatMessage(
-                            message.id.clone(),
-                            from.clone().into(),
-                            body.clone(),
-                        );
+                        let event =
+                            Event::ChatMessage(message.id.clone(), from.to_bare(), body.clone());
                         events.push(event)
                     }
                 }
@@ -426,10 +423,7 @@ impl Agent {
 
     async fn handle_presence(&mut self, presence: Presence) -> Vec<Event> {
         let mut events = vec![];
-        let from: BareJid = match presence.from.clone().unwrap() {
-            Jid::Full(FullJid { node, domain, .. }) => BareJid { node, domain },
-            Jid::Bare(bare) => bare,
-        };
+        let from = presence.from.unwrap().to_bare();
         for payload in presence.payloads.into_iter() {
             let muc_user = match MucUser::try_from(payload) {
                 Ok(muc_user) => muc_user,
