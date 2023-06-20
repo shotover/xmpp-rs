@@ -10,7 +10,7 @@
 //!
 //! For usage, check the documentation on the `Jid` struct.
 
-use crate::JidParseError as Error;
+use crate::Error;
 use core::num::NonZeroU16;
 use memchr::memchr;
 use std::str::FromStr;

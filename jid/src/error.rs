@@ -13,7 +13,7 @@ use std::fmt;
 
 /// An error that signifies that a `Jid` cannot be parsed from a string.
 #[derive(Debug, PartialEq, Eq)]
-pub enum JidParseError {
+pub enum Error {
     /// Happens when there is no domain, that is either the string is empty,
     /// starts with a /, or contains the @/ sequence.
     NoDomain,
@@ -49,22 +49,22 @@ pub enum JidParseError {
     ResourceInBareJid,
 }
 
-impl StdError for JidParseError {}
+impl StdError for Error {}
 
-impl fmt::Display for JidParseError {
+impl fmt::Display for Error {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.write_str(match self {
-            JidParseError::NoDomain => "no domain found in this JID",
-            JidParseError::NoResource => "no resource found in this full JID",
-            JidParseError::EmptyNode => "nodepart empty despite the presence of a @",
-            JidParseError::EmptyResource => "resource empty despite the presence of a /",
-            JidParseError::NodeTooLong => "localpart longer than 1023 bytes",
-            JidParseError::DomainTooLong => "domain longer than 1023 bytes",
-            JidParseError::ResourceTooLong => "resource longer than 1023 bytes",
-            JidParseError::NodePrep => "localpart doesn’t pass nodeprep validation",
-            JidParseError::NamePrep => "domain doesn’t pass nameprep validation",
-            JidParseError::ResourcePrep => "resource doesn’t pass resourceprep validation",
-            JidParseError::ResourceInBareJid => "resource found while parsing a bare JID",
+            Error::NoDomain => "no domain found in this JID",
+            Error::NoResource => "no resource found in this full JID",
+            Error::EmptyNode => "nodepart empty despite the presence of a @",
+            Error::EmptyResource => "resource empty despite the presence of a /",
+            Error::NodeTooLong => "localpart longer than 1023 bytes",
+            Error::DomainTooLong => "domain longer than 1023 bytes",
+            Error::ResourceTooLong => "resource longer than 1023 bytes",
+            Error::NodePrep => "localpart doesn’t pass nodeprep validation",
+            Error::NamePrep => "domain doesn’t pass nameprep validation",
+            Error::ResourcePrep => "resource doesn’t pass resourceprep validation",
+            Error::ResourceInBareJid => "resource found while parsing a bare JID",
         })
     }
 }

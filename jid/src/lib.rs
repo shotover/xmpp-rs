@@ -24,7 +24,7 @@ use stringprep::resourceprep;
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 
 mod error;
-pub use crate::error::JidParseError;
+pub use crate::error::Error;
 
 mod inner;
 use inner::InnerJid;
@@ -42,9 +42,9 @@ pub enum Jid {
 }
 
 impl FromStr for Jid {
-    type Err = JidParseError;
+    type Err = Error;
 
-    fn from_str(s: &str) -> Result<Jid, JidParseError> {
+    fn from_str(s: &str) -> Result<Jid, Error> {
         Jid::new(s)
     }
 }
@@ -94,9 +94,9 @@ impl Jid {
     ///
     /// ```
     /// use jid::Jid;
-    /// # use jid::JidParseError;
+    /// # use jid::Error;
     ///
-    /// # fn main() -> Result<(), JidParseError> {
+    /// # fn main() -> Result<(), Error> {
     /// let jid = Jid::new("node@domain/resource")?;
     ///
     /// assert_eq!(jid.node(), Some("node"));
@@ -105,7 +105,7 @@ impl Jid {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn new(s: &str) -> Result<Jid, JidParseError> {
+    pub fn new(s: &str) -> Result<Jid, Error> {
         let inner = InnerJid::new(s)?;
         if inner.slash.is_some() {
             Ok(Jid::Full(FullJid { inner }))
@@ -153,12 +153,12 @@ impl Jid {
 }
 
 impl TryFrom<Jid> for FullJid {
-    type Error = JidParseError;
+    type Error = Error;
 
     fn try_from(jid: Jid) -> Result<Self, Self::Error> {
         match jid {
             Jid::Full(full) => Ok(full),
-            Jid::Bare(_) => Err(JidParseError::NoResource),
+            Jid::Bare(_) => Err(Error::NoResource),
         }
     }
 }
@@ -297,9 +297,9 @@ impl Serialize for BareJid {
 }
 
 impl FromStr for FullJid {
-    type Err = JidParseError;
+    type Err = Error;
 
-    fn from_str(s: &str) -> Result<FullJid, JidParseError> {
+    fn from_str(s: &str) -> Result<FullJid, Error> {
         FullJid::new(s)
     }
 }
@@ -335,9 +335,9 @@ impl FullJid {
     ///
     /// ```
     /// use jid::FullJid;
-    /// # use jid::JidParseError;
+    /// # use jid::Error;
     ///
-    /// # fn main() -> Result<(), JidParseError> {
+    /// # fn main() -> Result<(), Error> {
     /// let jid = FullJid::new("node@domain/resource")?;
     ///
     /// assert_eq!(jid.node(), Some("node"));
@@ -346,12 +346,12 @@ impl FullJid {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn new(s: &str) -> Result<FullJid, JidParseError> {
+    pub fn new(s: &str) -> Result<FullJid, Error> {
         let inner = InnerJid::new(s)?;
         if inner.slash.is_some() {
             Ok(FullJid { inner })
         } else {
-            Err(JidParseError::NoResource)
+            Err(Error::NoResource)
         }
     }
 
@@ -393,9 +393,9 @@ impl FullJid {
 }
 
 impl FromStr for BareJid {
-    type Err = JidParseError;
+    type Err = Error;
 
-    fn from_str(s: &str) -> Result<BareJid, JidParseError> {
+    fn from_str(s: &str) -> Result<BareJid, Error> {
         BareJid::new(s)
     }
 }
@@ -409,9 +409,9 @@ impl BareJid {
     ///
     /// ```
     /// use jid::BareJid;
-    /// # use jid::JidParseError;
+    /// # use jid::Error;
     ///
-    /// # fn main() -> Result<(), JidParseError> {
+    /// # fn main() -> Result<(), Error> {
     /// let jid = BareJid::new("node@domain")?;
     ///
     /// assert_eq!(jid.node(), Some("node"));
@@ -419,12 +419,12 @@ impl BareJid {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn new(s: &str) -> Result<BareJid, JidParseError> {
+    pub fn new(s: &str) -> Result<BareJid, Error> {
         let inner = InnerJid::new(s)?;
         if inner.slash.is_none() {
             Ok(BareJid { inner })
         } else {
-            Err(JidParseError::ResourceInBareJid)
+            Err(Error::ResourceInBareJid)
         }
     }
 
@@ -452,8 +452,8 @@ impl BareJid {
     /// assert_eq!(full.domain(), "domain");
     /// assert_eq!(full.resource(), "resource");
     /// ```
-    pub fn with_resource(&self, resource: &str) -> Result<FullJid, JidParseError> {
-        let resource = resourceprep(resource).map_err(|_| JidParseError::ResourcePrep)?;
+    pub fn with_resource(&self, resource: &str) -> Result<FullJid, Error> {
+        let resource = resourceprep(resource).map_err(|_| Error::ResourcePrep)?;
         let slash = NonZeroU16::new(self.inner.normalized.len() as u16);
         let normalized = format!("{}/{resource}", self.inner.normalized);
         let inner = InnerJid {
@@ -549,8 +549,8 @@ mod tests {
             Ok(FullJid::new("b.c/d").unwrap())
         );
 
-        assert_eq!(FullJid::from_str("a@b.c"), Err(JidParseError::NoResource));
-        assert_eq!(FullJid::from_str("b.c"), Err(JidParseError::NoResource));
+        assert_eq!(FullJid::from_str("a@b.c"), Err(Error::NoResource));
+        assert_eq!(FullJid::from_str("b.c"), Err(Error::NoResource));
     }
 
     #[test]
@@ -606,7 +606,7 @@ mod tests {
         assert_eq!(FullJid::try_from(Jid::Full(full.clone())), Ok(full.clone()));
         assert_eq!(
             FullJid::try_from(Jid::Bare(bare.clone())),
-            Err(JidParseError::NoResource),
+            Err(Error::NoResource),
         );
         assert_eq!(Jid::Bare(full.clone().to_bare()), bare.clone());
         assert_eq!(Jid::Bare(bare.clone()), bare);
@@ -631,18 +631,18 @@ mod tests {
 
     #[test]
     fn invalid_jids() {
-        assert_eq!(BareJid::from_str(""), Err(JidParseError::NoDomain));
-        assert_eq!(BareJid::from_str("/c"), Err(JidParseError::NoDomain));
-        assert_eq!(BareJid::from_str("a@/c"), Err(JidParseError::NoDomain));
-        assert_eq!(BareJid::from_str("@b"), Err(JidParseError::EmptyNode));
-        assert_eq!(BareJid::from_str("b/"), Err(JidParseError::EmptyResource));
+        assert_eq!(BareJid::from_str(""), Err(Error::NoDomain));
+        assert_eq!(BareJid::from_str("/c"), Err(Error::NoDomain));
+        assert_eq!(BareJid::from_str("a@/c"), Err(Error::NoDomain));
+        assert_eq!(BareJid::from_str("@b"), Err(Error::EmptyNode));
+        assert_eq!(BareJid::from_str("b/"), Err(Error::EmptyResource));
 
-        assert_eq!(FullJid::from_str(""), Err(JidParseError::NoDomain));
-        assert_eq!(FullJid::from_str("/c"), Err(JidParseError::NoDomain));
-        assert_eq!(FullJid::from_str("a@/c"), Err(JidParseError::NoDomain));
-        assert_eq!(FullJid::from_str("@b"), Err(JidParseError::EmptyNode));
-        assert_eq!(FullJid::from_str("b/"), Err(JidParseError::EmptyResource));
-        assert_eq!(FullJid::from_str("a@b"), Err(JidParseError::NoResource));
+        assert_eq!(FullJid::from_str(""), Err(Error::NoDomain));
+        assert_eq!(FullJid::from_str("/c"), Err(Error::NoDomain));
+        assert_eq!(FullJid::from_str("a@/c"), Err(Error::NoDomain));
+        assert_eq!(FullJid::from_str("@b"), Err(Error::EmptyNode));
+        assert_eq!(FullJid::from_str("b/"), Err(Error::EmptyResource));
+        assert_eq!(FullJid::from_str("a@b"), Err(Error::NoResource));
     }
 
     #[test]
