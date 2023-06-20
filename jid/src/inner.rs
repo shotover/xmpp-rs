@@ -46,14 +46,14 @@ impl InnerJid {
         let normalized = match (orig_at, orig_slash) {
             (Some(at), Some(slash)) => {
                 let node = nodeprep(&unnormalized[..at]).map_err(|_| Error::NodePrep)?;
-                length_check(node.len(), Error::EmptyNode, Error::NodeTooLong)?;
+                length_check(node.len(), Error::NodeEmpty, Error::NodeTooLong)?;
 
                 let domain = nameprep(&unnormalized[at + 1..slash]).map_err(|_| Error::NamePrep)?;
-                length_check(domain.len(), Error::NoDomain, Error::DomainTooLong)?;
+                length_check(domain.len(), Error::DomainEmpty, Error::DomainTooLong)?;
 
                 let resource =
                     resourceprep(&unnormalized[slash + 1..]).map_err(|_| Error::ResourcePrep)?;
-                length_check(resource.len(), Error::EmptyResource, Error::ResourceTooLong)?;
+                length_check(resource.len(), Error::ResourceEmpty, Error::ResourceTooLong)?;
 
                 orig_at = Some(node.len());
                 orig_slash = Some(node.len() + domain.len() + 1);
@@ -61,28 +61,28 @@ impl InnerJid {
             }
             (Some(at), None) => {
                 let node = nodeprep(&unnormalized[..at]).map_err(|_| Error::NodePrep)?;
-                length_check(node.len(), Error::EmptyNode, Error::NodeTooLong)?;
+                length_check(node.len(), Error::NodeEmpty, Error::NodeTooLong)?;
 
                 let domain = nameprep(&unnormalized[at + 1..]).map_err(|_| Error::NamePrep)?;
-                length_check(domain.len(), Error::NoDomain, Error::DomainTooLong)?;
+                length_check(domain.len(), Error::DomainEmpty, Error::DomainTooLong)?;
 
                 orig_at = Some(node.len());
                 format!("{node}@{domain}")
             }
             (None, Some(slash)) => {
                 let domain = nameprep(&unnormalized[..slash]).map_err(|_| Error::NamePrep)?;
-                length_check(domain.len(), Error::NoDomain, Error::DomainTooLong)?;
+                length_check(domain.len(), Error::DomainEmpty, Error::DomainTooLong)?;
 
                 let resource =
                     resourceprep(&unnormalized[slash + 1..]).map_err(|_| Error::ResourcePrep)?;
-                length_check(resource.len(), Error::EmptyResource, Error::ResourceTooLong)?;
+                length_check(resource.len(), Error::ResourceEmpty, Error::ResourceTooLong)?;
 
                 orig_slash = Some(domain.len());
                 format!("{domain}/{resource}")
             }
             (None, None) => {
                 let domain = nameprep(unnormalized).map_err(|_| Error::NamePrep)?;
-                length_check(domain.len(), Error::NoDomain, Error::DomainTooLong)?;
+                length_check(domain.len(), Error::DomainEmpty, Error::DomainTooLong)?;
 
                 domain.into_owned()
             }

@@ -158,7 +158,7 @@ impl TryFrom<Jid> for FullJid {
     fn try_from(jid: Jid) -> Result<Self, Self::Error> {
         match jid {
             Jid::Full(full) => Ok(full),
-            Jid::Bare(_) => Err(Error::NoResource),
+            Jid::Bare(_) => Err(Error::ResourceMissingInFullJid),
         }
     }
 }
@@ -351,7 +351,7 @@ impl FullJid {
         if inner.slash.is_some() {
             Ok(FullJid { inner })
         } else {
-            Err(Error::NoResource)
+            Err(Error::ResourceMissingInFullJid)
         }
     }
 
@@ -549,8 +549,14 @@ mod tests {
             Ok(FullJid::new("b.c/d").unwrap())
         );
 
-        assert_eq!(FullJid::from_str("a@b.c"), Err(Error::NoResource));
-        assert_eq!(FullJid::from_str("b.c"), Err(Error::NoResource));
+        assert_eq!(
+            FullJid::from_str("a@b.c"),
+            Err(Error::ResourceMissingInFullJid)
+        );
+        assert_eq!(
+            FullJid::from_str("b.c"),
+            Err(Error::ResourceMissingInFullJid)
+        );
     }
 
     #[test]
@@ -606,7 +612,7 @@ mod tests {
         assert_eq!(FullJid::try_from(Jid::Full(full.clone())), Ok(full.clone()));
         assert_eq!(
             FullJid::try_from(Jid::Bare(bare.clone())),
-            Err(Error::NoResource),
+            Err(Error::ResourceMissingInFullJid),
         );
         assert_eq!(Jid::Bare(full.clone().to_bare()), bare.clone());
         assert_eq!(Jid::Bare(bare.clone()), bare);
@@ -631,18 +637,21 @@ mod tests {
 
     #[test]
     fn invalid_jids() {
-        assert_eq!(BareJid::from_str(""), Err(Error::NoDomain));
-        assert_eq!(BareJid::from_str("/c"), Err(Error::NoDomain));
-        assert_eq!(BareJid::from_str("a@/c"), Err(Error::NoDomain));
-        assert_eq!(BareJid::from_str("@b"), Err(Error::EmptyNode));
-        assert_eq!(BareJid::from_str("b/"), Err(Error::EmptyResource));
+        assert_eq!(BareJid::from_str(""), Err(Error::DomainEmpty));
+        assert_eq!(BareJid::from_str("/c"), Err(Error::DomainEmpty));
+        assert_eq!(BareJid::from_str("a@/c"), Err(Error::DomainEmpty));
+        assert_eq!(BareJid::from_str("@b"), Err(Error::NodeEmpty));
+        assert_eq!(BareJid::from_str("b/"), Err(Error::ResourceEmpty));
 
-        assert_eq!(FullJid::from_str(""), Err(Error::NoDomain));
-        assert_eq!(FullJid::from_str("/c"), Err(Error::NoDomain));
-        assert_eq!(FullJid::from_str("a@/c"), Err(Error::NoDomain));
-        assert_eq!(FullJid::from_str("@b"), Err(Error::EmptyNode));
-        assert_eq!(FullJid::from_str("b/"), Err(Error::EmptyResource));
-        assert_eq!(FullJid::from_str("a@b"), Err(Error::NoResource));
+        assert_eq!(FullJid::from_str(""), Err(Error::DomainEmpty));
+        assert_eq!(FullJid::from_str("/c"), Err(Error::DomainEmpty));
+        assert_eq!(FullJid::from_str("a@/c"), Err(Error::DomainEmpty));
+        assert_eq!(FullJid::from_str("@b"), Err(Error::NodeEmpty));
+        assert_eq!(FullJid::from_str("b/"), Err(Error::ResourceEmpty));
+        assert_eq!(
+            FullJid::from_str("a@b"),
+            Err(Error::ResourceMissingInFullJid)
+        );
     }
 
     #[test]
