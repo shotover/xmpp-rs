@@ -49,24 +49,6 @@ impl FromStr for Jid {
     }
 }
 
-impl From<Jid> for String {
-    fn from(jid: Jid) -> String {
-        match jid {
-            Jid::Bare(bare) => String::from(bare),
-            Jid::Full(full) => String::from(full),
-        }
-    }
-}
-
-impl From<&Jid> for String {
-    fn from(jid: &Jid) -> String {
-        match jid {
-            Jid::Bare(bare) => String::from(bare),
-            Jid::Full(full) => String::from(full),
-        }
-    }
-}
-
 impl From<BareJid> for Jid {
     fn from(bare_jid: BareJid) -> Jid {
         Jid::Bare(bare_jid)
@@ -81,7 +63,10 @@ impl From<FullJid> for Jid {
 
 impl fmt::Display for Jid {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        fmt.write_str(String::from(self.clone()).as_ref())
+        match self {
+            Jid::Bare(bare) => bare.fmt(fmt),
+            Jid::Full(full) => full.fmt(fmt),
+        }
     }
 }
 
@@ -228,30 +213,6 @@ pub struct BareJid {
     inner: InnerJid,
 }
 
-impl From<FullJid> for String {
-    fn from(jid: FullJid) -> String {
-        String::from(&jid)
-    }
-}
-
-impl From<&FullJid> for String {
-    fn from(jid: &FullJid) -> String {
-        jid.inner.normalized.clone()
-    }
-}
-
-impl From<BareJid> for String {
-    fn from(jid: BareJid) -> String {
-        String::from(&jid)
-    }
-}
-
-impl From<&BareJid> for String {
-    fn from(jid: &BareJid) -> String {
-        jid.inner.normalized.clone()
-    }
-}
-
 impl fmt::Debug for FullJid {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         write!(fmt, "FullJID({})", self)
@@ -266,13 +227,13 @@ impl fmt::Debug for BareJid {
 
 impl fmt::Display for FullJid {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        fmt.write_str(String::from(self.clone()).as_ref())
+        fmt.write_str(&self.inner.normalized)
     }
 }
 
 impl fmt::Display for BareJid {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        fmt.write_str(String::from(self.clone()).as_ref())
+        fmt.write_str(&self.inner.normalized)
     }
 }
 
@@ -471,42 +432,42 @@ use minidom::{IntoAttributeValue, Node};
 #[cfg(feature = "minidom")]
 impl IntoAttributeValue for Jid {
     fn into_attribute_value(self) -> Option<String> {
-        Some(String::from(self))
+        Some(format!("{}", self))
     }
 }
 
 #[cfg(feature = "minidom")]
 impl From<Jid> for Node {
     fn from(jid: Jid) -> Node {
-        Node::Text(String::from(jid))
+        Node::Text(format!("{}", jid))
     }
 }
 
 #[cfg(feature = "minidom")]
 impl IntoAttributeValue for FullJid {
     fn into_attribute_value(self) -> Option<String> {
-        Some(String::from(self))
+        Some(format!("{}", self))
     }
 }
 
 #[cfg(feature = "minidom")]
 impl From<FullJid> for Node {
     fn from(jid: FullJid) -> Node {
-        Node::Text(String::from(jid))
+        Node::Text(format!("{}", jid))
     }
 }
 
 #[cfg(feature = "minidom")]
 impl IntoAttributeValue for BareJid {
     fn into_attribute_value(self) -> Option<String> {
-        Some(String::from(self))
+        Some(format!("{}", self))
     }
 }
 
 #[cfg(feature = "minidom")]
 impl From<BareJid> for Node {
     fn from(jid: BareJid) -> Node {
-        Node::Text(String::from(jid))
+        Node::Text(format!("{}", jid))
     }
 }
 
@@ -621,11 +582,11 @@ mod tests {
     #[test]
     fn serialise() {
         assert_eq!(
-            String::from(FullJid::new("a@b/c").unwrap()),
+            format!("{}", FullJid::new("a@b/c").unwrap()),
             String::from("a@b/c")
         );
         assert_eq!(
-            String::from(BareJid::new("a@b").unwrap()),
+            format!("{}", BareJid::new("a@b").unwrap()),
             String::from("a@b")
         );
     }
@@ -701,19 +662,19 @@ mod tests {
         let elem = minidom::Element::builder("message", "jabber:client")
             .attr("from", full.clone())
             .build();
-        assert_eq!(elem.attr("from"), Some(String::from(full).as_ref()));
+        assert_eq!(elem.attr("from"), Some(format!("{}", full).as_str()));
 
         let bare = BareJid::new("a@b").unwrap();
         let elem = minidom::Element::builder("message", "jabber:client")
             .attr("from", bare.clone())
             .build();
-        assert_eq!(elem.attr("from"), Some(String::from(bare.clone()).as_ref()));
+        assert_eq!(elem.attr("from"), Some(format!("{}", bare).as_str()));
 
         let jid = Jid::Bare(bare.clone());
         let _elem = minidom::Element::builder("message", "jabber:client")
             .attr("from", jid)
             .build();
-        assert_eq!(elem.attr("from"), Some(String::from(bare).as_ref()));
+        assert_eq!(elem.attr("from"), Some(format!("{}", bare).as_str()));
     }
 
     #[test]
