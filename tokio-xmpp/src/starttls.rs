@@ -29,7 +29,7 @@ use crate::{Error, ProtocolError};
 async fn get_tls_stream<S: AsyncRead + AsyncWrite + Unpin>(
     xmpp_stream: XMPPStream<S>,
 ) -> Result<TlsStream<S>, Error> {
-    let domain = &xmpp_stream.jid.clone().domain();
+    let domain = xmpp_stream.jid.domain().to_owned();
     let stream = xmpp_stream.into_inner();
     let tls_stream = TlsConnector::from(NativeTlsConnector::builder().build().unwrap())
         .connect(&domain, stream)
@@ -41,7 +41,7 @@ async fn get_tls_stream<S: AsyncRead + AsyncWrite + Unpin>(
 async fn get_tls_stream<S: AsyncRead + AsyncWrite + Unpin>(
     xmpp_stream: XMPPStream<S>,
 ) -> Result<TlsStream<S>, Error> {
-    let domain = &xmpp_stream.jid.clone().domain();
+    let domain = xmpp_stream.jid.domain().to_owned();
     let domain = ServerName::try_from(domain.as_str())?;
     let stream = xmpp_stream.into_inner();
     let mut root_store = RootCertStore::empty();

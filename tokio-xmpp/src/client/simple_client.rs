@@ -50,7 +50,7 @@ impl Client {
     }
 
     async fn connect(jid: Jid, password: String) -> Result<XMPPStream, Error> {
-        let username = jid.clone().node().unwrap();
+        let username = jid.node().unwrap();
         let password = password;
         let domain = idna::domain_to_ascii(&jid.clone().domain()).map_err(|_| Error::Idna)?;
 

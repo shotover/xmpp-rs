@@ -4,7 +4,6 @@ use std::marker::Unpin;
 use tokio::io::{AsyncRead, AsyncWrite};
 use xmpp_parsers::bind::{BindQuery, BindResponse};
 use xmpp_parsers::iq::{Iq, IqType};
-use xmpp_parsers::Jid;
 
 use crate::xmpp_codec::Packet;
 use crate::xmpp_stream::XMPPStream;
@@ -16,11 +15,10 @@ pub async fn bind<S: AsyncRead + AsyncWrite + Unpin>(
     mut stream: XMPPStream<S>,
 ) -> Result<XMPPStream<S>, Error> {
     if stream.stream_features.can_bind() {
-        let resource = if let Jid::Full(jid) = stream.jid.clone() {
-            Some(jid.resource)
-        } else {
-            None
-        };
+        let resource = stream
+            .jid
+            .resource()
+            .and_then(|resource| Some(resource.to_owned()));
         let iq = Iq::from_set(BIND_REQ_ID, BindQuery::new(resource));
         stream.send_stanza(iq).await?;
 
