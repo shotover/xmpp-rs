@@ -301,7 +301,7 @@ mod tests {
     use super::*;
     use crate::message::Message;
     use crate::presence::{Presence, Type as PresenceType};
-    use crate::{BareJid, Jid};
+    use crate::Jid;
 
     #[test]
     fn test_simple() {
@@ -743,7 +743,7 @@ mod tests {
 
     #[test]
     fn message_payload() {
-        let jid: Jid = Jid::Bare(BareJid::new("louise", "example.com"));
+        let jid: Jid = Jid::new("louise@example.com").unwrap();
         let elem: Element = "<x xmlns='http://jabber.org/protocol/muc#user'/>"
             .parse()
             .unwrap();

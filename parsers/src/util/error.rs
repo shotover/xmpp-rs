@@ -33,7 +33,7 @@ pub enum Error {
 
     /// Generated when text which should be a [JID](../../jid/struct.Jid.html)
     /// fails to parse.
-    JidParseError(jid::JidParseError),
+    JidParseError(jid::Error),
 
     /// Generated when text which should be a
     /// [DateTime](../date/struct.DateTime.html) fails to parse.
@@ -92,8 +92,8 @@ impl From<std::net::AddrParseError> for Error {
     }
 }
 
-impl From<jid::JidParseError> for Error {
-    fn from(err: jid::JidParseError) -> Error {
+impl From<jid::Error> for Error {
+    fn from(err: jid::Error) -> Error {
         Error::JidParseError(err)
     }
 }

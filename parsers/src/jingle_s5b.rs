@@ -276,7 +276,6 @@ impl From<Transport> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use jid::BareJid;
     use std::str::FromStr;
 
     #[cfg(target_pointer_width = "32")]
@@ -344,7 +343,7 @@ mod tests {
             payload: TransportPayload::Candidates(vec![Candidate {
                 cid: CandidateId(String::from("coucou")),
                 host: IpAddr::from_str("127.0.0.1").unwrap(),
-                jid: Jid::Bare(BareJid::new("coucou", "coucou")),
+                jid: Jid::new("coucou@coucou").unwrap(),
                 port: None,
                 priority: 0u32,
                 type_: Type::Direct,

@@ -112,7 +112,7 @@ mod tests {
         assert_eq!(storage.conferences[0].autojoin, Autojoin::True);
         assert_eq!(
             storage.conferences[0].jid,
-            BareJid::new("test-muc", "muc.localhost")
+            BareJid::new("test-muc@muc.localhost").unwrap()
         );
         assert_eq!(storage.conferences[0].clone().name.unwrap(), "Test MUC");
         assert_eq!(storage.conferences[0].clone().nick.unwrap(), "Coucou");

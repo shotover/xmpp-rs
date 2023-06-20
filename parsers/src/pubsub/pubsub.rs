@@ -546,7 +546,6 @@ impl From<PubSub> for Element {
 mod tests {
     use super::*;
     use crate::data_forms::{DataForm, DataFormType, Field, FieldType};
-    use jid::FullJid;
 
     #[test]
     fn create() {
@@ -746,7 +745,7 @@ mod tests {
         let form = DataForm::try_from(elem).unwrap();
 
         let options = Options {
-            jid: Jid::Full(FullJid::new("juliet", "capulet.lit", "balcony")),
+            jid: Jid::new("juliet@capulet.lit/balcony").unwrap(),
             node: None,
             subid: None,
             form: Some(form),

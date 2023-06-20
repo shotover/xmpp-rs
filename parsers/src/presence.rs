@@ -672,24 +672,21 @@ mod tests {
         let elem: Element = presence.into();
         assert_eq!(elem.attr("to"), None);
 
-        let presence = Presence::new(Type::None).with_to(Jid::Bare(BareJid::domain("localhost")));
+        let presence = Presence::new(Type::None).with_to(Jid::new("localhost").unwrap());
         let elem: Element = presence.into();
         assert_eq!(elem.attr("to"), Some("localhost"));
 
-        let presence = Presence::new(Type::None).with_to(BareJid::domain("localhost"));
+        let presence = Presence::new(Type::None).with_to(BareJid::new("localhost").unwrap());
         let elem: Element = presence.into();
         assert_eq!(elem.attr("to"), Some("localhost"));
 
-        let presence = Presence::new(Type::None).with_to(Jid::Full(FullJid::new(
-            "test",
-            "localhost",
-            "coucou",
-        )));
+        let presence =
+            Presence::new(Type::None).with_to(Jid::new("test@localhost/coucou").unwrap());
         let elem: Element = presence.into();
         assert_eq!(elem.attr("to"), Some("test@localhost/coucou"));
 
         let presence =
-            Presence::new(Type::None).with_to(FullJid::new("test", "localhost", "coucou"));
+            Presence::new(Type::None).with_to(FullJid::new("test@localhost/coucou").unwrap());
         let elem: Element = presence.into();
         assert_eq!(elem.attr("to"), Some("test@localhost/coucou"));
     }

@@ -75,7 +75,7 @@ mod tests {
         let response = JidPrepResponse::try_from(elem).unwrap();
         assert_eq!(
             response.jid,
-            FullJid::new("romeo", "montague.lit", "orchard")
+            FullJid::new("romeo@montague.lit/orchard").unwrap()
         );
     }
 }

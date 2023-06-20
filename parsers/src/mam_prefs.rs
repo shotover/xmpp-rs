@@ -88,7 +88,7 @@ fn serialise_jid_list(name: &str, jids: Vec<Jid>) -> ::std::option::IntoIter<Nod
             Element::builder(name, ns::MAM)
                 .append_all(
                     jids.into_iter()
-                        .map(|jid| Element::builder("jid", ns::MAM).append(String::from(jid))),
+                        .map(|jid| Element::builder("jid", ns::MAM).append(jid)),
                 )
                 .into(),
         )
@@ -160,8 +160,11 @@ mod tests {
         .parse()
         .unwrap();
         let prefs = Prefs::try_from(elem).unwrap();
-        assert_eq!(prefs.always, [BareJid::new("romeo", "montague.lit")]);
-        assert_eq!(prefs.never, [BareJid::new("montague", "montague.lit")]);
+        assert_eq!(prefs.always, [BareJid::new("romeo@montague.lit").unwrap()]);
+        assert_eq!(
+            prefs.never,
+            [BareJid::new("montague@montague.lit").unwrap()]
+        );
 
         let elem2 = Element::from(prefs.clone());
         println!("{:?}", elem2);

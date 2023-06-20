@@ -92,7 +92,10 @@ mod tests {
     fn test_simple() {
         let elem: Element = "<stream:stream xmlns='jabber:client' xmlns:stream='http://etherx.jabber.org/streams' xml:lang='en' version='1.0' id='abc' from='some-server.example'/>".parse().unwrap();
         let stream = Stream::try_from(elem).unwrap();
-        assert_eq!(stream.from, Some(BareJid::domain("some-server.example")));
+        assert_eq!(
+            stream.from,
+            Some(BareJid::new("some-server.example").unwrap())
+        );
         assert_eq!(stream.to, None);
         assert_eq!(stream.id, Some(String::from("abc")));
         assert_eq!(stream.version, Some(String::from("1.0")));

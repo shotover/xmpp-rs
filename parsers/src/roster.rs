@@ -167,7 +167,10 @@ mod tests {
         let roster = Roster::try_from(elem).unwrap();
         assert_eq!(roster.ver, Some(String::from("ver11")));
         assert_eq!(roster.items.len(), 4);
-        assert_eq!(roster.items[0].jid, BareJid::new("romeo", "example.net"));
+        assert_eq!(
+            roster.items[0].jid,
+            BareJid::new("romeo@example.net").unwrap()
+        );
         assert_eq!(roster.items[0].name, Some(String::from("Romeo")));
         assert_eq!(roster.items[0].subscription, Subscription::Both);
         assert_eq!(roster.items[0].ask, Ask::None);
@@ -176,7 +179,10 @@ mod tests {
             vec!(Group::from_str("Friends").unwrap())
         );
 
-        assert_eq!(roster.items[3].jid, BareJid::new("contact", "example.org"));
+        assert_eq!(
+            roster.items[3].jid,
+            BareJid::new("contact@example.org").unwrap()
+        );
         assert_eq!(roster.items[3].name, Some(String::from("MyContact")));
         assert_eq!(roster.items[3].subscription, Subscription::None);
         assert_eq!(roster.items[3].ask, Ask::Subscribe);
@@ -195,7 +201,10 @@ mod tests {
         let roster = Roster::try_from(elem).unwrap();
         assert!(roster.ver.is_none());
         assert_eq!(roster.items.len(), 1);
-        assert_eq!(roster.items[0].jid, BareJid::new("test", "example.org"));
+        assert_eq!(
+            roster.items[0].jid,
+            BareJid::new("test@example.org").unwrap()
+        );
         assert_eq!(roster.items[0].name, None);
         assert_eq!(roster.items[0].groups.len(), 2);
         assert_eq!(roster.items[0].groups[0], Group::from_str("A").unwrap());
@@ -225,7 +234,10 @@ mod tests {
         let roster = Roster::try_from(elem).unwrap();
         assert!(roster.ver.is_none());
         assert_eq!(roster.items.len(), 1);
-        assert_eq!(roster.items[0].jid, BareJid::new("nurse", "example.com"));
+        assert_eq!(
+            roster.items[0].jid,
+            BareJid::new("nurse@example.com").unwrap()
+        );
         assert_eq!(roster.items[0].name, Some(String::from("Nurse")));
         assert_eq!(roster.items[0].groups.len(), 1);
         assert_eq!(
@@ -242,7 +254,10 @@ mod tests {
         let roster = Roster::try_from(elem).unwrap();
         assert!(roster.ver.is_none());
         assert_eq!(roster.items.len(), 1);
-        assert_eq!(roster.items[0].jid, BareJid::new("nurse", "example.com"));
+        assert_eq!(
+            roster.items[0].jid,
+            BareJid::new("nurse@example.com").unwrap()
+        );
         assert!(roster.items[0].name.is_none());
         assert!(roster.items[0].groups.is_empty());
         assert_eq!(roster.items[0].subscription, Subscription::Remove);

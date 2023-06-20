@@ -66,7 +66,7 @@ mod tests {
             .unwrap();
         let stanza_id = StanzaId::try_from(elem).unwrap();
         assert_eq!(stanza_id.id, String::from("coucou"));
-        assert_eq!(stanza_id.by, BareJid::new("coucou", "coucou"));
+        assert_eq!(stanza_id.by, BareJid::new("coucou@coucou").unwrap());
 
         let elem: Element = "<origin-id xmlns='urn:xmpp:sid:0' id='coucou'/>"
             .parse()
@@ -119,7 +119,7 @@ mod tests {
             .unwrap();
         let stanza_id = StanzaId {
             id: String::from("coucou"),
-            by: Jid::Bare(BareJid::new("coucou", "coucou")),
+            by: Jid::new("coucou@coucou").unwrap(),
         };
         let elem2 = stanza_id.into();
         assert_eq!(elem, elem2);

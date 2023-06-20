@@ -170,11 +170,14 @@ mod tests {
         //assert_eq!(bind.resource.unwrap(), "HelloTM");
         assert_eq!(bind.resource.unwrap(), "Hello™");
 
-        let elem: Element = "<bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'><jid>coucou@linkmauve.fr/HelloTM</jid></bind>"
+        let elem: Element = "<bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'><jid>coucou@linkmauve.fr/Hello™</jid></bind>"
             .parse()
             .unwrap();
         let bind = BindResponse::try_from(elem).unwrap();
-        assert_eq!(bind.jid, FullJid::new("coucou", "linkmauve.fr", "HelloTM"));
+        assert_eq!(
+            bind.jid,
+            FullJid::new("coucou@linkmauve.fr/HelloTM").unwrap()
+        );
     }
 
     #[cfg(not(feature = "disable-validation"))]

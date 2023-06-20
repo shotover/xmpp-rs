@@ -273,7 +273,7 @@ mod tests {
                 assert_eq!(items[0].id, Some(ItemId(String::from("test"))));
                 assert_eq!(
                     items[0].publisher.clone().unwrap(),
-                    BareJid::new("test", "coucou")
+                    BareJid::new("test@coucou").unwrap()
                 );
                 assert_eq!(items[0].payload, None);
             }
@@ -404,7 +404,7 @@ mod tests {
                     )))
                 );
                 assert_eq!(subscription, Some(Subscription::Subscribed));
-                assert_eq!(jid.unwrap(), BareJid::new("francisco", "denmark.lit"));
+                assert_eq!(jid.unwrap(), BareJid::new("francisco@denmark.lit").unwrap());
                 assert_eq!(expiry, Some("2006-02-28T23:59:59Z".parse().unwrap()));
             }
             _ => panic!(),

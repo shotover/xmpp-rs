@@ -299,7 +299,6 @@ impl From<Message> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use jid::BareJid;
     use std::str::FromStr;
 
     #[cfg(target_pointer_width = "32")]
@@ -378,7 +377,7 @@ mod tests {
         let elem: Element = "<message xmlns='jabber:client' to='coucou@example.org' type='chat'><body>Hello world!</body></message>".parse().unwrap();
         #[cfg(feature = "component")]
         let elem: Element = "<message xmlns='jabber:component:accept' to='coucou@example.org' type='chat'><body>Hello world!</body></message>".parse().unwrap();
-        let mut message = Message::new(Jid::Bare(BareJid::new("coucou", "example.org")));
+        let mut message = Message::new(Jid::new("coucou@example.org").unwrap());
         message
             .bodies
             .insert(String::from(""), Body::from_str("Hello world!").unwrap());

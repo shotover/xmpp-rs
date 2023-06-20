@@ -24,7 +24,7 @@
 #![warn(missing_docs)]
 
 pub use crate::util::error::Error;
-pub use jid::{BareJid, FullJid, Jid, JidParseError};
+pub use jid::{BareJid, Error as JidParseError, FullJid, Jid};
 pub use minidom::Element;
 
 /// XML namespace definitions used through XMPP.
