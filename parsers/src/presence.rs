@@ -393,7 +393,7 @@ mod tests {
     fn test_size() {
         assert_size!(Show, 1);
         assert_size!(Type, 1);
-        assert_size!(Presence, 240);
+        assert_size!(Presence, 160);
     }
 
     #[test]

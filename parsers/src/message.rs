@@ -318,7 +318,7 @@ mod tests {
         assert_size!(Body, 24);
         assert_size!(Subject, 24);
         assert_size!(Thread, 24);
-        assert_size!(Message, 288);
+        assert_size!(Message, 208);
     }
 
     #[test]

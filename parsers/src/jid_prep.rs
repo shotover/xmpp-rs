@@ -55,10 +55,7 @@ mod tests {
     #[test]
     fn test_size() {
         assert_size!(JidPrepQuery, 24);
-        #[cfg(rustc_nightly)]
-        assert_size!(JidPrepResponse, 72);
-        #[cfg(not(rustc_nightly))]
-        assert_size!(JidPrepResponse, 80);
+        assert_size!(JidPrepResponse, 40);
     }
 
     #[test]

@@ -84,7 +84,7 @@ mod tests {
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
-        assert_size!(Open, 168);
+        assert_size!(Open, 136);
     }
 
     #[test]

@@ -82,8 +82,8 @@ mod tests {
         assert_size!(Enable, 0);
         assert_size!(Disable, 0);
         assert_size!(Private, 0);
-        assert_size!(Received, 408);
-        assert_size!(Sent, 408);
+        assert_size!(Received, 288);
+        assert_size!(Sent, 288);
     }
 
     #[test]

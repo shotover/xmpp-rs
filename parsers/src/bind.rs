@@ -150,7 +150,7 @@ mod tests {
     #[test]
     fn test_size() {
         assert_size!(BindQuery, 24);
-        assert_size!(BindResponse, 72);
+        assert_size!(BindResponse, 32);
     }
 
     #[test]

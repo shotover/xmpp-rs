@@ -326,7 +326,7 @@ mod tests {
     fn test_size() {
         assert_size!(ErrorType, 1);
         assert_size!(DefinedCondition, 1);
-        assert_size!(StanzaError, 232);
+        assert_size!(StanzaError, 192);
     }
 
     #[test]
