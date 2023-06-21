@@ -2,10 +2,27 @@ Unreleased
 
   * Breaking
     - serde: Jid is now using untagged enum representation (#66)
+    - JidParseError has been renamed Error
+    - Jid::new, FullJid::new, and BareJid::new now take a single stringy argument and return a Result ;
+    to build JIDs from separate parts, use the from_parts() method instead (#204)
   * Additions
-    - From<&Jid> is now implemented for String (#69)
     - Parsing invalid JIDs with stringprep feature no longer results in panic,
-    returning JidParseError::IcuError instead (#84)
+    returning Error with NodePrep, NamePrep or ResourcePrep variant instead (#84)
+    - JID parts are now typed as NodePart, DomainPart and ResourcePart ; once part into those types,
+    JID operations cannot fail
+    - BareJid::with_resource appends a ResourcePart to a BareJid to produce a FullJid (#204)
+    - BareJid::with_resource_str appends a stringy resource to a BareJid to produce a FullJid, and can fail
+    in case of resource stringprep or length check error (#204)
+    - Jid::from_parts, BareJid::from_parts, and FullJid::from_parts enable to build JIDs from typed Parts
+    and cannot fail (#204)
+    - Jid::node(), BareJid::node(), and FullJid::node() now return an option of the typed NodePart ; the
+    node_str() method returns the same information as a string slice (#204)
+    - Jid::domain(), BareJid::domain(), and FullJid::domain() now return the typed DomainPart ; the
+    domain_str() method returns the same information as a string slice (#204)
+    - FullJid::resource() returns the typed ResourcePart ; the resource_str() method returns the same
+    information as a string slice (#204)
+    - Jid::resource() returns an optional typed ResourcePart ; the resource_str() method returns the same
+    information as a string slice (#204)
 
 Version 0.9.3, release 2022-03-07:
   * Updates
