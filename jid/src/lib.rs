@@ -45,6 +45,9 @@ pub use crate::error::Error;
 mod inner;
 use inner::InnerJid;
 
+mod parts;
+pub use parts::{DomainPart, NodePart, ResourcePart};
+
 /// An enum representing a Jabber ID. It can be either a `FullJid` or a `BareJid`.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(untagged))]
@@ -89,6 +92,7 @@ impl fmt::Display for Jid {
 impl Jid {
     /// Constructs a Jabber ID from a string. This is of the form
     /// `node`@`domain`/`resource`, where node and resource parts are optional.
+    /// If you want a non-fallible version, use [`Jid::from_parts`] instead.
     ///
     /// # Examples
     ///
@@ -111,6 +115,21 @@ impl Jid {
             Ok(Jid::Full(FullJid { inner }))
         } else {
             Ok(Jid::Bare(BareJid { inner }))
+        }
+    }
+
+    /// Build a [`Jid`] from typed parts. This method cannot fail because it uses parts that have
+    /// already been parsed and stringprepped into [`NodePart`], [`DomainPart`], and [`ResourcePart`].
+    /// This method allocates and does not consume the typed parts.
+    pub fn from_parts(
+        node: Option<&NodePart>,
+        domain: &DomainPart,
+        resource: Option<&ResourcePart>,
+    ) -> Jid {
+        if let Some(resource) = resource {
+            Jid::Full(FullJid::from_parts(node, domain, resource))
+        } else {
+            Jid::Bare(BareJid::from_parts(node, domain))
         }
     }
 
@@ -305,6 +324,7 @@ impl<'de> Deserialize<'de> for BareJid {
 impl FullJid {
     /// Constructs a full Jabber ID containing all three components. This is of the form
     /// `node@domain/resource`, where node part is optional.
+    /// If you want a non-fallible version, use [`FullJid::from_parts`] instead.
     ///
     /// # Examples
     ///
@@ -328,6 +348,38 @@ impl FullJid {
         } else {
             Err(Error::ResourceMissingInFullJid)
         }
+    }
+
+    /// Build a [`FullJid`] from typed parts. This method cannot fail because it uses parts that have
+    /// already been parsed and stringprepped into [`NodePart`], [`DomainPart`], and [`ResourcePart`].
+    /// This method allocates and does not consume the typed parts.
+    pub fn from_parts(
+        node: Option<&NodePart>,
+        domain: &DomainPart,
+        resource: &ResourcePart,
+    ) -> FullJid {
+        let (at, slash, normalized) = if let Some(node) = node {
+            // Parts are never empty so len > 0 for NonZeroU16::new is always Some
+            (
+                NonZeroU16::new(node.0.len() as u16),
+                NonZeroU16::new((node.0.len() + 1 + domain.0.len()) as u16),
+                format!("{}@{}/{}", node.0, domain.0, resource.0),
+            )
+        } else {
+            (
+                None,
+                NonZeroU16::new(domain.0.len() as u16),
+                format!("{}/{}", domain.0, resource.0),
+            )
+        };
+
+        let inner = InnerJid {
+            normalized,
+            at,
+            slash,
+        };
+
+        FullJid { inner }
     }
 
     /// The optional node part of the JID.
@@ -378,6 +430,7 @@ impl FromStr for BareJid {
 impl BareJid {
     /// Constructs a bare Jabber ID, containing two components. This is of the form
     /// `node`@`domain`, where node part is optional.
+    /// If you want a non-fallible version, use [`BareJid::from_parts`] instead.
     ///
     /// # Examples
     ///
@@ -400,6 +453,29 @@ impl BareJid {
         } else {
             Err(Error::ResourceInBareJid)
         }
+    }
+
+    /// Build a [`BareJid`] from typed parts. This method cannot fail because it uses parts that have
+    /// already been parsed and stringprepped into [`NodePart`] and [`DomainPart`]. This method allocates
+    /// and does not consume the typed parts.
+    pub fn from_parts(node: Option<&NodePart>, domain: &DomainPart) -> BareJid {
+        let (at, normalized) = if let Some(node) = node {
+            // Parts are never empty so len > 0 for NonZeroU16::new is always Some
+            (
+                NonZeroU16::new(node.0.len() as u16),
+                format!("{}@{}", node.0, domain.0),
+            )
+        } else {
+            (None, domain.0.clone())
+        };
+
+        let inner = InnerJid {
+            normalized,
+            at,
+            slash: None,
+        };
+
+        BareJid { inner }
     }
 
     /// The optional node part of the JID.
