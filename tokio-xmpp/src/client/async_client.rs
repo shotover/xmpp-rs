@@ -109,13 +109,13 @@ impl Client {
         jid: Jid,
         password: String,
     ) -> Result<XMPPStream, Error> {
-        let username = jid.node().unwrap();
+        let username = jid.node_str().unwrap();
         let password = password;
 
         // TCP connection
         let tcp_stream = match server {
             ServerConfig::UseSrv => {
-                connect_with_srv(jid.domain(), "_xmpp-client._tcp", 5222).await?
+                connect_with_srv(jid.domain_str(), "_xmpp-client._tcp", 5222).await?
             }
             ServerConfig::Manual { host, port } => connect_to_host(host.as_str(), port).await?,
         };

@@ -34,7 +34,6 @@ use core::num::NonZeroU16;
 use std::convert::TryFrom;
 use std::fmt;
 use std::str::FromStr;
-use stringprep::resourceprep;
 
 #[cfg(feature = "serde")]
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
@@ -103,9 +102,9 @@ impl Jid {
     /// # fn main() -> Result<(), Error> {
     /// let jid = Jid::new("node@domain/resource")?;
     ///
-    /// assert_eq!(jid.node(), Some("node"));
-    /// assert_eq!(jid.domain(), "domain");
-    /// assert_eq!(jid.resource(), Some("resource"));
+    /// assert_eq!(jid.node_str(), Some("node"));
+    /// assert_eq!(jid.domain_str(), "domain");
+    /// assert_eq!(jid.resource_str(), Some("resource"));
     /// # Ok(())
     /// # }
     /// ```
@@ -133,22 +132,51 @@ impl Jid {
         }
     }
 
-    /// The optional node part of the JID.
-    pub fn node(&self) -> Option<&str> {
+    /// The optional node part of the JID, as a [`NodePart`]
+    pub fn node(&self) -> Option<NodePart> {
+        match self {
+            Jid::Bare(BareJid { inner }) | Jid::Full(FullJid { inner }) => {
+                inner.node().map(|s| NodePart::new_unchecked(s))
+            }
+        }
+    }
+
+    /// The optional node part of the JID, as a stringy reference
+    pub fn node_str(&self) -> Option<&str> {
         match self {
             Jid::Bare(BareJid { inner }) | Jid::Full(FullJid { inner }) => inner.node(),
         }
     }
 
-    /// The domain part of the JID.
-    pub fn domain(&self) -> &str {
+    /// The domain part of the JID, as a [`DomainPart`]
+    pub fn domain(&self) -> DomainPart {
+        match self {
+            Jid::Bare(BareJid { inner }) | Jid::Full(FullJid { inner }) => {
+                DomainPart::new_unchecked(inner.domain())
+            }
+        }
+    }
+
+    /// The domain part of the JID, as a stringy reference
+    pub fn domain_str(&self) -> &str {
         match self {
             Jid::Bare(BareJid { inner }) | Jid::Full(FullJid { inner }) => inner.domain(),
         }
     }
 
-    /// The optional resource part of the JID.
-    pub fn resource(&self) -> Option<&str> {
+    /// The optional resource part of the JID, as a [`ResourcePart`]. It is guaranteed to be present
+    /// when the JID is a Full variant, which you can check with [`Jid::is_full`].
+    pub fn resource(&self) -> Option<ResourcePart> {
+        match self {
+            Jid::Bare(BareJid { inner }) | Jid::Full(FullJid { inner }) => {
+                inner.resource().map(|s| ResourcePart::new_unchecked(s))
+            }
+        }
+    }
+
+    /// The optional resource of the Jabber ID. It is guaranteed to be present when the JID is
+    /// a Full variant, which you can check with [`Jid::is_full`].
+    pub fn resource_str(&self) -> Option<&str> {
         match self {
             Jid::Bare(BareJid { inner }) | Jid::Full(FullJid { inner }) => inner.resource(),
         }
@@ -168,6 +196,19 @@ impl Jid {
             Jid::Full(jid) => jid.into_bare(),
             Jid::Bare(jid) => jid,
         }
+    }
+
+    /// Checks if the JID contains a [`FullJid`]
+    pub fn is_full(&self) -> bool {
+        match self {
+            Self::Full(_) => true,
+            Self::Bare(_) => false,
+        }
+    }
+
+    /// Checks if the JID contains a [`BareJid`]
+    pub fn is_bare(&self) -> bool {
+        !self.is_full()
     }
 }
 
@@ -488,22 +529,23 @@ impl BareJid {
         self.inner.domain()
     }
 
-    /// Constructs a [`FullJid`] from the bare JID, by specifying a `resource`.
+    /// Constructs a [`BareJid`] from the bare JID, by specifying a [`ResourcePart`].
+    /// If you'd like to specify a stringy resource, use [`BareJid::with_resource_str`] instead.
     ///
     /// # Examples
     ///
     /// ```
-    /// use jid::BareJid;
+    /// use jid::{BareJid, ResourcePart};
     ///
+    /// let resource = ResourcePart::new("resource").unwrap();
     /// let bare = BareJid::new("node@domain").unwrap();
-    /// let full = bare.with_resource("resource").unwrap();
+    /// let full = bare.with_resource(&resource);
     ///
     /// assert_eq!(full.node(), Some("node"));
     /// assert_eq!(full.domain(), "domain");
     /// assert_eq!(full.resource(), "resource");
     /// ```
-    pub fn with_resource(&self, resource: &str) -> Result<FullJid, Error> {
-        let resource = resourceprep(resource).map_err(|_| Error::ResourcePrep)?;
+    pub fn with_resource(&self, resource: &ResourcePart) -> FullJid {
         let slash = NonZeroU16::new(self.inner.normalized.len() as u16);
         let normalized = format!("{}/{resource}", self.inner.normalized);
         let inner = InnerJid {
@@ -511,7 +553,28 @@ impl BareJid {
             at: self.inner.at,
             slash,
         };
-        Ok(FullJid { inner })
+
+        FullJid { inner }
+    }
+
+    /// Constructs a [`FullJid`] from the bare JID, by specifying a stringy `resource`.
+    /// If your resource has already been parsed into a [`ResourcePart`], use [`BareJid::with_resource`].
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use jid::BareJid;
+    ///
+    /// let bare = BareJid::new("node@domain").unwrap();
+    /// let full = bare.with_resource_str("resource").unwrap();
+    ///
+    /// assert_eq!(full.node(), Some("node"));
+    /// assert_eq!(full.domain(), "domain");
+    /// assert_eq!(full.resource(), "resource");
+    /// ```
+    pub fn with_resource_str(&self, resource: &str) -> Result<FullJid, Error> {
+        let resource = ResourcePart::new(resource)?;
+        Ok(self.with_resource(&resource))
     }
 }
 
@@ -634,24 +697,51 @@ mod tests {
     }
 
     #[test]
-    fn bare_to_full_jid() {
+    fn bare_to_full_jid_str() {
         assert_eq!(
-            BareJid::new("a@b.c").unwrap().with_resource("d").unwrap(),
+            BareJid::new("a@b.c")
+                .unwrap()
+                .with_resource_str("d")
+                .unwrap(),
             FullJid::new("a@b.c/d").unwrap()
         );
     }
 
     #[test]
-    fn node_from_jid() {
+    fn bare_to_full_jid() {
         assert_eq!(
-            Jid::Full(FullJid::new("a@b.c/d").unwrap()).node(),
-            Some("a"),
-        );
+            BareJid::new("a@b.c")
+                .unwrap()
+                .with_resource(&ResourcePart::new("d").unwrap()),
+            FullJid::new("a@b.c/d").unwrap()
+        )
+    }
+
+    #[test]
+    fn node_from_jid() {
+        let jid = Jid::new("a@b.c/d").unwrap();
+
+        assert_eq!(jid.node_str(), Some("a"),);
+
+        assert_eq!(jid.node(), Some(NodePart::new("a").unwrap()));
     }
 
     #[test]
     fn domain_from_jid() {
-        assert_eq!(Jid::Bare(BareJid::new("a@b.c").unwrap()).domain(), "b.c");
+        let jid = Jid::new("a@b.c").unwrap();
+
+        assert_eq!(jid.domain_str(), "b.c");
+
+        assert_eq!(jid.domain(), DomainPart::new("b.c").unwrap());
+    }
+
+    #[test]
+    fn resource_from_jid() {
+        let jid = Jid::new("a@b.c/d").unwrap();
+
+        assert_eq!(jid.resource_str(), Some("d"),);
+
+        assert_eq!(jid.resource(), Some(ResourcePart::new("d").unwrap()));
     }
 
     #[test]
@@ -771,5 +861,21 @@ mod tests {
         let full = FullJid::from_str("Test@☃.coM/Test™").unwrap();
         let equiv = FullJid::new("test@☃.com/TestTM").unwrap();
         assert_eq!(full, equiv);
+    }
+
+    #[test]
+    fn jid_from_parts() {
+        let node = NodePart::new("node").unwrap();
+        let domain = DomainPart::new("domain").unwrap();
+        let resource = ResourcePart::new("resource").unwrap();
+
+        let jid = Jid::from_parts(Some(&node), &domain, Some(&resource));
+        assert_eq!(jid, Jid::new("node@domain/resource").unwrap());
+
+        let barejid = BareJid::from_parts(Some(&node), &domain);
+        assert_eq!(barejid, BareJid::new("node@domain").unwrap());
+
+        let fulljid = FullJid::from_parts(Some(&node), &domain, &resource);
+        assert_eq!(fulljid, FullJid::new("node@domain/resource").unwrap());
     }
 }

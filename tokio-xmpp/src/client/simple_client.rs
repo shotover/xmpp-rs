@@ -50,9 +50,9 @@ impl Client {
     }
 
     async fn connect(jid: Jid, password: String) -> Result<XMPPStream, Error> {
-        let username = jid.node().unwrap();
+        let username = jid.node_str().unwrap();
         let password = password;
-        let domain = idna::domain_to_ascii(&jid.clone().domain()).map_err(|_| Error::Idna)?;
+        let domain = idna::domain_to_ascii(&jid.clone().domain_str()).map_err(|_| Error::Idna)?;
 
         // TCP connection
         let tcp_stream = connect_with_srv(&domain, "_xmpp-client._tcp", 5222).await?;

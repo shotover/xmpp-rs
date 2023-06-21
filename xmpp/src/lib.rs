@@ -180,7 +180,7 @@ impl ClientBuilder<'_> {
 
     pub fn build(self) -> Agent {
         let jid: Jid = if let Some(resource) = &self.resource {
-            self.jid.with_resource(resource).unwrap().into()
+            self.jid.with_resource_str(resource).unwrap().into()
         } else {
             self.jid.clone().into()
         };
@@ -233,7 +233,7 @@ impl Agent {
         }
 
         let nick = nick.unwrap_or_else(|| self.default_nick.read().unwrap().clone());
-        let room_jid = room.with_resource(&nick).unwrap();
+        let room_jid = room.with_resource_str(&nick).unwrap();
         let mut presence = Presence::new(PresenceType::None).with_to(room_jid);
         presence.add_payload(muc);
         presence.set_status(String::from(lang), String::from(status));
@@ -262,7 +262,7 @@ impl Agent {
         lang: &str,
         text: &str,
     ) {
-        let recipient: Jid = room.with_resource(&recipient).unwrap().into();
+        let recipient: Jid = room.with_resource_str(&recipient).unwrap().into();
         let mut message = Message::new(recipient).with_payload(MucUser::new());
         message.type_ = MessageType::Chat;
         message
