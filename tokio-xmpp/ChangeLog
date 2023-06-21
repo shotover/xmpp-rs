@@ -1,5 +1,7 @@
-xxxxxxxxxx
+Version next:
+0000-00-00 xxxxxxxxxx
     * Breaking changes:
-          - AsyncClient::new takes a parsed Jid instead of string (#72)
-	* Changes:
-		- env_logger is now included in dev_dependencies for examples debugging with RUST_LOG=debug
+      - AsyncClient::new takes a parsed Jid instead of string (#72)
+    * Changes:
+      - env_logger is now included in dev_dependencies for examples debugging with RUST_LOG=debug
+      - Fix debug prints to include all XML being sent and received

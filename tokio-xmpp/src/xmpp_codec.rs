@@ -177,9 +177,9 @@ impl Encoder<Packet> for XMPPCodec {
                 }
                 write!(buf, ">\n").map_err(to_io_err)?;
 
+                write!(dst, "{}", buf)?;
                 let utf8 = std::str::from_utf8(dst)?;
-                debug!(">> {}", highlight_xml(utf8));
-                write!(dst, "{}", buf)?
+                debug!(">> {}", highlight_xml(utf8))
             }
             Packet::Stanza(stanza) => {
                 let _ = stanza
