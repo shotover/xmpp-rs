@@ -175,7 +175,7 @@ impl Encoder<Packet> for XMPPCodec {
                         self.ns = Some(value);
                     }
                 }
-                write!(buf, ">\n").map_err(to_io_err)?;
+                write!(buf, ">").map_err(to_io_err)?;
 
                 write!(dst, "{}", buf)?;
                 let utf8 = std::str::from_utf8(dst)?;
