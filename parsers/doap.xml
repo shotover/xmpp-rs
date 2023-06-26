@@ -27,6 +27,11 @@
 
     <programming-language>Rust</programming-language>
 
+    <os>linux</os>
+    <os>windows</os>
+    <os>macos</os>
+    <os>android</os>
+
     <category rdf:resource="https://linkmauve.fr/ns/xmpp-doap#category-library"/>
 
     <maintainer>
