@@ -13,6 +13,7 @@
 use crate::Error;
 use core::num::NonZeroU16;
 use memchr::memchr;
+use std::borrow::Cow;
 use std::str::FromStr;
 use stringprep::{nameprep, nodeprep, resourceprep};
 
@@ -57,7 +58,12 @@ impl InnerJid {
 
                 orig_at = Some(node.len());
                 orig_slash = Some(node.len() + domain.len() + 1);
-                format!("{node}@{domain}/{resource}")
+                match (node, domain, resource) {
+                    (Cow::Borrowed(_), Cow::Borrowed(_), Cow::Borrowed(_)) => {
+                        unnormalized.to_string()
+                    }
+                    (node, domain, resource) => format!("{node}@{domain}/{resource}"),
+                }
             }
             (Some(at), None) => {
                 let node = nodeprep(&unnormalized[..at]).map_err(|_| Error::NodePrep)?;
@@ -67,7 +73,10 @@ impl InnerJid {
                 length_check(domain.len(), Error::DomainEmpty, Error::DomainTooLong)?;
 
                 orig_at = Some(node.len());
-                format!("{node}@{domain}")
+                match (node, domain) {
+                    (Cow::Borrowed(_), Cow::Borrowed(_)) => unnormalized.to_string(),
+                    (node, domain) => format!("{node}@{domain}"),
+                }
             }
             (None, Some(slash)) => {
                 let domain = nameprep(&unnormalized[..slash]).map_err(|_| Error::NamePrep)?;
@@ -78,7 +87,10 @@ impl InnerJid {
                 length_check(resource.len(), Error::ResourceEmpty, Error::ResourceTooLong)?;
 
                 orig_slash = Some(domain.len());
-                format!("{domain}/{resource}")
+                match (domain, resource) {
+                    (Cow::Borrowed(_), Cow::Borrowed(_)) => unnormalized.to_string(),
+                    (domain, resource) => format!("{domain}/{resource}"),
+                }
             }
             (None, None) => {
                 let domain = nameprep(unnormalized).map_err(|_| Error::NamePrep)?;

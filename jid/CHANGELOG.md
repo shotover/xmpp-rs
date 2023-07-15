@@ -8,6 +8,7 @@ Unreleased
   * Additions
     - Parsing invalid JIDs with stringprep feature no longer results in panic,
     returning Error with NodePrep, NamePrep or ResourcePrep variant instead (#84)
+    - Parsing already-normalized JIDs with stringprep is much faster, about 20 times.
     - JID parts are now typed as NodePart, DomainPart and ResourcePart ; once part into those types,
     JID operations cannot fail
     - BareJid::with_resource appends a ResourcePart to a BareJid to produce a FullJid (#204)
