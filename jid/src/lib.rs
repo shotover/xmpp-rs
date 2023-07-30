@@ -117,6 +117,13 @@ impl Jid {
         }
     }
 
+    /// Returns the inner String of this JID.
+    pub fn into_inner(self) -> String {
+        match self {
+            Jid::Bare(BareJid { inner }) | Jid::Full(FullJid { inner }) => inner.normalized,
+        }
+    }
+
     /// Build a [`Jid`] from typed parts. This method cannot fail because it uses parts that have
     /// already been parsed and stringprepped into [`NodePart`], [`DomainPart`], and [`ResourcePart`].
     /// This method allocates and does not consume the typed parts.
@@ -391,6 +398,11 @@ impl FullJid {
         }
     }
 
+    /// Returns the inner String of this JID.
+    pub fn into_inner(self) -> String {
+        self.inner.normalized
+    }
+
     /// Build a [`FullJid`] from typed parts. This method cannot fail because it uses parts that have
     /// already been parsed and stringprepped into [`NodePart`], [`DomainPart`], and [`ResourcePart`].
     /// This method allocates and does not consume the typed parts.
@@ -494,6 +506,11 @@ impl BareJid {
         } else {
             Err(Error::ResourceInBareJid)
         }
+    }
+
+    /// Returns the inner String of this JID.
+    pub fn into_inner(self) -> String {
+        self.inner.normalized
     }
 
     /// Build a [`BareJid`] from typed parts. This method cannot fail because it uses parts that have
