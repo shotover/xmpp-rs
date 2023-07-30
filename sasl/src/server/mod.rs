@@ -13,11 +13,11 @@ macro_rules! impl_validator_using_provider {
                 &self,
                 identity: &$crate::common::Identity,
                 value: &$secret,
-            ) -> Result<(), ValidatorError> {
+            ) -> Result<(), $crate::server::ValidatorError> {
                 if &(self as &$crate::server::Provider<$secret>).provide(identity)? == value {
                     Ok(())
                 } else {
-                    Err(ValidatorError::AuthenticationFailed)
+                    Err($crate::server::ValidatorError::AuthenticationFailed)
                 }
             }
         }
