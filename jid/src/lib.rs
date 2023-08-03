@@ -325,7 +325,7 @@ impl Serialize for FullJid {
     where
         S: Serializer,
     {
-        serializer.serialize_str(String::from(self).as_str())
+        serializer.serialize_str(&self.inner.normalized)
     }
 }
 
@@ -335,7 +335,7 @@ impl Serialize for BareJid {
     where
         S: Serializer,
     {
-        serializer.serialize_str(String::from(self).as_str())
+        serializer.serialize_str(&self.inner.normalized)
     }
 }
 
