@@ -911,4 +911,49 @@ mod tests {
         let fulljid = FullJid::from_parts(Some(&node), &domain, &resource);
         assert_eq!(fulljid, FullJid::new("node@domain/resource").unwrap());
     }
+
+    #[cfg(feature="serde")]
+    #[derive(Serialize, Deserialize)]
+    struct User<T> {
+        jid: T,
+    }
+
+    #[cfg(feature="serde")]
+    impl<T> From<T> for User<T> {
+        fn from(jid: T) -> User<T> {
+            User {
+                jid,
+            }
+        }
+    }
+
+    #[cfg(feature="serde")]
+    const BARE_JSON_STR: &'static str = "{\"jid\":\"node@domain\"}";
+    #[cfg(feature="serde")]
+    const FULL_JSON_STR: &'static str = "{\"jid\":\"node@domain/resource\"}";
+
+    #[test]
+    #[cfg(feature="serde")]
+    fn jid_serialize() {
+        let jid: User<Jid> = Jid::new("node@domain").unwrap().into();
+        assert_eq!(BARE_JSON_STR, serde_json::to_string(&jid).unwrap());
+        let jid: User<BareJid> = BareJid::new("node@domain").unwrap().into();
+        assert_eq!(BARE_JSON_STR, serde_json::to_string(&jid).unwrap());
+        let jid: User<FullJid> = FullJid::new("node@domain/resource").unwrap().into();
+        assert_eq!(FULL_JSON_STR, serde_json::to_string(&jid).unwrap());
+    }
+
+    #[test]
+    #[cfg(feature="serde")]
+    fn jid_deserialize() {
+        let jid = Jid::new("node@domain").unwrap();
+        let deser_jid: User<Jid> = serde_json::from_str(BARE_JSON_STR).unwrap();
+        assert_eq!(jid, deser_jid.jid);
+        let jid = BareJid::new("node@domain").unwrap();
+        let deser_jid: User<BareJid> = serde_json::from_str(BARE_JSON_STR).unwrap();
+        assert_eq!(jid, deser_jid.jid);
+        let jid = FullJid::new("node@domain/resource").unwrap();
+        let deser_jid: User<FullJid> = serde_json::from_str(FULL_JSON_STR).unwrap();
+        assert_eq!(jid, deser_jid.jid);
+    }
 }
