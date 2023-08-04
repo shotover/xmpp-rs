@@ -912,28 +912,26 @@ mod tests {
         assert_eq!(fulljid, FullJid::new("node@domain/resource").unwrap());
     }
 
-    #[cfg(feature="serde")]
+    #[cfg(feature = "serde")]
     #[derive(Serialize, Deserialize)]
     struct User<T> {
         jid: T,
     }
 
-    #[cfg(feature="serde")]
+    #[cfg(feature = "serde")]
     impl<T> From<T> for User<T> {
         fn from(jid: T) -> User<T> {
-            User {
-                jid,
-            }
+            User { jid }
         }
     }
 
-    #[cfg(feature="serde")]
+    #[cfg(feature = "serde")]
     const BARE_JSON_STR: &'static str = "{\"jid\":\"node@domain\"}";
-    #[cfg(feature="serde")]
+    #[cfg(feature = "serde")]
     const FULL_JSON_STR: &'static str = "{\"jid\":\"node@domain/resource\"}";
 
     #[test]
-    #[cfg(feature="serde")]
+    #[cfg(feature = "serde")]
     fn jid_serialize() {
         let jid: User<Jid> = Jid::new("node@domain").unwrap().into();
         assert_eq!(BARE_JSON_STR, serde_json::to_string(&jid).unwrap());
@@ -944,7 +942,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg(feature="serde")]
+    #[cfg(feature = "serde")]
     fn jid_deserialize() {
         let jid = Jid::new("node@domain").unwrap();
         let deser_jid: User<Jid> = serde_json::from_str(BARE_JSON_STR).unwrap();
