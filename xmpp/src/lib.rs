@@ -368,7 +368,7 @@ impl Agent {
                         Jid::Full(full) => Event::RoomMessage(
                             message.id.clone(),
                             from.to_bare(),
-                            full.resource().to_owned(),
+                            full.resource_str().to_owned(),
                             body.clone(),
                         ),
                         Jid::Bare(bare) => {
@@ -391,7 +391,7 @@ impl Agent {
                                 Jid::Full(full) => Event::RoomPrivateMessage(
                                     message.id.clone(),
                                     full.to_bare(),
-                                    full.resource().to_owned(),
+                                    full.resource_str().to_owned(),
                                     body.clone(),
                                 ),
                             };
