@@ -435,18 +435,34 @@ impl FullJid {
         FullJid { inner }
     }
 
-    /// The optional node part of the JID.
-    pub fn node(&self) -> Option<&str> {
+    /// The optional node part of the JID, as a [`NodePart`]
+    pub fn node(&self) -> Option<NodePart> {
+        self.node_str().map(|s| NodePart::new_unchecked(s))
+    }
+
+    /// The optional node part of the JID, as a stringy reference
+    pub fn node_str(&self) -> Option<&str> {
         self.inner.node()
     }
 
-    /// The domain part of the JID.
-    pub fn domain(&self) -> &str {
+    /// The domain part of the JID, as a [`DomainPart`]
+    pub fn domain(&self) -> DomainPart {
+        DomainPart::new_unchecked(self.domain_str())
+    }
+
+    /// The domain part of the JID, as a stringy reference
+    pub fn domain_str(&self) -> &str {
         self.inner.domain()
     }
 
+    /// The optional resource part of the JID, as a [`ResourcePart`].  Since this is a full JID it
+    /// is always present.
+    pub fn resource(&self) -> ResourcePart {
+        ResourcePart::new_unchecked(self.resource_str())
+    }
+
     /// The optional resource of the Jabber ID.  Since this is a full JID it is always present.
-    pub fn resource(&self) -> &str {
+    pub fn resource_str(&self) -> &str {
         self.inner.resource().unwrap()
     }
 
@@ -536,13 +552,23 @@ impl BareJid {
         BareJid { inner }
     }
 
-    /// The optional node part of the JID.
-    pub fn node(&self) -> Option<&str> {
+    /// The optional node part of the JID, as a [`NodePart`]
+    pub fn node(&self) -> Option<NodePart> {
+        self.node_str().map(|s| NodePart::new_unchecked(s))
+    }
+
+    /// The optional node part of the JID, as a stringy reference
+    pub fn node_str(&self) -> Option<&str> {
         self.inner.node()
     }
 
-    /// The domain part of the JID.
-    pub fn domain(&self) -> &str {
+    /// The domain part of the JID, as a [`DomainPart`]
+    pub fn domain(&self) -> DomainPart {
+        DomainPart::new_unchecked(self.domain_str())
+    }
+
+    /// The domain part of the JID, as a stringy reference
+    pub fn domain_str(&self) -> &str {
         self.inner.domain()
     }
 
