@@ -881,6 +881,11 @@ mod tests {
     }
 
     #[test]
+    fn invalid_stringprep() {
+        FullJid::from_str("a@b/🎉").unwrap_err();
+    }
+
+    #[test]
     fn jid_from_parts() {
         let node = NodePart::new("node").unwrap();
         let domain = DomainPart::new("domain").unwrap();
