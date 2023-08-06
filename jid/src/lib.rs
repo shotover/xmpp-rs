@@ -383,9 +383,9 @@ impl FullJid {
     /// # fn main() -> Result<(), Error> {
     /// let jid = FullJid::new("node@domain/resource")?;
     ///
-    /// assert_eq!(jid.node(), Some("node"));
-    /// assert_eq!(jid.domain(), "domain");
-    /// assert_eq!(jid.resource(), "resource");
+    /// assert_eq!(jid.node_str(), Some("node"));
+    /// assert_eq!(jid.domain_str(), "domain");
+    /// assert_eq!(jid.resource_str(), "resource");
     /// # Ok(())
     /// # }
     /// ```
@@ -510,8 +510,8 @@ impl BareJid {
     /// # fn main() -> Result<(), Error> {
     /// let jid = BareJid::new("node@domain")?;
     ///
-    /// assert_eq!(jid.node(), Some("node"));
-    /// assert_eq!(jid.domain(), "domain");
+    /// assert_eq!(jid.node_str(), Some("node"));
+    /// assert_eq!(jid.domain_str(), "domain");
     /// # Ok(())
     /// # }
     /// ```
@@ -584,9 +584,9 @@ impl BareJid {
     /// let bare = BareJid::new("node@domain").unwrap();
     /// let full = bare.with_resource(&resource);
     ///
-    /// assert_eq!(full.node(), Some("node"));
-    /// assert_eq!(full.domain(), "domain");
-    /// assert_eq!(full.resource(), "resource");
+    /// assert_eq!(full.node_str(), Some("node"));
+    /// assert_eq!(full.domain_str(), "domain");
+    /// assert_eq!(full.resource_str(), "resource");
     /// ```
     pub fn with_resource(&self, resource: &ResourcePart) -> FullJid {
         let slash = NonZeroU16::new(self.inner.normalized.len() as u16);
@@ -611,9 +611,9 @@ impl BareJid {
     /// let bare = BareJid::new("node@domain").unwrap();
     /// let full = bare.with_resource_str("resource").unwrap();
     ///
-    /// assert_eq!(full.node(), Some("node"));
-    /// assert_eq!(full.domain(), "domain");
-    /// assert_eq!(full.resource(), "resource");
+    /// assert_eq!(full.node_str(), Some("node"));
+    /// assert_eq!(full.domain_str(), "domain");
+    /// assert_eq!(full.resource_str(), "resource");
     /// ```
     pub fn with_resource_str(&self, resource: &str) -> Result<FullJid, Error> {
         let resource = ResourcePart::new(resource)?;
