@@ -627,42 +627,42 @@ use minidom::{IntoAttributeValue, Node};
 #[cfg(feature = "minidom")]
 impl IntoAttributeValue for Jid {
     fn into_attribute_value(self) -> Option<String> {
-        Some(format!("{}", self))
+        Some(self.to_string())
     }
 }
 
 #[cfg(feature = "minidom")]
 impl From<Jid> for Node {
     fn from(jid: Jid) -> Node {
-        Node::Text(format!("{}", jid))
+        Node::Text(jid.to_string())
     }
 }
 
 #[cfg(feature = "minidom")]
 impl IntoAttributeValue for FullJid {
     fn into_attribute_value(self) -> Option<String> {
-        Some(format!("{}", self))
+        Some(self.to_string())
     }
 }
 
 #[cfg(feature = "minidom")]
 impl From<FullJid> for Node {
     fn from(jid: FullJid) -> Node {
-        Node::Text(format!("{}", jid))
+        Node::Text(jid.to_string())
     }
 }
 
 #[cfg(feature = "minidom")]
 impl IntoAttributeValue for BareJid {
     fn into_attribute_value(self) -> Option<String> {
-        Some(format!("{}", self))
+        Some(self.to_string())
     }
 }
 
 #[cfg(feature = "minidom")]
 impl From<BareJid> for Node {
     fn from(jid: BareJid) -> Node {
-        Node::Text(format!("{}", jid))
+        Node::Text(jid.to_string())
     }
 }
 
@@ -803,14 +803,8 @@ mod tests {
 
     #[test]
     fn serialise() {
-        assert_eq!(
-            format!("{}", FullJid::new("a@b/c").unwrap()),
-            String::from("a@b/c")
-        );
-        assert_eq!(
-            format!("{}", BareJid::new("a@b").unwrap()),
-            String::from("a@b")
-        );
+        assert_eq!(FullJid::new("a@b/c").unwrap().to_string(), "a@b/c");
+        assert_eq!(BareJid::new("a@b").unwrap().to_string(), "a@b");
     }
 
     #[test]
@@ -839,22 +833,13 @@ mod tests {
 
     #[test]
     fn display_jids() {
+        assert_eq!(FullJid::new("a@b/c").unwrap().to_string(), "a@b/c");
+        assert_eq!(BareJid::new("a@b").unwrap().to_string(), "a@b");
         assert_eq!(
-            format!("{}", FullJid::new("a@b/c").unwrap()),
-            String::from("a@b/c")
+            Jid::Full(FullJid::new("a@b/c").unwrap()).to_string(),
+            "a@b/c"
         );
-        assert_eq!(
-            format!("{}", BareJid::new("a@b").unwrap()),
-            String::from("a@b")
-        );
-        assert_eq!(
-            format!("{}", Jid::Full(FullJid::new("a@b/c").unwrap())),
-            String::from("a@b/c")
-        );
-        assert_eq!(
-            format!("{}", Jid::Bare(BareJid::new("a@b").unwrap())),
-            String::from("a@b")
-        );
+        assert_eq!(Jid::Bare(BareJid::new("a@b").unwrap()).to_string(), "a@b");
     }
 
     #[cfg(feature = "minidom")]
@@ -884,19 +869,19 @@ mod tests {
         let elem = minidom::Element::builder("message", "jabber:client")
             .attr("from", full.clone())
             .build();
-        assert_eq!(elem.attr("from"), Some(format!("{}", full).as_str()));
+        assert_eq!(elem.attr("from"), Some(full.to_string().as_str()));
 
         let bare = BareJid::new("a@b").unwrap();
         let elem = minidom::Element::builder("message", "jabber:client")
             .attr("from", bare.clone())
             .build();
-        assert_eq!(elem.attr("from"), Some(format!("{}", bare).as_str()));
+        assert_eq!(elem.attr("from"), Some(bare.to_string().as_str()));
 
         let jid = Jid::Bare(bare.clone());
         let _elem = minidom::Element::builder("message", "jabber:client")
             .attr("from", jid)
             .build();
-        assert_eq!(elem.attr("from"), Some(format!("{}", bare).as_str()));
+        assert_eq!(elem.attr("from"), Some(bare.to_string().as_str()));
     }
 
     #[test]
