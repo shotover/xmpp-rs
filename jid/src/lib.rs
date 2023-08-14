@@ -912,46 +912,15 @@ mod tests {
         assert_eq!(fulljid, FullJid::new("node@domain/resource").unwrap());
     }
 
-    #[cfg(feature = "serde")]
-    #[derive(Serialize, Deserialize)]
-    struct JidContainer<T> {
-        jid: T,
-    }
-
-    #[cfg(feature = "serde")]
-    impl<T> From<T> for JidContainer<T> {
-        fn from(jid: T) -> JidContainer<T> {
-            JidContainer { jid }
-        }
-    }
-
-    #[cfg(feature = "serde")]
-    const BARE_JSON_STR: &'static str = "{\"jid\":\"node@domain\"}";
-    #[cfg(feature = "serde")]
-    const FULL_JSON_STR: &'static str = "{\"jid\":\"node@domain/resource\"}";
-
     #[test]
     #[cfg(feature = "serde")]
-    fn jid_serialize() {
-        let jid: JidContainer<Jid> = Jid::new("node@domain").unwrap().into();
-        assert_eq!(BARE_JSON_STR, serde_json::to_string(&jid).unwrap());
-        let jid: JidContainer<BareJid> = BareJid::new("node@domain").unwrap().into();
-        assert_eq!(BARE_JSON_STR, serde_json::to_string(&jid).unwrap());
-        let jid: JidContainer<FullJid> = FullJid::new("node@domain/resource").unwrap().into();
-        assert_eq!(FULL_JSON_STR, serde_json::to_string(&jid).unwrap());
-    }
+    fn jid_ser_de() {
+        let jid: Jid = Jid::new("node@domain").unwrap();
+        serde_test::assert_tokens(&jid, &[serde_test::Token::Str("node@domain")]);
+        let jid: BareJid = BareJid::new("node@domain").unwrap();
+        serde_test::assert_tokens(&jid, &[serde_test::Token::Str("node@domain")]);
 
-    #[test]
-    #[cfg(feature = "serde")]
-    fn jid_deserialize() {
-        let jid = Jid::new("node@domain").unwrap();
-        let deser_jid: JidContainer<Jid> = serde_json::from_str(BARE_JSON_STR).unwrap();
-        assert_eq!(jid, deser_jid.jid);
-        let jid = BareJid::new("node@domain").unwrap();
-        let deser_jid: JidContainer<BareJid> = serde_json::from_str(BARE_JSON_STR).unwrap();
-        assert_eq!(jid, deser_jid.jid);
-        let jid = FullJid::new("node@domain/resource").unwrap();
-        let deser_jid: JidContainer<FullJid> = serde_json::from_str(FULL_JSON_STR).unwrap();
-        assert_eq!(jid, deser_jid.jid);
+        let jid: FullJid = FullJid::new("node@domain/resource").unwrap();
+        serde_test::assert_tokens(&jid, &[serde_test::Token::Str("node@domain/resource")]);
     }
 }
