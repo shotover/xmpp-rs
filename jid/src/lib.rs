@@ -917,6 +917,10 @@ mod tests {
     fn jid_ser_de() {
         let jid: Jid = Jid::new("node@domain").unwrap();
         serde_test::assert_tokens(&jid, &[serde_test::Token::Str("node@domain")]);
+
+        let jid: Jid = Jid::new("node@domain/resource").unwrap();
+        serde_test::assert_tokens(&jid, &[serde_test::Token::Str("node@domain/resource")]);
+
         let jid: BareJid = BareJid::new("node@domain").unwrap();
         serde_test::assert_tokens(&jid, &[serde_test::Token::Str("node@domain")]);
 
