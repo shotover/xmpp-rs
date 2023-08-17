@@ -29,7 +29,8 @@ variables:
 .test:
   stage: test
   script:
-    - cargo test --verbose
+    - cargo test --verbose --release -- --include-ignored
+    - cargo test --verbose --no-default-features
 
 rustfmt:
   stage: lint

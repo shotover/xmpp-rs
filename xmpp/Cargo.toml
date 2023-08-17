@@ -25,6 +25,10 @@ tokio-util = { version = "0.7", features = ["codec"] }
 [dev-dependencies]
 env_logger = "0.10"
 
+[[example]]
+name = "hello_bot"
+required-features = ["avatar"]
+
 [features]
 default = ["avatars"]
 avatars = []

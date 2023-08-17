@@ -576,8 +576,10 @@ mod tests {
             .set_client(ClientType::Bot, "xmpp-rs")
             .set_website("https://gitlab.com/xmpp-rs/xmpp-rs")
             .set_default_nick("bot")
-            .enable_feature(ClientFeature::Avatars)
             .enable_feature(ClientFeature::ContactList);
+
+        #[cfg(feature = "avatars")]
+        let client_builder = client_builder.enable_feature(ClientFeature::Avatars);
 
         let mut agent: Agent = client_builder.build_impl(client);
 
