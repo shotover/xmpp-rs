@@ -14,8 +14,7 @@ license = "MPL-2.0"
 edition = "2018"
 
 [dependencies]
-tokio-xmpp = "3.2"
-xmpp-parsers = "0.19"
+tokio-xmpp = "3.4"
 futures = "0.3"
 tokio = { version = "1", features = ["fs"] }
 log = "0.4"

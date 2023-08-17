@@ -7,8 +7,8 @@
 use env_logger;
 use std::env::args;
 use std::str::FromStr;
+use tokio_xmpp::parsers::{message::MessageType, BareJid, Jid};
 use xmpp::{ClientBuilder, ClientFeature, ClientType, Event};
-use xmpp_parsers::{message::MessageType, BareJid, Jid};
 
 #[tokio::main]
 async fn main() -> Result<(), Option<()>> {

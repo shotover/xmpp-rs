@@ -8,7 +8,7 @@ use super::Agent;
 use crate::Event;
 use std::convert::TryFrom;
 use std::str::FromStr;
-use xmpp_parsers::{
+use tokio_xmpp::parsers::{
     bookmarks2::{Autojoin, Conference},
     ns,
     pubsub::event::PubSubEvent,

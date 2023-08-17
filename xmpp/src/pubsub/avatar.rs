@@ -9,7 +9,7 @@ use crate::Event;
 use std::convert::TryFrom;
 use std::fs::{self, File};
 use std::io::{self, Write};
-use xmpp_parsers::{
+use tokio_xmpp::parsers::{
     avatar::{Data, Metadata},
     iq::Iq,
     ns,

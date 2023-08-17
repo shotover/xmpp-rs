@@ -15,8 +15,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
 use tokio::fs::File;
 use tokio_util::codec::{BytesCodec, FramedRead};
-use tokio_xmpp::{AsyncClient as TokioXmppClient, Event as TokioXmppEvent};
-use xmpp_parsers::{
+use tokio_xmpp::parsers::{
     bookmarks2::Conference,
     caps::{compute_disco, hash_caps, Caps},
     disco::{DiscoInfoQuery, DiscoInfoResult, Feature, Identity},
@@ -33,8 +32,9 @@ use xmpp_parsers::{
     pubsub::pubsub::{Items, PubSub},
     roster::{Item as RosterItem, Roster},
     stanza_error::{DefinedCondition, ErrorType, StanzaError},
-    BareJid, Element, Jid,
 };
+use tokio_xmpp::{AsyncClient as TokioXmppClient, Event as TokioXmppEvent};
+use tokio_xmpp::{BareJid, Element, Jid};
 #[macro_use]
 extern crate log;
 
