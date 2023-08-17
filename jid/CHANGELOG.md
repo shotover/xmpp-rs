@@ -24,6 +24,7 @@ Unreleased
     information as a string slice (#204)
     - Jid::resource() returns an optional typed ResourcePart ; the resource_str() method returns the same
     information as a string slice (#204)
+    - Add serde_test in tests to ensure correctness of Serialize / Deserialize implementations.
 
 Version 0.9.3, release 2022-03-07:
   * Updates
