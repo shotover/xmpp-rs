@@ -1,5 +1,5 @@
-Version next:
-0000-00-00 xxxxxxxxxx
+Version 3.4.0:
+2023-08-17 Maxime “pep” Buquet <pep@bouah.net>
     * Breaking changes:
       - AsyncClient::new takes a parsed Jid instead of string (#72)
       - Properly add @id to every stanza, and also add support for components.
