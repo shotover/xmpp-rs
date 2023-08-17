@@ -21,3 +21,8 @@ pub use crate::component::Component;
 mod error;
 pub use crate::error::{AuthError, ConnecterError, Error, ParseError, ProtocolError};
 pub use starttls::starttls;
+
+// Re-exports
+pub use minidom::Element;
+pub use xmpp_parsers as parsers;
+pub use xmpp_parsers::{BareJid, FullJid, Jid, JidParseError};
