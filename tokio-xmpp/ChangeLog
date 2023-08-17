@@ -2,6 +2,12 @@ Version next:
 0000-00-00 xxxxxxxxxx
     * Breaking changes:
       - AsyncClient::new takes a parsed Jid instead of string (#72)
+      - Properly add @id to every stanza, and also add support for components.
     * Changes:
       - env_logger is now included in dev_dependencies for examples debugging with RUST_LOG=debug
       - Fix debug prints to include all XML being sent and received
+      - Add chosen DNS method to debug logs
+      - Add syntax highlighting to debug logs
+      - Update dependencies
+      - Fix a deadlock when packets were being ignored. (6ccc5cc)
+      - Re-export jid structs, minidom::Element, and parsers module
