@@ -1,5 +1,4 @@
-Unreleased
-
+Version 0.10.0, release 2023-08-17:
   * Breaking
     - serde: Jid is now using untagged enum representation (#66)
     - JidParseError has been renamed Error
