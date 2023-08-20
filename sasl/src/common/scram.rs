@@ -21,6 +21,7 @@ pub fn generate_nonce() -> Result<String, RngError> {
 pub enum DeriveError {
     IncompatibleHashingMethod(String, String),
     IncorrectSalt,
+    InvalidLength,
     IncompatibleIterationCount(u32, u32),
 }
 
@@ -31,6 +32,7 @@ impl std::fmt::Display for DeriveError {
                 write!(fmt, "incompatible hashing method, {} is not {}", one, two)
             }
             DeriveError::IncorrectSalt => write!(fmt, "incorrect salt"),
+            DeriveError::InvalidLength => write!(fmt, "invalid length"),
             DeriveError::IncompatibleIterationCount(one, two) => {
                 write!(fmt, "incompatible iteration count, {} is not {}", one, two)
             }
@@ -39,6 +41,12 @@ impl std::fmt::Display for DeriveError {
 }
 
 impl std::error::Error for DeriveError {}
+
+impl From<hmac::digest::InvalidLength> for DeriveError {
+    fn from(_err: hmac::digest::InvalidLength) -> DeriveError {
+        DeriveError::InvalidLength
+    }
+}
 
 /// A trait which defines the needed methods for SCRAM.
 pub trait ScramProvider {
@@ -89,7 +97,7 @@ impl ScramProvider for Sha1 {
         match *password {
             Password::Plain(ref plain) => {
                 let mut result = vec![0; 20];
-                pbkdf2::<Hmac<Sha1_hash>>(plain.as_bytes(), salt, iterations, &mut result);
+                pbkdf2::<Hmac<Sha1_hash>>(plain.as_bytes(), salt, iterations, &mut result)?;
                 Ok(result)
             }
             Password::Pbkdf2 {
@@ -149,7 +157,7 @@ impl ScramProvider for Sha256 {
         match *password {
             Password::Plain(ref plain) => {
                 let mut result = vec![0; 32];
-                pbkdf2::<Hmac<Sha256_hash>>(plain.as_bytes(), salt, iterations, &mut result);
+                pbkdf2::<Hmac<Sha256_hash>>(plain.as_bytes(), salt, iterations, &mut result)?;
                 Ok(result)
             }
             Password::Pbkdf2 {
