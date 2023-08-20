@@ -1,6 +1,6 @@
 //! Provides the SASL "SCRAM-*" mechanisms and a way to implement more.
 
-use base64;
+use base64::{engine::general_purpose::STANDARD as Base64, Engine};
 
 use crate::client::{Mechanism, MechanismError};
 use crate::common::scram::{generate_nonce, ScramProvider};
@@ -122,7 +122,7 @@ impl<S: ScramProvider> Mechanism for Scram<S> {
                 let frame =
                     parse_frame(challenge).map_err(|_| MechanismError::CannotDecodeChallenge)?;
                 let server_nonce = frame.get("r");
-                let salt = frame.get("s").and_then(|v| base64::decode(v).ok());
+                let salt = frame.get("s").and_then(|v| Base64.decode(v).ok());
                 let iterations = frame.get("i").and_then(|v| v.parse().ok());
                 let server_nonce = server_nonce.ok_or_else(|| MechanismError::NoServerNonce)?;
                 let salt = salt.ok_or_else(|| MechanismError::NoServerSalt)?;
@@ -133,7 +133,7 @@ impl<S: ScramProvider> Mechanism for Scram<S> {
                 let mut cb_data: Vec<u8> = Vec::new();
                 cb_data.extend(gs2_header);
                 cb_data.extend(self.channel_binding.data());
-                client_final_message_bare.extend(base64::encode(&cb_data).bytes());
+                client_final_message_bare.extend(Base64.encode(&cb_data).bytes());
                 client_final_message_bare.extend(b",r=");
                 client_final_message_bare.extend(server_nonce.bytes());
                 let salted_password = S::derive(&self.password, &salt, iterations)?;
@@ -152,7 +152,7 @@ impl<S: ScramProvider> Mechanism for Scram<S> {
                 let mut client_final_message = Vec::new();
                 client_final_message.extend(&client_final_message_bare);
                 client_final_message.extend(b",p=");
-                client_final_message.extend(base64::encode(&client_proof).bytes());
+                client_final_message.extend(Base64.encode(&client_proof).bytes());
                 next_state = ScramState::GotServerData {
                     server_signature: server_signature,
                 };
@@ -172,7 +172,7 @@ impl<S: ScramProvider> Mechanism for Scram<S> {
             ScramState::GotServerData {
                 ref server_signature,
             } => {
-                if let Some(sig) = frame.get("v").and_then(|v| base64::decode(&v).ok()) {
+                if let Some(sig) = frame.get("v").and_then(|v| Base64.decode(&v).ok()) {
                     if sig == *server_signature {
                         Ok(())
                     } else {

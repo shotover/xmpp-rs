@@ -8,13 +8,13 @@ use crate::common::Password;
 
 use crate::secret;
 
-use base64;
+use base64::{engine::general_purpose::STANDARD as Base64, Engine};
 
 /// Generate a nonce for SCRAM authentication.
 pub fn generate_nonce() -> Result<String, RngError> {
     let mut data = [0u8; 32];
     getrandom(&mut data)?;
-    Ok(base64::encode(&data))
+    Ok(Base64.encode(&data))
 }
 
 #[derive(Debug, PartialEq)]

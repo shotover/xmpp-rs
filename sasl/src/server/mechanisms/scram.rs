@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use base64;
+use base64::{engine::general_purpose::STANDARD as Base64, Engine};
 
 use crate::common::scram::{generate_nonce, ScramProvider};
 use crate::common::{parse_frame, xor, ChannelBinding, Identity};
@@ -120,7 +120,7 @@ where
                 buf.extend(b"r=");
                 buf.extend(server_nonce.bytes());
                 buf.extend(b",s=");
-                buf.extend(base64::encode(pbkdf2.salt()).bytes());
+                buf.extend(Base64.encode(pbkdf2.salt()).bytes());
                 buf.extend(b",i=");
                 buf.extend(pbkdf2.iterations().to_string().bytes());
                 ret = Response::Proceed(buf.clone());
@@ -148,7 +148,7 @@ where
                 cb_data.extend(self.channel_binding.data());
                 let mut client_final_message_bare = Vec::new();
                 client_final_message_bare.extend(b"c=");
-                client_final_message_bare.extend(base64::encode(&cb_data).bytes());
+                client_final_message_bare.extend(Base64.encode(&cb_data).bytes());
                 client_final_message_bare.extend(b",r=");
                 client_final_message_bare.extend(server_nonce.bytes());
                 let client_key = S::hmac(b"Client Key", &salted_password)?;
@@ -163,15 +163,16 @@ where
                 let client_signature = S::hmac(&auth_message, &stored_key)?;
                 let client_proof = xor(&client_key, &client_signature);
                 let sent_proof = frame.get("p").ok_or_else(|| MechanismError::NoProof)?;
-                let sent_proof =
-                    base64::decode(sent_proof).map_err(|_| MechanismError::CannotDecodeProof)?;
+                let sent_proof = Base64
+                    .decode(sent_proof)
+                    .map_err(|_| MechanismError::CannotDecodeProof)?;
                 if client_proof != sent_proof {
                     return Err(MechanismError::AuthenticationFailed);
                 }
                 let server_signature = S::hmac(&auth_message, &server_key)?;
                 let mut buf = Vec::new();
                 buf.extend(b"v=");
-                buf.extend(base64::encode(&server_signature).bytes());
+                buf.extend(Base64.encode(&server_signature).bytes());
                 ret = Response::Success(identity.clone(), buf);
                 next_state = ScramState::Done;
             }
