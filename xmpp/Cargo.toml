@@ -27,7 +27,7 @@ env_logger = "0.10"
 
 [[example]]
 name = "hello_bot"
-required-features = ["avatar"]
+required-features = ["avatars"]
 
 [features]
 default = ["avatars"]
