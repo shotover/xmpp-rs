@@ -1,3 +1,12 @@
+Version 0.5.1, released 2023-08-20:
+  * Important changes
+    - Move sasl-rs to the xmpp-rs repository at https://gitlab.com/xmpp-rs/xmpp-rs.
+  * Small changes
+    - Use module FQNs in macro (thanks Raman Hafiyatulin)
+    - Fix SASL ANONYMOUS service side (#11)
+    - Update LICENSE file to reflect 0.5.0 changes
+    - Bump dependencies
+
 Version 0.5.0, released 2021-01-12:
   * Important changes
     - Relicensed to MPL-2.0 from LGPL-3.0-or-later.
