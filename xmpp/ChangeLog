@@ -1,11 +1,15 @@
-Unreleased:
-xxxxxxxxxx
+Version 0.5.0:
+2023-08-23 [ Maxime “pep” Buquet <pep@bouah.net> ]
     * Breaking changes:
-	  - ClientBuilder::new takes a parsed BareJid instead of string (#72)
-	  - ClientBuilder::new doesn't return a Result anymore
+      - ClientBuilder::new takes a parsed BareJid instead of string (#72)
+      - ClientBuilder::new doesn't return a Result anymore
     * Improvements:
+      - New event: RoomPrivateMessage(Id, BareJid, RoomNick, Body) (#85)
+      - New Agent::send_room_private_message method.
       - Agent is now Send, by replacing Rc with Arc and RefCell with RwLock (#64)
-	  - ClientBuilder now has a set_resource method for manual resource management (#72)
+      - ClientBuilder now has a set_resource method for manual resource management (#72)
+      - Update dependencies
+      - Re-export jid structs, minidom::Element, and parsers module.
 
 Version 0.4.0:
 2023-05-18 [ Maxime “pep” Buquet <pep@bouah.net>, Emmanuel Gil Peyrot <linkmauve@linkmauve.fr> ]
