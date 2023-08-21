@@ -15,6 +15,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
 use tokio::fs::File;
 use tokio_util::codec::{BytesCodec, FramedRead};
+pub use tokio_xmpp::parsers;
 use tokio_xmpp::parsers::{
     bookmarks2::Conference,
     caps::{compute_disco, hash_caps, Caps},
@@ -34,7 +35,7 @@ use tokio_xmpp::parsers::{
     stanza_error::{DefinedCondition, ErrorType, StanzaError},
 };
 use tokio_xmpp::{AsyncClient as TokioXmppClient, Event as TokioXmppEvent};
-use tokio_xmpp::{BareJid, Element, Jid};
+pub use tokio_xmpp::{BareJid, Element, FullJid, Jid};
 #[macro_use]
 extern crate log;
 
