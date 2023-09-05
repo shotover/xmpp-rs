@@ -589,9 +589,11 @@ macro_rules! generate_serialiser {
         $builder.append_all($parent.$elem.into_iter())
     };
     ($builder:ident, $parent:ident, $elem:ident, Present, $constructor:ident, ($name:tt, $ns:ident)) => {
-        $builder.append(::minidom::Node::Element(
-            crate::Element::builder($name, crate::ns::$ns).build(),
-        ))
+        $builder.append_all(
+            $parent
+                .$elem
+                .then(|| crate::Element::builder($name, crate::ns::$ns)),
+        )
     };
     ($builder:ident, $parent:ident, $elem:ident, $_:ident, $constructor:ident, ($name:tt, $ns:ident)) => {
         $builder.append(::minidom::Node::Element(crate::Element::from(
