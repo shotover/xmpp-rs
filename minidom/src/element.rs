@@ -146,6 +146,9 @@ impl PartialEq for Element {
     fn eq(&self, other: &Self) -> bool {
         if self.name() == other.name() && self.ns() == other.ns() && self.attrs().eq(other.attrs())
         {
+            if self.nodes().count() != other.nodes().count() {
+                return false;
+            }
             self.nodes()
                 .zip(other.nodes())
                 .all(|(node1, node2)| node1 == node2)
@@ -976,6 +979,16 @@ mod tests {
         assert_eq!(elem, elem2);
         assert_eq!(elem, elem3);
         assert_eq!(elem, elem4);
+    }
+
+    #[test]
+    fn test_compare_empty_children() {
+        let elem1 = Element::bare("p", "");
+        let elem2 = Element::builder("p", "")
+            .append(Node::Element(Element::bare("span", "")))
+            .build();
+
+        assert_ne!(elem1, elem2);
     }
 
     #[test]
