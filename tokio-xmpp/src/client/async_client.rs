@@ -48,7 +48,7 @@ pub enum ServerConfig {
     },
 }
 
-/// XMMPP client configuration
+/// XMPP client configuration
 #[derive(Clone, Debug)]
 pub struct Config {
     /// jid of the account
