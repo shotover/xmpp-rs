@@ -45,7 +45,7 @@ async fn get_tls_stream<S: AsyncRead + AsyncWrite + Unpin>(
     let domain = ServerName::try_from(domain.as_str())?;
     let stream = xmpp_stream.into_inner();
     let mut root_store = RootCertStore::empty();
-    root_store.add_server_trust_anchors(webpki_roots::TLS_SERVER_ROOTS.0.iter().map(|ta| {
+    root_store.add_server_trust_anchors(webpki_roots::TLS_SERVER_ROOTS.iter().map(|ta| {
         OwnedTrustAnchor::from_subject_spki_name_constraints(
             ta.subject,
             ta.spki,
