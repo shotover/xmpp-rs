@@ -1,9 +1,9 @@
 use crate::{ConnecterError, Error};
+use hickory_resolver::{IntoName, TokioAsyncResolver};
 use idna;
 use log::debug;
 use std::net::SocketAddr;
 use tokio::net::TcpStream;
-use trust_dns_resolver::{IntoName, TokioAsyncResolver};
 
 pub async fn connect_to_host(domain: &str, port: u16) -> Result<TcpStream, Error> {
     let ascii_domain = idna::domain_to_ascii(&domain).map_err(|_| Error::Idna)?;

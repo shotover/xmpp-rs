@@ -1,3 +1,4 @@
+use hickory_resolver::{error::ResolveError, proto::error::ProtoError};
 #[cfg(feature = "tls-native")]
 use native_tls::Error as TlsError;
 use sasl::client::MechanismError as SaslMechanismError;
@@ -10,8 +11,6 @@ use std::str::Utf8Error;
 use tokio_rustls::rustls::client::InvalidDnsNameError;
 #[cfg(all(feature = "tls-rust", not(feature = "tls-native")))]
 use tokio_rustls::rustls::Error as TlsError;
-use trust_dns_proto::error::ProtoError;
-use trust_dns_resolver::error::ResolveError;
 
 use xmpp_parsers::sasl::DefinedCondition as SaslDefinedCondition;
 use xmpp_parsers::{Error as ParsersError, JidParseError};

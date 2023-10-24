@@ -23,8 +23,7 @@ tokio-native-tls = { version = "0.3", optional = true }
 tokio-rustls = { version = "0.24", optional = true }
 tokio-stream = { version = "0.1", features = [] }
 tokio-util = { version = "0.7", features = ["codec"] }
-trust-dns-proto = "0.22"
-trust-dns-resolver = "0.22"
+hickory-resolver = "0.24"
 xmpp-parsers = "0.20"
 minidom = "0.15"
 rxml = "0.9.1"
