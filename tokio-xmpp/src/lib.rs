@@ -5,6 +5,9 @@
 #[cfg(all(feature = "tls-native", feature = "tls-rust"))]
 compile_error!("Both tls-native and tls-rust features can't be enabled at the same time.");
 
+#[cfg(all(not(feature = "tls-native"), not(feature = "tls-rust")))]
+compile_error!("One of tls-native and tls-rust features must be enabled.");
+
 mod starttls;
 mod stream_start;
 mod xmpp_codec;
