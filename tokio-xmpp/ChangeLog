@@ -1,3 +1,12 @@
+Version 3.5.0:
+2023-10-24 Maxime “pep” Buquet <pep@bouah.net>
+    * Changes:
+      - Require one and only one of tls-native and tls-rust to be enabled.
+        Technically a breaking change, but enabling both wasn't working in the
+        previous release anyway.
+      - Various fixes that were guarded under the tls-rust feature. All
+        updates from dependencies.
+
 Version 3.4.0:
 2023-08-17 Maxime “pep” Buquet <pep@bouah.net>
     * Breaking changes:
