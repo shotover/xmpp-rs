@@ -2,6 +2,9 @@
 
 #![deny(unsafe_code, missing_docs, bare_trait_objects)]
 
+#[cfg(all(feature = "tls-native", feature = "tls-rust"))]
+compile_error!("Both tls-native and tls-rust features can't be enabled at the same time.");
+
 mod starttls;
 mod stream_start;
 mod xmpp_codec;

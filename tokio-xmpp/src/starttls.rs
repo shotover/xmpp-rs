@@ -1,6 +1,6 @@
 use futures::{sink::SinkExt, stream::StreamExt};
 
-#[cfg(feature = "tls-rust")]
+#[cfg(all(feature = "tls-rust", not(feature = "tls-native")))]
 use {
     std::convert::TryFrom,
     std::sync::Arc,
@@ -37,7 +37,7 @@ async fn get_tls_stream<S: AsyncRead + AsyncWrite + Unpin>(
     Ok(tls_stream)
 }
 
-#[cfg(feature = "tls-rust")]
+#[cfg(all(feature = "tls-rust", not(feature = "tls-native")))]
 async fn get_tls_stream<S: AsyncRead + AsyncWrite + Unpin>(
     xmpp_stream: XMPPStream<S>,
 ) -> Result<TlsStream<S>, Error> {

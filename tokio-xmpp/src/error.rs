@@ -6,9 +6,9 @@ use std::error::Error as StdError;
 use std::fmt;
 use std::io::Error as IoError;
 use std::str::Utf8Error;
-#[cfg(feature = "tls-rust")]
+#[cfg(all(feature = "tls-rust", not(feature = "tls-native")))]
 use tokio_rustls::rustls::client::InvalidDnsNameError;
-#[cfg(feature = "tls-rust")]
+#[cfg(all(feature = "tls-rust", not(feature = "tls-native")))]
 use tokio_rustls::rustls::Error as TlsError;
 use trust_dns_proto::error::ProtoError;
 use trust_dns_resolver::error::ResolveError;
@@ -34,7 +34,7 @@ pub enum Error {
     Auth(AuthError),
     /// TLS error
     Tls(TlsError),
-    #[cfg(feature = "tls-rust")]
+    #[cfg(all(feature = "tls-rust", not(feature = "tls-native")))]
     /// DNS name parsing error
     DnsNameError(InvalidDnsNameError),
     /// Connection closed
@@ -57,7 +57,7 @@ impl fmt::Display for Error {
             Error::Protocol(e) => write!(fmt, "protocol error: {}", e),
             Error::Auth(e) => write!(fmt, "authentication error: {}", e),
             Error::Tls(e) => write!(fmt, "TLS error: {}", e),
-            #[cfg(feature = "tls-rust")]
+            #[cfg(all(feature = "tls-rust", not(feature = "tls-native")))]
             Error::DnsNameError(e) => write!(fmt, "DNS name error: {}", e),
             Error::Disconnected => write!(fmt, "disconnected"),
             Error::InvalidState => write!(fmt, "invalid state"),
@@ -117,7 +117,7 @@ impl From<Utf8Error> for Error {
     }
 }
 
-#[cfg(feature = "tls-rust")]
+#[cfg(all(feature = "tls-rust", not(feature = "tls-native")))]
 impl From<InvalidDnsNameError> for Error {
     fn from(e: InvalidDnsNameError) -> Self {
         Error::DnsNameError(e)

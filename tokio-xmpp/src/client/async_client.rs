@@ -7,7 +7,7 @@ use tokio::net::TcpStream;
 use tokio::task::JoinHandle;
 #[cfg(feature = "tls-native")]
 use tokio_native_tls::TlsStream;
-#[cfg(feature = "tls-rust")]
+#[cfg(all(feature = "tls-rust", not(feature = "tls-native")))]
 use tokio_rustls::client::TlsStream;
 use xmpp_parsers::{ns, Element, Jid};
 
