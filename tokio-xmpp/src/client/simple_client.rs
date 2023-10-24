@@ -40,7 +40,7 @@ impl Client {
 
     /// Start a new client given that the JID is already parsed.
     pub async fn new_with_jid(jid: Jid, password: String) -> Result<Self, Error> {
-        let stream = Self::connect(jid.clone(), password.clone()).await?;
+        let stream = Self::connect(jid, password).await?;
         Ok(Client { stream })
     }
 
@@ -52,7 +52,7 @@ impl Client {
     async fn connect(jid: Jid, password: String) -> Result<XMPPStream, Error> {
         let username = jid.node_str().unwrap();
         let password = password;
-        let domain = idna::domain_to_ascii(&jid.clone().domain_str()).map_err(|_| Error::Idna)?;
+        let domain = idna::domain_to_ascii(jid.domain_str()).map_err(|_| Error::Idna)?;
 
         // TCP connection
         let tcp_stream = connect_with_srv(&domain, "_xmpp-client._tcp", 5222).await?;
