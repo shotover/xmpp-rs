@@ -24,6 +24,7 @@ enum ScramState {
 /// A struct for the SASL SCRAM-* and SCRAM-*-PLUS mechanisms.
 pub struct Scram<S: ScramProvider> {
     name: String,
+    name_plus: String,
     username: String,
     password: Password,
     client_nonce: String,
@@ -45,6 +46,7 @@ impl<S: ScramProvider> Scram<S> {
     ) -> Result<Scram<S>, Error> {
         Ok(Scram {
             name: format!("SCRAM-{}", S::name()),
+            name_plus: format!("SCRAM-{}-PLUS", S::name()),
             username: username.into(),
             password: password.into(),
             client_nonce: generate_nonce()?,
@@ -64,6 +66,7 @@ impl<S: ScramProvider> Scram<S> {
     ) -> Scram<S> {
         Scram {
             name: format!("SCRAM-{}", S::name()),
+            name_plus: format!("SCRAM-{}-PLUS", S::name()),
             username: username.into(),
             password: password.into(),
             client_nonce: nonce,
@@ -77,7 +80,10 @@ impl<S: ScramProvider> Scram<S> {
 impl<S: ScramProvider> Mechanism for Scram<S> {
     fn name(&self) -> &str {
         // TODO: this is quite the workaround…
-        &self.name
+        match self.channel_binding {
+            ChannelBinding::None | ChannelBinding::Unsupported => &self.name,
+            ChannelBinding::TlsUnique(_) | ChannelBinding::TlsExporter(_) => &self.name_plus,
+        }
     }
 
     fn from_credentials(credentials: Credentials) -> Result<Scram<S>, MechanismError> {
