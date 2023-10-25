@@ -168,8 +168,10 @@ pub enum ChannelBinding {
     None,
     /// Advertise that the client does not think the server supports channel binding.
     Unsupported,
-    /// p=tls-unique channel binding data.
+    /// p=tls-unique channel binding data (for TLS 1.2).
     TlsUnique(Vec<u8>),
+    /// p=tls-exporter channel binding data (for TLS 1.3).
+    TlsExporter(Vec<u8>),
 }
 
 impl ChannelBinding {
@@ -179,6 +181,7 @@ impl ChannelBinding {
             ChannelBinding::None => b"n,,",
             ChannelBinding::Unsupported => b"y,,",
             ChannelBinding::TlsUnique(_) => b"p=tls-unique,,",
+            ChannelBinding::TlsExporter(_) => b"p=tls-exporter,,",
         }
     }
 
@@ -188,6 +191,7 @@ impl ChannelBinding {
             ChannelBinding::None => &[],
             ChannelBinding::Unsupported => &[],
             ChannelBinding::TlsUnique(ref data) => data,
+            ChannelBinding::TlsExporter(ref data) => data,
         }
     }
 
@@ -197,6 +201,7 @@ impl ChannelBinding {
             ChannelBinding::None => false,
             ChannelBinding::Unsupported => false,
             ChannelBinding::TlsUnique(_) => mechanism == "tls-unique",
+            ChannelBinding::TlsExporter(_) => mechanism == "tls-exporter",
         }
     }
 }
