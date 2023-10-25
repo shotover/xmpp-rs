@@ -1,5 +1,7 @@
 use futures::{sink::SinkExt, Sink, Stream};
 use idna;
+#[cfg(feature = "tls-native")]
+use log::warn;
 use sasl::common::{ChannelBinding, Credentials};
 use std::pin::Pin;
 use std::str::FromStr;
@@ -8,7 +10,7 @@ use tokio::net::TcpStream;
 #[cfg(feature = "tls-native")]
 use tokio_native_tls::TlsStream;
 #[cfg(all(feature = "tls-rust", not(feature = "tls-native")))]
-use tokio_rustls::client::TlsStream;
+use tokio_rustls::{client::TlsStream, rustls::ProtocolVersion};
 use tokio_stream::StreamExt;
 use xmpp_parsers::{ns, Element, Jid};
 
@@ -62,9 +64,34 @@ impl Client {
             xmpp_stream::XMPPStream::start(tcp_stream, jid.clone(), ns::JABBER_CLIENT.to_owned())
                 .await?;
 
+        let channel_binding;
         let xmpp_stream = if xmpp_stream.stream_features.can_starttls() {
             // TlsStream
             let tls_stream = starttls(xmpp_stream).await?;
+            #[cfg(feature = "tls-native")]
+            {
+                warn!("tls-native doesn’t support channel binding, please use tls-rust if you want this feature!");
+                channel_binding = ChannelBinding::None;
+            }
+            #[cfg(all(feature = "tls-rust", not(feature = "tls-native")))]
+            {
+                let (_, connection) = tls_stream.get_ref();
+                match connection.protocol_version() {
+                    // TODO: Add support for TLS 1.2 and earlier.
+                    Some(ProtocolVersion::TLSv1_3) => {
+                        let data = vec![0u8; 32];
+                        let data = connection.export_keying_material(
+                            data,
+                            b"EXPORTER-Channel-Binding",
+                            None,
+                        )?;
+                        channel_binding = ChannelBinding::TlsExporter(data);
+                    }
+                    _ => {
+                        channel_binding = ChannelBinding::None;
+                    }
+                }
+            }
             // Encrypted XMPPStream
             xmpp_stream::XMPPStream::start(tls_stream, jid.clone(), ns::JABBER_CLIENT.to_owned())
                 .await?
@@ -75,7 +102,7 @@ impl Client {
         let creds = Credentials::default()
             .with_username(username)
             .with_password(password)
-            .with_channel_binding(ChannelBinding::None);
+            .with_channel_binding(channel_binding);
         // Authenticated (unspecified) stream
         let stream = auth(xmpp_stream, creds).await?;
         // Authenticated XMPPStream
