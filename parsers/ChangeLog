@@ -1,3 +1,8 @@
+Version xxx:
+0000-00-00 Authors
+    * Improvements:
+      - Re-export the jid module entirely.
+
 Version 0.20.0:
 2023-08-17 Maxime “pep” Buquet <pep@bouah.net>, Emmanuel Gil Peyrot <linkmauve@linkmauve.fr>
     * New parsers/serialisers:
