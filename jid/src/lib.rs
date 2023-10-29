@@ -38,6 +38,11 @@ use std::str::FromStr;
 #[cfg(feature = "serde")]
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 
+#[cfg(feature = "quote")]
+use proc_macro2::TokenStream;
+#[cfg(feature = "quote")]
+use quote::{quote, ToTokens};
+
 mod error;
 pub use crate::error::Error;
 
@@ -366,6 +371,34 @@ impl<'de> Deserialize<'de> for BareJid {
     {
         let s = String::deserialize(deserializer)?;
         BareJid::from_str(&s).map_err(de::Error::custom)
+    }
+}
+
+#[cfg(feature = "quote")]
+impl ToTokens for Jid {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        tokens.extend(match self {
+            Jid::Full(full) => quote! { Jid::Full(#full) },
+            Jid::Bare(bare) => quote! { Jid::Bare(#bare) },
+        });
+    }
+}
+
+#[cfg(feature = "quote")]
+impl ToTokens for FullJid {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let inner = &self.inner.normalized;
+        let t = quote! { FullJid::new(#inner).unwrap() };
+        tokens.extend(t);
+    }
+}
+
+#[cfg(feature = "quote")]
+impl ToTokens for BareJid {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let inner = &self.inner.normalized;
+        let t = quote! { BareJid::new(#inner).unwrap() };
+        tokens.extend(t);
     }
 }
 
