@@ -6,7 +6,6 @@
 use crate::ns;
 use crate::util::error::Error;
 use crate::Element;
-use std::convert::TryFrom;
 
 generate_attribute!(
     /// Whether a conference bookmark should be joined automatically.
@@ -123,7 +122,6 @@ mod tests {
     use super::*;
     use crate::pubsub::{pubsub::Item as PubSubItem, PubSubEvent};
     use crate::Element;
-    use std::convert::TryFrom;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

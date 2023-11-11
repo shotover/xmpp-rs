@@ -2,7 +2,6 @@ use futures::{sink::SinkExt, stream::StreamExt};
 
 #[cfg(all(feature = "tls-rust", not(feature = "tls-native")))]
 use {
-    std::convert::TryFrom,
     std::sync::Arc,
     tokio_rustls::{
         client::TlsStream,

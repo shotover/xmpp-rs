@@ -9,7 +9,6 @@ use crate::util::error::Error;
 use crate::Element;
 use jid::Jid;
 use std::collections::BTreeMap;
-use std::convert::TryFrom;
 
 /// Should be implemented on every known payload of a `<message/>`.
 pub trait MessagePayload: TryFrom<Element> + Into<Element> {}

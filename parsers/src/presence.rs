@@ -10,7 +10,6 @@ use crate::util::error::Error;
 use jid::Jid;
 use minidom::{Element, IntoAttributeValue};
 use std::collections::BTreeMap;
-use std::convert::TryFrom;
 use std::str::FromStr;
 
 /// Should be implemented on every known payload of a `<presence/>`.

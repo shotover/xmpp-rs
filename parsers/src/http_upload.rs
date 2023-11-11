@@ -4,8 +4,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use std::convert::TryFrom;
-
 use crate::iq::{IqGetPayload, IqResultPayload};
 use crate::ns;
 use crate::util::error::Error;
@@ -117,7 +115,6 @@ impl IqResultPayload for SlotResult {}
 mod tests {
     use super::*;
     use crate::Element;
-    use std::convert::TryFrom;
 
     #[test]
     fn test_slot_request() {

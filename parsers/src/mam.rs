@@ -92,7 +92,6 @@ mod tests {
     use super::*;
     use crate::util::error::Error;
     use minidom::Element;
-    use std::convert::TryFrom;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

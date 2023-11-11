@@ -1,5 +1,4 @@
 use futures::stream::StreamExt;
-use std::convert::TryFrom;
 use std::env::args;
 use std::fs::{create_dir_all, File};
 use std::io::{self, Write};

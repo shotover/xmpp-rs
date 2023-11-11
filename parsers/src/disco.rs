@@ -10,7 +10,6 @@ use crate::ns;
 use crate::util::error::Error;
 use crate::Element;
 use jid::Jid;
-use std::convert::TryFrom;
 
 generate_element!(
 /// Structure representing a `<query xmlns='http://jabber.org/protocol/disco#info'/>` element.

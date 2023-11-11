@@ -13,7 +13,6 @@ use crate::error::Result;
 
 use rxml::writer::Item;
 
-use std::convert::TryInto;
 use std::io::Write;
 
 /// A node in an element tree.

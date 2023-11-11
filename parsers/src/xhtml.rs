@@ -9,7 +9,6 @@ use crate::ns;
 use crate::util::error::Error;
 use minidom::{Element, Node};
 use std::collections::HashMap;
-use std::convert::TryFrom;
 
 // TODO: Use a proper lang type.
 type Lang = String;

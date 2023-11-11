@@ -12,7 +12,6 @@ use crate::util::error::Error;
 use crate::Element;
 
 use jid::FullJid;
-use std::convert::TryFrom;
 
 generate_attribute_enum!(
 /// Lists all of the possible status codes used in MUC presences.

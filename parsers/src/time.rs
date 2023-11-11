@@ -10,7 +10,6 @@ use crate::ns;
 use crate::util::error::Error;
 use crate::Element;
 use chrono::FixedOffset;
-use std::convert::TryFrom;
 use std::str::FromStr;
 
 generate_empty_element!(

@@ -13,7 +13,6 @@ use crate::pubsub::{
 use crate::util::error::Error;
 use crate::Element;
 use jid::Jid;
-use std::convert::TryFrom;
 
 // TODO: a better solution would be to split this into a query and a result elements, like for
 // XEP-0030.

@@ -21,7 +21,6 @@ mod tests {
     #[cfg(not(feature = "disable-validation"))]
     use crate::util::error::Error;
     use crate::Element;
-    use std::convert::TryFrom;
 
     #[test]
     fn test_size() {

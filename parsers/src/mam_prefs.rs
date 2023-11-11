@@ -9,7 +9,6 @@ use crate::ns;
 use crate::util::error::Error;
 use jid::Jid;
 use minidom::{Element, Node};
-use std::convert::TryFrom;
 
 generate_attribute!(
     /// Notes the default archiving preference for the user.

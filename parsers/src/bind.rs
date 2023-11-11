@@ -9,7 +9,6 @@ use crate::ns;
 use crate::util::error::Error;
 use crate::Element;
 use jid::{FullJid, Jid};
-use std::convert::TryFrom;
 use std::str::FromStr;
 
 /// The request for resource binding, which is the process by which a client

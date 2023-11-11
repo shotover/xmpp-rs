@@ -12,7 +12,6 @@ use crate::pubsub::{AffiliationAttribute, NodeName, Subscription};
 use crate::util::error::Error;
 use crate::Element;
 use jid::Jid;
-use std::convert::TryFrom;
 
 generate_element!(
     /// A list of affiliations you have on a service, or on a node.

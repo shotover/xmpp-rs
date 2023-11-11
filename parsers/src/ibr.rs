@@ -10,7 +10,6 @@ use crate::ns;
 use crate::util::error::Error;
 use crate::Element;
 use std::collections::HashMap;
-use std::convert::TryFrom;
 
 /// Query for registering against a service.
 #[derive(Debug, Clone)]

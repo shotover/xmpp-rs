@@ -11,7 +11,7 @@ repository = "https://gitlab.com/xmpp-rs/xmpp-rs"
 keywords = ["xmpp", "jabber", "xml"]
 categories = ["parsing", "network-programming"]
 license = "MPL-2.0"
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 minidom = "0.15"

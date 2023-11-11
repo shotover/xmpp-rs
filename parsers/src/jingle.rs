@@ -15,7 +15,6 @@ use crate::util::error::Error;
 use crate::Element;
 use jid::Jid;
 use std::collections::BTreeMap;
-use std::convert::TryFrom;
 use std::fmt;
 use std::str::FromStr;
 

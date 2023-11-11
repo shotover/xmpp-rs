@@ -8,7 +8,6 @@ use crate::ns;
 use crate::util::error::Error;
 use crate::Element;
 use jid::Jid;
-use std::convert::TryFrom;
 use std::net::IpAddr;
 
 generate_attribute!(

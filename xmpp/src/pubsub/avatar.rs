@@ -6,7 +6,6 @@
 
 use super::Agent;
 use crate::Event;
-use std::convert::TryFrom;
 use std::fs::{self, File};
 use std::io::{self, Write};
 use tokio_xmpp::parsers::{

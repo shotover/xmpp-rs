@@ -4,7 +4,6 @@ use sasl::client::Mechanism;
 use sasl::common::scram::{Sha1, Sha256};
 use sasl::common::Credentials;
 use std::collections::HashSet;
-use std::convert::TryFrom;
 use std::str::FromStr;
 use tokio::io::{AsyncRead, AsyncWrite};
 use xmpp_parsers::sasl::{Auth, Challenge, Failure, Mechanism as XMPPMechanism, Response, Success};

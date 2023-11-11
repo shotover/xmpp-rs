@@ -114,7 +114,6 @@ mod tests {
     use crate::hashes::Algo;
     use crate::jingle_dtls_srtp::Setup;
     use crate::Element;
-    use std::convert::TryFrom;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

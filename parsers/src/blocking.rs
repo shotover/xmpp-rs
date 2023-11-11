@@ -9,7 +9,6 @@ use crate::ns;
 use crate::util::error::Error;
 use crate::Element;
 use jid::Jid;
-use std::convert::TryFrom;
 
 generate_empty_element!(
     /// The element requesting the blocklist, the result iq will contain a

@@ -11,7 +11,6 @@ use crate::util::error::Error;
 use crate::Element;
 use jid::Jid;
 use minidom::IntoAttributeValue;
-use std::convert::TryFrom;
 
 /// Should be implemented on every known payload of an `<iq type='get'/>`.
 pub trait IqGetPayload: TryFrom<Element> + Into<Element> {}

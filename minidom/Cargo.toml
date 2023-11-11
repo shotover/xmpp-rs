@@ -15,7 +15,7 @@ documentation = "https://docs.rs/minidom"
 readme = "README.md"
 keywords = ["xml", "xmpp"]
 license = "MPL-2.0"
-edition = "2018"
+edition = "2021"
 
 [badges]
 gitlab = { repository = "xmpp-rs/xmpp-rs" }

@@ -11,7 +11,6 @@ use crate::util::error::Error;
 use crate::Element;
 use jid::Jid;
 use std::collections::BTreeMap;
-use std::convert::TryFrom;
 
 generate_attribute!(
     /// The type of the error.

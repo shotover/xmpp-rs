@@ -12,7 +12,6 @@ use crate::pubsub::{Item as PubSubItem, ItemId, NodeName, Subscription, Subscrip
 use crate::util::error::Error;
 use crate::Element;
 use jid::Jid;
-use std::convert::TryFrom;
 
 /// Event wrapper for a PubSub `<item/>`.
 #[derive(Debug, Clone)]

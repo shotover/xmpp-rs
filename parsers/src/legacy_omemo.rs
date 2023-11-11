@@ -182,7 +182,6 @@ impl MessagePayload for Encrypted {}
 mod tests {
     use super::*;
     use crate::Element;
-    use std::convert::TryInto;
 
     #[test]
     fn parse_bundle() {

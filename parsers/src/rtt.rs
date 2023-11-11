@@ -8,7 +8,6 @@ use crate::ns;
 use crate::util::error::Error;
 use crate::util::helpers::PlainText;
 use crate::Element;
-use std::convert::TryFrom;
 
 generate_attribute!(
     /// Events for real-time text.
@@ -245,7 +244,6 @@ impl From<Rtt> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::convert::TryInto;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

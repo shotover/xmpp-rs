@@ -6,7 +6,6 @@
 
 use super::Agent;
 use crate::Event;
-use std::convert::TryFrom;
 use std::str::FromStr;
 use tokio_xmpp::parsers::{
     bookmarks2::{Autojoin, Conference},

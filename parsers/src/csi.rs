@@ -30,7 +30,6 @@ mod tests {
     use super::*;
     use crate::ns;
     use crate::Element;
-    use std::convert::TryFrom;
 
     #[test]
     fn test_size() {

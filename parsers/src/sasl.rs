@@ -9,7 +9,6 @@ use crate::util::error::Error;
 use crate::util::helpers::Base64;
 use crate::Element;
 use std::collections::BTreeMap;
-use std::convert::TryFrom;
 
 generate_attribute!(
     /// The list of available SASL mechanisms.
@@ -215,7 +214,6 @@ impl From<Failure> for Element {
 mod tests {
     use super::*;
     use crate::Element;
-    use std::convert::TryFrom;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

@@ -255,7 +255,6 @@ impl Destroy {
 mod tests {
     use super::*;
     use crate::Element;
-    use std::convert::TryFrom;
 
     #[test]
     fn participant() {

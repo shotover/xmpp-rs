@@ -1,5 +1,4 @@
 use futures::stream::StreamExt;
-use std::convert::TryFrom;
 use std::env::args;
 use std::process::exit;
 use std::str::FromStr;

@@ -31,7 +31,6 @@
 //!   mixing left-to-write and right-to-left characters
 
 use core::num::NonZeroU16;
-use std::convert::TryFrom;
 use std::fmt;
 use std::str::FromStr;
 

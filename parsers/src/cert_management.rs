@@ -121,7 +121,6 @@ mod tests {
     use super::*;
     use crate::ns;
     use crate::Element;
-    use std::convert::TryFrom;
     use std::str::FromStr;
 
     #[cfg(target_pointer_width = "32")]

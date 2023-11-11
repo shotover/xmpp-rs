@@ -11,7 +11,7 @@ repository = "https://gitlab.com/xmpp-rs/xmpp-rs"
 keywords = ["xmpp", "jabber", "chat", "messaging", "bot"]
 categories = ["network-programming"]
 license = "MPL-2.0"
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 tokio-xmpp = "3.4"

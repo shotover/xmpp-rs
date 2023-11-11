@@ -10,7 +10,6 @@ use futures::stream::StreamExt;
 use reqwest::{
     header::HeaderMap as ReqwestHeaderMap, Body as ReqwestBody, Client as ReqwestClient,
 };
-use std::convert::TryFrom;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
 use tokio::fs::File;

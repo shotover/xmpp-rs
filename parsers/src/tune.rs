@@ -8,7 +8,6 @@ use crate::ns;
 use crate::pubsub::PubSubPayload;
 use crate::util::error::Error;
 use crate::Element;
-use std::convert::TryFrom;
 
 generate_elem_id!(
     /// The artist or performer of the song or piece.

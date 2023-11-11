@@ -40,7 +40,6 @@ mod tests {
     use crate::util::error::Error;
     use crate::Element;
     use jid::BareJid;
-    use std::convert::TryFrom;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

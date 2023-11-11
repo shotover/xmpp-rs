@@ -20,7 +20,6 @@ use crate::prefixes::{Namespace, Prefix, Prefixes};
 use crate::tree_builder::TreeBuilder;
 
 use std::collections::{btree_map, BTreeMap};
-use std::convert::{TryFrom, TryInto};
 use std::io::{BufRead, Write};
 use std::sync::Arc;
 
@@ -884,8 +883,6 @@ mod tests {
 
     #[test]
     fn test_element_new() {
-        use std::iter::FromIterator;
-
         let elem = Element::new(
             "name".to_owned(),
             "namespace".to_owned(),

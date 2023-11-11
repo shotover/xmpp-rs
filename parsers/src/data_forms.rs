@@ -8,7 +8,6 @@ use crate::media_element::MediaElement;
 use crate::ns;
 use crate::util::error::Error;
 use crate::Element;
-use std::convert::TryFrom;
 
 generate_element!(
     /// Represents one of the possible values for a list- field.

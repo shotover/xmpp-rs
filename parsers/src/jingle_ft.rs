@@ -11,7 +11,6 @@ use crate::ns;
 use crate::util::error::Error;
 use minidom::{Element, Node};
 use std::collections::BTreeMap;
-use std::convert::TryFrom;
 use std::str::FromStr;
 
 generate_element!(
