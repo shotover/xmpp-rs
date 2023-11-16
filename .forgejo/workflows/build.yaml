@@ -1,0 +1,52 @@
+name: 'Build'
+run-name: 'Building xmpp-rs libraries'
+on:
+  workflow_dispatch:
+  push:
+
+env:
+  FEATURES: ""
+  RUST_BACKTRACE: "full"
+
+jobs:
+  lint:
+    runs-on: 'docker'
+    container:
+      image: 'rust:alpine'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rustfmt
+        run: |
+          rustup update
+          rustup component add rustfmt
+          cargo fmt --check
+
+  test-stable:
+    needs: [lint]
+    runs-on: 'docker'
+    container:
+      image: 'rust:alpine'
+    steps:
+      - run: apk update; apk add pkgconf musl-dev libressl-dev
+      - uses: actions/checkout@v4
+      - name: Print versions
+        run: rustc --version; cargo --version
+      - name: Run tests
+        run: cargo test --verbose --release -- --include-ignored
+      - name: Run tests without default features
+        run: cargo test --verbose --no-default-features
+
+  test-nightly:
+    needs: [lint]
+    runs-on: 'docker'
+    container:
+      image: 'rustlang/rust:nightly-alpine'
+    steps:
+      - run: apk update; apk add pkgconf musl-dev libressl-dev
+      - uses: actions/checkout@v4
+      - name: Print versions
+        run: rustc --version; cargo --version
+      - name: Run tests
+        run: cargo test --verbose --release -- --include-ignored
+      - name: Run tests without default features
+        run: cargo test --verbose --no-default-features
