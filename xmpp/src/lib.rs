@@ -441,6 +441,12 @@ impl Agent {
         events
     }
 
+    /// Wait for new events.
+    ///
+    /// # Returns
+    ///
+    /// - `Some(events)` if there are new events; multiple may be returned at once.
+    /// - `None` if the underlying stream is closed.
     pub async fn wait_for_events(&mut self) -> Option<Vec<Event>> {
         if let Some(event) = self.client.next().await {
             let mut events = Vec::new();
