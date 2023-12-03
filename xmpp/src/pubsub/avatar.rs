@@ -30,26 +30,26 @@ pub(crate) async fn handle_metadata_pubsub_event(
     for item in items {
         let payload = item.payload.clone().unwrap();
         if payload.is("metadata", ns::AVATAR_METADATA) {
-
             match Metadata::try_from(payload) {
-                Ok(metadata) => for info in metadata.infos {
-                    let filename = format!("data/{}/{}", from, &*info.id.to_hex());
-                    let file_length = match fs::metadata(filename.clone()) {
-                        Ok(metadata) => metadata.len(),
-                        Err(_) => 0,
-                    };
-                    // TODO: Also check the hash.
-                    if info.bytes as u64 == file_length {
-                        events.push(Event::AvatarRetrieved(from.clone(), filename));
-                    } else {
-                        let iq = download_avatar(from);
-                        let _ = agent.client.send_stanza(iq.into()).await;
+                Ok(metadata) => {
+                    for info in metadata.infos {
+                        let filename = format!("data/{}/{}", from, &*info.id.to_hex());
+                        let file_length = match fs::metadata(filename.clone()) {
+                            Ok(metadata) => metadata.len(),
+                            Err(_) => 0,
+                        };
+                        // TODO: Also check the hash.
+                        if info.bytes as u64 == file_length {
+                            events.push(Event::AvatarRetrieved(from.clone(), filename));
+                        } else {
+                            let iq = download_avatar(from);
+                            let _ = agent.client.send_stanza(iq.into()).await;
+                        }
                     }
                 }
 
-                Err(e) => error!("Error parsing avatar metadata: {}", e)
+                Err(e) => error!("Error parsing avatar metadata: {}", e),
             }
-
         }
     }
     events
