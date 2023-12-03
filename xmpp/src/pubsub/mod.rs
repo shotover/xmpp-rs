@@ -72,8 +72,11 @@ pub(crate) async fn handle_event(from: &Jid, elem: Element, agent: &mut Agent) -
                 }
                 ref node => unimplemented!("node {}", node),
             }
+        },
+        Err(e) => {
+            error!("Error parsing PubSub event: {}", e);
         }
-        _ => unimplemented!(),
+        _ => unimplemented!("PubSub event: {:#?}", event),
     }
     events
 }
