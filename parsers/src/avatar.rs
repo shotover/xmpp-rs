@@ -24,7 +24,7 @@ generate_element!(
     Info, "info", AVATAR_METADATA,
     attributes: [
         /// The size of the image data in bytes.
-        bytes: Required<u16> = "bytes",
+        bytes: Required<u32> = "bytes",
 
         /// The width of the image in pixels.
         width: Option<u16> = "width",
