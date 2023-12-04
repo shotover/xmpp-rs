@@ -108,9 +108,9 @@ impl InnerJid {
     }
 
     pub(crate) fn node(&self) -> Option<&str> {
-        self.at.and_then(|at| {
+        self.at.map(|at| {
             let at = u16::from(at) as usize;
-            Some(&self.normalized[..at])
+            &self.normalized[..at]
         })
     }
 
@@ -134,9 +134,9 @@ impl InnerJid {
     }
 
     pub(crate) fn resource(&self) -> Option<&str> {
-        self.slash.and_then(|slash| {
+        self.slash.map(|slash| {
             let slash = u16::from(slash) as usize;
-            Some(&self.normalized[slash + 1..])
+            &self.normalized[slash + 1..]
         })
     }
 }

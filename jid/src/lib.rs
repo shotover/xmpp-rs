@@ -148,7 +148,7 @@ impl Jid {
     pub fn node(&self) -> Option<NodePart> {
         match self {
             Jid::Bare(BareJid { inner }) | Jid::Full(FullJid { inner }) => {
-                inner.node().map(|s| NodePart::new_unchecked(s))
+                inner.node().map(NodePart::new_unchecked)
             }
         }
     }
@@ -181,7 +181,7 @@ impl Jid {
     pub fn resource(&self) -> Option<ResourcePart> {
         match self {
             Jid::Bare(BareJid { inner }) | Jid::Full(FullJid { inner }) => {
-                inner.resource().map(|s| ResourcePart::new_unchecked(s))
+                inner.resource().map(ResourcePart::new_unchecked)
             }
         }
     }
@@ -470,7 +470,7 @@ impl FullJid {
 
     /// The optional node part of the JID, as a [`NodePart`]
     pub fn node(&self) -> Option<NodePart> {
-        self.node_str().map(|s| NodePart::new_unchecked(s))
+        self.node_str().map(NodePart::new_unchecked)
     }
 
     /// The optional node part of the JID, as a stringy reference
@@ -587,7 +587,7 @@ impl BareJid {
 
     /// The optional node part of the JID, as a [`NodePart`]
     pub fn node(&self) -> Option<NodePart> {
-        self.node_str().map(|s| NodePart::new_unchecked(s))
+        self.node_str().map(NodePart::new_unchecked)
     }
 
     /// The optional node part of the JID, as a stringy reference
