@@ -34,9 +34,6 @@ syntect = { version = "5", optional = true }
 [dev-dependencies]
 env_logger = { version = "0.10", default-features = false, features = ["auto-color", "humantime"] }
 
-[build-dependencies]
-rustc_version = "0.4"
-
 [features]
 default = ["tls-native"]
 tls-rust = ["tokio-rustls", "webpki-roots"]
