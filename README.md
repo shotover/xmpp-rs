@@ -60,7 +60,7 @@ include tests where appropriate, and pass the existing test suite.
 CI should pass to submit your changes. This is done by ensuring `cargo fmt`
 and `cargo test` pass (in the workspace).
 
-More thorough tests can be done locally with `act exec` or `forgejo-runner
+More thorough tests can be done locally with `act` or `forgejo-runner
 exec`, which is also what is run in the CI. We require docker to be setup for
 this to work.
 
