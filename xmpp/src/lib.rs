@@ -459,22 +459,43 @@ impl Agent {
         events
     }
 
+    /// Translate a `Presence` stanza into a list of higher-level `Event`s.
     async fn handle_presence(&mut self, presence: Presence) -> Vec<Event> {
+        // Allocate an empty vector to store the events.
         let mut events = vec![];
+
+        // Extract the JID of the sender (i.e. the one whose presence is being sent).
         let from = presence.from.unwrap().to_bare();
-        for payload in presence.payloads.into_iter() {
-            let muc_user = match MucUser::try_from(payload) {
-                Ok(muc_user) => muc_user,
-                _ => continue,
-            };
-            for status in muc_user.status.into_iter() {
-                if status == Status::SelfPresence {
-                    events.push(Event::RoomJoined(from.clone()));
-                    break;
+
+        // Search through the payloads for a MUC user status.
+
+        if let Some(muc) = presence
+            .payloads
+            .iter()
+            .filter_map(|p| MucUser::try_from(p.clone()).ok())
+            .next()
+        {
+            // If a MUC user status was found, search through the statuses for a self-presence.
+            if muc.status.iter().any(|s| *s == Status::SelfPresence) {
+                // If a self-presence was found, then the stanza is about the client's own presence.
+
+                match presence.type_ {
+                    PresenceType::None => {
+                        // According to https://xmpp.org/extensions/xep-0045.html#enter-pres, no type should be seen as "available".
+                        events.push(Event::RoomJoined(from.clone()));
+                    }
+                    PresenceType::Unavailable => {
+                        // According to https://xmpp.org/extensions/xep-0045.html#exit, the server will use type "unavailable" to notify the client that it has left the room/
+                        events.push(Event::RoomLeft(from.clone()));
+                    }
+                    _ => unimplemented!("Presence type {:?}", presence.type_), // TODO: What to do here?
                 }
+
+                events.push(Event::RoomJoined(from.clone()));
             }
         }
 
+        // Return the list of events.
         events
     }
 
