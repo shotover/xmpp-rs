@@ -263,7 +263,6 @@ impl Agent {
         lang: impl Into<String>,
         status: impl Into<String>,
     ) {
-
         // XEP-0045 specifies that, to leave a room, the client must send a presence stanza
         // with type="unavailable".
         let mut presence = Presence::new(PresenceType::Unavailable).with_to(
@@ -496,8 +495,6 @@ impl Agent {
                     }
                     _ => unimplemented!("Presence type {:?}", presence.type_), // TODO: What to do here?
                 }
-
-                events.push(Event::RoomJoined(from.clone()));
             }
         }
 
