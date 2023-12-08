@@ -241,6 +241,40 @@ impl Agent {
         let _ = self.client.send_stanza(presence.into()).await;
     }
 
+    /// Send a "leave room" request to the server.
+    ///
+    /// The returned future will resolve when the request has been sent,
+    /// not when the room has actually been left.
+    ///
+    /// If successful, a `RoomLeft` event should be received later as a confirmation.
+    ///
+    /// See: https://xmpp.org/extensions/xep-0045.html#exit
+    ///
+    /// # Arguments
+    ///
+    /// * `room_jid`: The JID of the room to leave, including the nickname.
+    /// * `lang`: The language of the status message.
+    /// * `status`: The status message to send.
+    pub async fn leave_room(&mut self, room_jid: FullJid, lang: impl Into<String>, status: impl Into<String>) {
+
+        // XEP-0054 specifies that, to leave a room, the client must send a presence stanza
+        // with type="unavailable".
+
+        let mut presence =
+            Presence::new(PresenceType::Unavailable).with_to(room_jid);
+
+        // Optionally, the client may include a status message in the presence stanza.
+        // TODO: Should this be optional? The XEP says "MAY", but the method signature requires the arguments.
+        // XEP-0054: "The occupant MAY include normal <status/> information in the unavailable presence stanzas"
+        presence.set_status(lang, status);
+
+        // Send the presence stanza.
+        if let Err(e) = self.client.send_stanza(presence.into()).await {
+            // Report any errors to the log.
+            error!("Failed to send leave room presence: {}", e);
+        }
+    }
+
     pub async fn send_message(
         &mut self,
         recipient: Jid,
