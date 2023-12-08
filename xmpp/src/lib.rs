@@ -252,23 +252,29 @@ impl Agent {
     ///
     /// # Arguments
     ///
-    /// * `room_jid`: The JID of the room to leave, including the nickname.
+    /// * `room_jid`: The JID of the room to leave.
+    /// * `nickname`: The nickname to use in the room.
     /// * `lang`: The language of the status message.
     /// * `status`: The status message to send.
     pub async fn leave_room(
         &mut self,
-        room_jid: FullJid,
+        room_jid: BareJid,
+        nickname: RoomNick,
         lang: impl Into<String>,
         status: impl Into<String>,
     ) {
-        // XEP-0054 specifies that, to leave a room, the client must send a presence stanza
-        // with type="unavailable".
 
-        let mut presence = Presence::new(PresenceType::Unavailable).with_to(room_jid);
+        // XEP-0045 specifies that, to leave a room, the client must send a presence stanza
+        // with type="unavailable".
+        let mut presence = Presence::new(PresenceType::Unavailable).with_to(
+            room_jid
+                .with_resource_str(nickname.as_str())
+                .expect("Invalid room JID after adding resource part."),
+        );
 
         // Optionally, the client may include a status message in the presence stanza.
         // TODO: Should this be optional? The XEP says "MAY", but the method signature requires the arguments.
-        // XEP-0054: "The occupant MAY include normal <status/> information in the unavailable presence stanzas"
+        // XEP-0045: "The occupant MAY include normal <status/> information in the unavailable presence stanzas"
         presence.set_status(lang, status);
 
         // Send the presence stanza.
