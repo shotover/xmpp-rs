@@ -241,7 +241,7 @@ impl Agent {
         let _ = self.client.send_stanza(presence.into()).await;
     }
 
-    /// Send a "leave room" request to the server.
+    /// Send a "leave room" request to the server (specifically, an "unavailable" presence stanza).
     ///
     /// The returned future will resolve when the request has been sent,
     /// not when the room has actually been left.
@@ -249,6 +249,10 @@ impl Agent {
     /// If successful, a `RoomLeft` event should be received later as a confirmation.
     ///
     /// See: https://xmpp.org/extensions/xep-0045.html#exit
+    ///
+    /// Note that this method does NOT remove the room from the auto-join list; the latter
+    /// is more a list of bookmarks that the account knows about and that have a flag set
+    /// to indicate that they should be joined automatically after connecting (see the JoinRoom event).
     ///
     /// # Arguments
     ///
