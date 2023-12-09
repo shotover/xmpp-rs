@@ -254,6 +254,9 @@ impl Agent {
     /// is more a list of bookmarks that the account knows about and that have a flag set
     /// to indicate that they should be joined automatically after connecting (see the JoinRoom event).
     ///
+    /// Regarding the latter, see the these minutes about auto-join behavior:
+    /// https://docs.modernxmpp.org/meetings/2019-01-brussels/#bookmarks
+    ///
     /// # Arguments
     ///
     /// * `room_jid`: The JID of the room to leave.
