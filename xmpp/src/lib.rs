@@ -77,7 +77,7 @@ pub type RoomNick = String;
 #[derive(Debug)]
 pub enum Event {
     Online,
-    Disconnected,
+    Disconnected(Error),
     ContactAdded(RosterItem),
     ContactRemoved(RosterItem),
     ContactChanged(RosterItem),
@@ -539,8 +539,8 @@ impl Agent {
                     let _ = self.client.send_stanza(iq).await;
                 }
                 TokioXmppEvent::Online { resumed: true, .. } => {}
-                TokioXmppEvent::Disconnected(_) => {
-                    events.push(Event::Disconnected);
+                TokioXmppEvent::Disconnected(e) => {
+                    events.push(Event::Disconnected(e));
                 }
                 TokioXmppEvent::Stanza(elem) => {
                     if elem.is("iq", "jabber:client") {
@@ -659,7 +659,7 @@ mod tests {
 
         while let Some(events) = agent.wait_for_events().await {
             assert!(match events[0] {
-                Event::Disconnected => true,
+                Event::Disconnected(_) => true,
                 _ => false,
             });
             assert_eq!(events.len(), 1);

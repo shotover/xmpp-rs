@@ -39,8 +39,8 @@ async fn main() -> Result<(), Option<()>> {
                 Event::Online => {
                     println!("Online.");
                 }
-                Event::Disconnected => {
-                    println!("Disconnected");
+                Event::Disconnected(e) => {
+                    println!("Disconnected because of {}.", e);
                     return Err(None);
                 }
                 Event::ContactAdded(contact) => {
