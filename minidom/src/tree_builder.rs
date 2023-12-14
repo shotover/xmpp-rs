@@ -18,6 +18,12 @@ pub struct TreeBuilder {
     pub root: Option<Element>,
 }
 
+impl Default for TreeBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TreeBuilder {
     /// Create a new one
     pub fn new() -> Self {
@@ -110,27 +116,20 @@ impl TreeBuilder {
             }
 
             RawEvent::Attribute(_, (prefix, name), value) => {
-                self.next_tag
-                    .as_mut()
-                    .map(
-                        |(_, _, ref mut prefixes, ref mut attrs)| match (prefix, name) {
-                            (None, xmlns) if xmlns == "xmlns" => {
-                                prefixes.insert(None, value);
-                            }
-                            (Some(xmlns), prefix) if xmlns.as_str() == "xmlns" => {
-                                prefixes.insert(Some(prefix.as_str().to_owned()), value);
-                            }
-                            (Some(prefix), name) => {
-                                attrs.insert(
-                                    format!("{}:{}", prefix, name),
-                                    value.as_str().to_owned(),
-                                );
-                            }
-                            (None, name) => {
-                                attrs.insert(name.as_str().to_owned(), value.as_str().to_owned());
-                            }
-                        },
-                    );
+                if let Some((_, _, ref mut prefixes, ref mut attrs)) = self.next_tag.as_mut() {
+                    match (prefix, name) {
+                        (None, xmlns) if xmlns == "xmlns" => prefixes.insert(None, value),
+                        (Some(xmlns), prefix) if xmlns.as_str() == "xmlns" => {
+                            prefixes.insert(Some(prefix.as_str().to_owned()), value);
+                        }
+                        (Some(prefix), name) => {
+                            attrs.insert(format!("{}:{}", prefix, name), value.as_str().to_owned());
+                        }
+                        (None, name) => {
+                            attrs.insert(name.as_str().to_owned(), value.as_str().to_owned());
+                        }
+                    }
+                }
             }
 
             RawEvent::ElementHeadClose(_) => {

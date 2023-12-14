@@ -400,7 +400,7 @@ impl Element {
             ));
         }
 
-        let namespace = if self.namespace.len() == 0 {
+        let namespace = if self.namespace.is_empty() {
             None
         } else {
             Some(Arc::new(self.namespace.clone().try_into()?))
@@ -712,7 +712,7 @@ impl Element {
     /// Remove the leading nodes up to the first child element and
     /// return it
     pub fn unshift_child(&mut self) -> Option<Element> {
-        while self.children.len() > 0 {
+        while self.children.is_empty() {
             if let Some(el) = self.children.remove(0).into_element() {
                 return Some(el);
             }

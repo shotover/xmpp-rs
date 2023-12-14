@@ -201,8 +201,8 @@ impl From<ElementBuilder> for Node {
 impl PartialEq for Node {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (&Node::Element(ref elem1), &Node::Element(ref elem2)) => elem1 == elem2,
-            (&Node::Text(ref text1), &Node::Text(ref text2)) => text1 == text2,
+            (Node::Element(elem1), Node::Element(elem2)) => elem1 == elem2,
+            (Node::Text(text1), Node::Text(text2)) => text1 == text2,
             _ => false,
         }
     }
