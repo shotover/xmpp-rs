@@ -26,7 +26,7 @@ impl XhtmlIm {
     pub fn into_html(self) -> String {
         let mut html = Vec::new();
         // TODO: use the best language instead.
-        if let Some((lang, body)) = self.bodies.into_iter().next() {
+        for (lang, body) in self.bodies {
             if lang.is_empty() {
                 assert!(body.xml_lang.is_none());
             } else {
@@ -35,6 +35,7 @@ impl XhtmlIm {
             for tag in body.children {
                 html.push(tag.into_html());
             }
+            break;
         }
         html.concat()
     }
