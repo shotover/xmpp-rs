@@ -711,7 +711,7 @@ impl Element {
     /// Remove the leading nodes up to the first child element and
     /// return it
     pub fn unshift_child(&mut self) -> Option<Element> {
-        while self.children.is_empty() {
+        while !self.children.is_empty() {
             if let Some(el) = self.children.remove(0).into_element() {
                 return Some(el);
             }
