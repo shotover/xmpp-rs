@@ -56,7 +56,7 @@ impl TryFrom<Element> for Conference {
             extensions: Vec::new(),
         };
 
-        for child in root.children().cloned() {
+        for child in root.children() {
             if child.is("nick", ns::BOOKMARKS2) {
                 if conference.nick.is_some() {
                     return Err(Error::ParseError(

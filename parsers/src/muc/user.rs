@@ -271,6 +271,12 @@ generate_element!(
     ]
 );
 
+impl Default for MucUser {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MucUser {
     /// Creates an empty MucUser
     pub fn new() -> MucUser {

@@ -5,6 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 /// The `http://jabber.org/protocol/muc` protocol.
+#[allow(clippy::module_inception)]
 pub mod muc;
 
 /// The `http://jabber.org/protocol/muc#user` protocol.

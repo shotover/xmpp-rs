@@ -151,9 +151,9 @@ impl TryFrom<Element> for Action {
 
     fn try_from(elem: Element) -> Result<Action, Error> {
         match elem.name() {
-            "t" => Insert::try_from(elem).map(|insert| Action::Insert(insert)),
-            "e" => Erase::try_from(elem).map(|erase| Action::Erase(erase)),
-            "w" => Wait::try_from(elem).map(|wait| Action::Wait(wait)),
+            "t" => Insert::try_from(elem).map(Action::Insert),
+            "e" => Erase::try_from(elem).map(Action::Erase),
+            "w" => Wait::try_from(elem).map(Action::Wait),
             _ => Err(Error::ParseError("This is not a rtt action element.")),
         }
     }

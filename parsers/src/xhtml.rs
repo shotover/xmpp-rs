@@ -23,19 +23,18 @@ pub struct XhtmlIm {
 
 impl XhtmlIm {
     /// Serialise formatted text to HTML.
-    pub fn to_html(self) -> String {
+    pub fn into_html(self) -> String {
         let mut html = Vec::new();
         // TODO: use the best language instead.
-        for (lang, body) in self.bodies {
+        if let Some((lang, body)) = self.bodies.into_iter().next() {
             if lang.is_empty() {
                 assert!(body.xml_lang.is_none());
             } else {
                 assert_eq!(Some(lang), body.xml_lang);
             }
             for tag in body.children {
-                html.push(tag.to_html());
+                html.push(tag.into_html());
             }
-            break;
         }
         html.concat()
     }
@@ -112,9 +111,9 @@ enum Child {
 }
 
 impl Child {
-    fn to_html(self) -> String {
+    fn into_html(self) -> String {
         match self {
-            Child::Tag(tag) => tag.to_html(),
+            Child::Tag(tag) => tag.into_html(),
             Child::Text(text) => text,
         }
     }
@@ -227,7 +226,7 @@ enum Tag {
 }
 
 impl Tag {
-    fn to_html(self) -> String {
+    fn into_html(self) -> String {
         match self {
             Tag::A {
                 href,
@@ -468,7 +467,7 @@ fn children_to_nodes(children: Vec<Child>) -> impl IntoIterator<Item = Node> {
 fn children_to_html(children: Vec<Child>) -> String {
     children
         .into_iter()
-        .map(|child| child.to_html())
+        .map(|child| child.into_html())
         .collect::<Vec<_>>()
         .concat()
 }
@@ -592,7 +591,7 @@ mod tests {
             .unwrap();
         let parsed = XhtmlIm::try_from(elem).unwrap();
         let parsed2 = parsed.clone();
-        let html = parsed.to_html();
+        let html = parsed.into_html();
         assert_eq!(html, "Hello world!");
 
         let elem = Element::from(parsed2);
@@ -605,14 +604,14 @@ mod tests {
             .parse()
             .unwrap();
         let xhtml_im = XhtmlIm::try_from(elem).unwrap();
-        let html = xhtml_im.to_html();
+        let html = xhtml_im.into_html();
         assert_eq!(html, "<p>Hello world!</p>");
 
         let elem: Element = "<html xmlns='http://jabber.org/protocol/xhtml-im'><body xmlns='http://www.w3.org/1999/xhtml'><p>Hello <strong>world</strong>!</p></body></html>"
             .parse()
             .unwrap();
         let xhtml_im = XhtmlIm::try_from(elem).unwrap();
-        let html = xhtml_im.to_html();
+        let html = xhtml_im.into_html();
         assert_eq!(html, "<p>Hello <strong>world</strong>!</p>");
     }
 

@@ -76,7 +76,7 @@ impl WhitespaceAwareBase64 {
             .chars()
             .filter(|ch| *ch != ' ' && *ch != '\n' && *ch != '\t')
             .collect();
-        Ok(Base64Engine.decode(&s)?)
+        Ok(Base64Engine.decode(s)?)
     }
 
     pub fn encode(b: &[u8]) -> Option<String> {

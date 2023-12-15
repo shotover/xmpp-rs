@@ -209,7 +209,7 @@ impl From<PubSubEvent> for Element {
             PubSubEvent::PublishedItems { node, items } => {
                 Element::builder("items", ns::PUBSUB_EVENT)
                     .attr("node", node)
-                    .append_all(items.into_iter())
+                    .append_all(items)
             }
             PubSubEvent::RetractedItems { node, items } => {
                 Element::builder("items", ns::PUBSUB_EVENT)

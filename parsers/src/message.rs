@@ -291,7 +291,7 @@ impl From<Message> for Element {
                 );
                 body
             }))
-            .append_all(message.payloads.into_iter())
+            .append_all(message.payloads)
             .build()
     }
 }

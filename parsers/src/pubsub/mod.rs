@@ -11,6 +11,7 @@ pub mod event;
 pub mod owner;
 
 /// The `http://jabber.org/protocol/pubsub` protocol.
+#[allow(clippy::module_inception)]
 pub mod pubsub;
 
 pub use self::event::PubSubEvent;

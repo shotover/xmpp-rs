@@ -67,10 +67,11 @@ type Status = String;
 type Priority = i8;
 
 ///
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub enum Type {
     /// This value is not an acceptable 'type' attribute, it is only used
     /// internally to signal the absence of 'type'.
+    #[default]
     None,
 
     /// An error has occurred regarding processing of a previously sent
@@ -98,12 +99,6 @@ pub enum Type {
     /// The subscription request has been denied or a previously granted
     /// subscription has been canceled.
     Unsubscribed,
-}
-
-impl Default for Type {
-    fn default() -> Type {
-        Type::None
-    }
 }
 
 impl FromStr for Type {
@@ -350,7 +345,7 @@ impl From<Presence> for Element {
             .attr("to", presence.to)
             .attr("id", presence.id)
             .attr("type", presence.type_)
-            .append_all(presence.show.into_iter())
+            .append_all(presence.show)
             .append_all(presence.statuses.into_iter().map(|(lang, status)| {
                 Element::builder("status", ns::DEFAULT_NS)
                     .attr(
@@ -370,7 +365,7 @@ impl From<Presence> for Element {
                         .append(format!("{}", presence.priority)),
                 )
             })
-            .append_all(presence.payloads.into_iter())
+            .append_all(presence.payloads)
             .build()
     }
 }

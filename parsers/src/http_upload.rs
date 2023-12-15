@@ -48,7 +48,7 @@ impl TryFrom<Element> for Header {
         check_no_children!(elem, "header");
         check_no_unknown_attributes!(elem, "header", ["name"]);
         let name: String = get_attr!(elem, "name", Required);
-        let text = String::from(elem.text());
+        let text = elem.text();
 
         Ok(match name.to_lowercase().as_str() {
             "authorization" => Header::Authorization(text),

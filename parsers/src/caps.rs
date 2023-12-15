@@ -49,7 +49,7 @@ impl TryFrom<Element> for Caps {
         let ver: String = get_attr!(elem, "ver", Required);
         let hash = Hash {
             algo: get_attr!(elem, "hash", Required),
-            hash: Base64.decode(&ver)?,
+            hash: Base64.decode(ver)?,
         };
         Ok(Caps {
             ext: get_attr!(elem, "ext", Option),
