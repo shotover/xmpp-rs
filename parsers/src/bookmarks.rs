@@ -4,14 +4,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+//!
+//! Chatroom bookmarks from [XEP-0048 v1.0](https://xmpp.org/extensions/attic/xep-0048-1.0.html). Only use on older servers
+//! which do not advertise `urn:xmpp:bookmarks:1#compat` on the user's BareJID in a disco info request.
+//! On modern compliant servers, use the [`crate::bookmarks2`] module instead.
+//!
+//! See [ModernXMPP docs](https://docs.modernxmpp.org/client/groupchat/#bookmarks) on how to handle all historic
+//! and newer specifications for your clients.
+//!
+//! This module exposes the [`Autojoin`][crate::bookmarks::Autojoin] boolean flag, the [`Conference`][crate::bookmarks::Conference] chatroom element, and the [`crate::ns::BOOKMARKS`] XML namespace.
+
 use jid::BareJid;
 
-generate_attribute!(
-    /// Whether a conference bookmark should be joined automatically.
-    Autojoin,
-    "autojoin",
-    bool
-);
+pub use crate::bookmarks2::Autojoin;
 
 generate_element!(
     /// A conference bookmark.
@@ -34,6 +39,23 @@ generate_element!(
         password: Option<String> = ("password", BOOKMARKS) => String
     ]
 );
+
+impl Conference {
+    /// Turns a XEP-0048 Conference element into a XEP-0402 "Bookmarks2" Conference element, in a
+    /// tuple with the room JID.
+    pub fn into_bookmarks2(self) -> (BareJid, crate::bookmarks2::Conference) {
+        (
+            self.jid,
+            crate::bookmarks2::Conference {
+                autojoin: self.autojoin,
+                name: self.name,
+                nick: self.nick,
+                password: self.password,
+                extensions: vec![],
+            },
+        )
+    }
+}
 
 generate_element!(
     /// An URL bookmark.
