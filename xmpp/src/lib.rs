@@ -16,7 +16,7 @@ use tokio::fs::File;
 use tokio_util::codec::{BytesCodec, FramedRead};
 pub use tokio_xmpp::parsers;
 use tokio_xmpp::parsers::{
-    bookmarks2,
+    bookmarks, bookmarks2,
     caps::{compute_disco, hash_caps, Caps},
     disco::{DiscoInfoQuery, DiscoInfoResult, Feature, Identity},
     hashes::Algo,
@@ -202,6 +202,7 @@ impl ClientBuilder<'_> {
             disco,
             node,
             uploads: Vec::new(),
+            awaiting_disco_bookmarks_type: false,
         }
     }
 }
@@ -213,6 +214,7 @@ pub struct Agent {
     disco: DiscoInfoResult,
     node: String,
     uploads: Vec<(String, Jid, PathBuf)>,
+    awaiting_disco_bookmarks_type: bool,
 }
 
 impl Agent {
@@ -401,6 +403,50 @@ impl Agent {
                         panic!("Wrong XEP-0048 v1.0 Bookmark format: {}", e);
                     }
                 }
+            } else if payload.is("query", ns::DISCO_INFO) {
+                match DiscoInfoResult::try_from(payload) {
+                    Ok(disco) => {
+                        // Safe unwrap because no DISCO is received when we are not online
+                        if from == self.client.bound_jid().unwrap().to_bare()
+                            && self.awaiting_disco_bookmarks_type
+                        {
+                            // Trigger bookmarks query
+                            // TODO: only send this when the JoinRooms feature is enabled.
+                            self.awaiting_disco_bookmarks_type = false;
+                            let mut perform_bookmarks2 = false;
+                            for feature in disco.features {
+                                if feature.var == "urn:xmpp:bookmarks:1#compat" {
+                                    perform_bookmarks2 = true;
+                                }
+                            }
+
+                            if perform_bookmarks2 {
+                                // XEP-0402 bookmarks (modern)
+                                let iq = Iq::from_get(
+                                    "bookmarks",
+                                    PubSub::Items(Items::new(ns::BOOKMARKS2)),
+                                )
+                                .into();
+                                let _ = self.client.send_stanza(iq).await;
+                            } else {
+                                // XEP-0048 v1.0 bookmarks (legacy)
+                                let iq = Iq::from_get(
+                                    "bookmarks-legacy",
+                                    PrivateXMLQuery {
+                                        storage: bookmarks::Storage::new(),
+                                    },
+                                )
+                                .into();
+                                let _ = self.client.send_stanza(iq).await;
+                            }
+                        } else {
+                            unimplemented!("Ignored disco#info response from {}", from);
+                        }
+                    }
+                    Err(e) => {
+                        panic!("Wrong disco#info format: {}", e);
+                    }
+                }
             }
         } else if let IqType::Set(_) = iq.payload {
             // We MUST answer unhandled set iqs with a service-unavailable error.
@@ -545,10 +591,11 @@ impl Agent {
                     )
                     .into();
                     let _ = self.client.send_stanza(iq).await;
-                    // TODO: only send this when the JoinRooms feature is enabled.
-                    let iq =
-                        Iq::from_get("bookmarks", PubSub::Items(Items::new(ns::BOOKMARKS2))).into();
+
+                    // Query account disco to know what bookmarks spec is used
+                    let iq = Iq::from_get("disco-account", DiscoInfoQuery { node: None }).into();
                     let _ = self.client.send_stanza(iq).await;
+                    self.awaiting_disco_bookmarks_type = true;
                 }
                 TokioXmppEvent::Online { resumed: true, .. } => {}
                 TokioXmppEvent::Disconnected(e) => {
