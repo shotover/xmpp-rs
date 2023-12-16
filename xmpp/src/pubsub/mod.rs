@@ -8,7 +8,7 @@ use super::Agent;
 use crate::Event;
 use std::str::FromStr;
 use tokio_xmpp::parsers::{
-    bookmarks2::{Autojoin, Conference},
+    bookmarks2::{self, Autojoin},
     ns,
     pubsub::event::PubSubEvent,
     pubsub::pubsub::PubSub,
@@ -37,7 +37,7 @@ pub(crate) async fn handle_event(from: &Jid, elem: Element, agent: &mut Agent) -
                     let item = items.clone().pop().unwrap();
                     let jid = BareJid::from_str(&item.id.clone().unwrap().0).unwrap();
                     let payload = item.payload.clone().unwrap();
-                    match Conference::try_from(payload) {
+                    match bookmarks2::Conference::try_from(payload) {
                         Ok(conference) => {
                             if conference.autojoin == Autojoin::True {
                                 events.push(Event::JoinRoom(jid, conference));
@@ -97,7 +97,7 @@ pub(crate) fn handle_iq_result(from: &Jid, elem: Element) -> impl IntoIterator<I
                     let item = item.0;
                     let jid = BareJid::from_str(&item.id.clone().unwrap().0).unwrap();
                     let payload = item.payload.clone().unwrap();
-                    match Conference::try_from(payload) {
+                    match bookmarks2::Conference::try_from(payload) {
                         Ok(conference) => {
                             if let Autojoin::True = conference.autojoin {
                                 events.push(Event::JoinRoom(jid, conference));

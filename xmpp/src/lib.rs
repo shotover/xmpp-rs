@@ -16,7 +16,7 @@ use tokio::fs::File;
 use tokio_util::codec::{BytesCodec, FramedRead};
 pub use tokio_xmpp::parsers;
 use tokio_xmpp::parsers::{
-    bookmarks2::Conference,
+    bookmarks2,
     caps::{compute_disco, hash_caps, Caps},
     disco::{DiscoInfoQuery, DiscoInfoResult, Feature, Identity},
     hashes::Algo,
@@ -29,6 +29,7 @@ use tokio_xmpp::parsers::{
     },
     ns,
     presence::{Presence, Type as PresenceType},
+    private::Query as PrivateXMLQuery,
     pubsub::pubsub::{Items, PubSub},
     roster::{Item as RosterItem, Roster},
     stanza_error::{DefinedCondition, ErrorType, StanzaError},
@@ -84,7 +85,7 @@ pub enum Event {
     #[cfg(feature = "avatars")]
     AvatarRetrieved(Jid, String),
     ChatMessage(Id, BareJid, Body),
-    JoinRoom(BareJid, Conference),
+    JoinRoom(BareJid, bookmarks2::Conference),
     LeaveRoom(BareJid),
     LeaveAllRooms,
     RoomJoined(BareJid),
@@ -388,6 +389,18 @@ impl Agent {
             } else if payload.is("slot", ns::HTTP_UPLOAD) {
                 let new_events = handle_upload_result(&from, iq.id, payload, self).await;
                 events.extend(new_events);
+            } else if payload.is("query", ns::PRIVATE) {
+                match PrivateXMLQuery::try_from(payload) {
+                    Ok(query) => {
+                        for conf in query.storage.conferences {
+                            let (jid, room) = conf.into_bookmarks2();
+                            events.push(Event::JoinRoom(jid, room));
+                        }
+                    }
+                    Err(e) => {
+                        panic!("Wrong XEP-0048 v1.0 Bookmark format: {}", e);
+                    }
+                }
             }
         } else if let IqType::Set(_) = iq.payload {
             // We MUST answer unhandled set iqs with a service-unavailable error.
@@ -402,7 +415,6 @@ impl Agent {
                 .into();
             let _ = self.client.send_stanza(iq).await;
         }
-
         events
     }
 
