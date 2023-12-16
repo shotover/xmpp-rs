@@ -43,6 +43,9 @@ pub const IBB: &str = "http://jabber.org/protocol/ibb";
 /// XEP-0048: Bookmarks
 pub const BOOKMARKS: &str = "storage:bookmarks";
 
+/// XEP-0049: Private XML Storage
+pub const PRIVATE: &str = "jabber:iq:private";
+
 /// XEP-0059: Result Set Management
 pub const RSM: &str = "http://jabber.org/protocol/rsm";
 

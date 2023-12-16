@@ -70,6 +70,9 @@ pub mod ibb;
 /// XEP-0048: Bookmarks
 pub mod bookmarks;
 
+/// XEP-0049: Private XML storage
+pub mod private;
+
 /// XEP-0059: Result Set Management
 pub mod rsm;
 
