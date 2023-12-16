@@ -15,6 +15,9 @@
 //!
 //! See [ModernXMPP docs](https://docs.modernxmpp.org/client/groupchat/#bookmarks) on how to handle
 //! all historic and newer specifications for your clients handling of chatroom bookmarks.
+//!
+//! This module uses the legacy bookmarks [`bookmarks::Conference`][crate::bookmarks::Conference]
+//! struct as stored in a legacy [`bookmarks::Storage`][crate::bookmarks::Storage] struct.
 
 use crate::{
     bookmarks::Storage,

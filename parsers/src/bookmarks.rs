@@ -5,14 +5,16 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 //!
-//! Chatroom bookmarks from [XEP-0048 v1.0](https://xmpp.org/extensions/attic/xep-0048-1.0.html). Only use on older servers
-//! which do not advertise `urn:xmpp:bookmarks:1#compat` on the user's BareJID in a disco info request.
-//! On modern compliant servers, use the [`crate::bookmarks2`] module instead.
+//! Chatroom bookmarks from [XEP-0048](https://xmpp.org/extensions/attic/xep-0048-1.0.html). You should never use this, but use
+//! [`bookmarks2`][`crate::bookmarks2`], or [`private::Query`][`crate::private::Query`] for legacy servers which do not advertise
+//! `urn:xmpp:bookmarks:1#compat` on the user's BareJID in a disco info request.
 //!
 //! See [ModernXMPP docs](https://docs.modernxmpp.org/client/groupchat/#bookmarks) on how to handle all historic
 //! and newer specifications for your clients.
 //!
 //! This module exposes the [`Autojoin`][crate::bookmarks::Autojoin] boolean flag, the [`Conference`][crate::bookmarks::Conference] chatroom element, and the [`crate::ns::BOOKMARKS`] XML namespace.
+//!
+//! The [`Conference`][crate::bookmarks::Conference] struct used in [`private::Query`][`crate::private::Query`] is the one from this module. Only the querying mechanism changes from a legacy PubSub implementation here, to a legacy Private XML Query implementation in that other module. The [`Conference`][crate::bookmarks2::Conference] element from the [`bookmarks2`][crate::bookmarks2] module is a different structure, but conversion is possible from [`bookmarks::Conference`][crate::bookmarks::Conference] to [`bookmarks2::Conference`][crate::bookmarks2::Conference] via the [`Conference::into_bookmarks2`][crate::bookmarks::Conference::into_bookmarks2] method.
 
 use jid::BareJid;
 

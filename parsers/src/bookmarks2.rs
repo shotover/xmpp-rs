@@ -7,7 +7,7 @@
 //!
 //! Chatroom bookmarks from [XEP-0402](https://xmpp.org/extensions/xep-0402.html) for newer servers
 //! which advertise `urn:xmpp:bookmarks:1#compat` on the user's BareJID in a disco info request.
-//! On legacy non-compliant servers, use the [`crate::bookmarks`] module instead.
+//! On legacy non-compliant servers, use the [`private`][crate::private] module instead.
 //!
 //! See [ModernXMPP docs](https://docs.modernxmpp.org/client/groupchat/#bookmarks) on how to handle all historic
 //! and newer specifications for your clients.
