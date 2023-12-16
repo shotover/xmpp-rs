@@ -3,6 +3,17 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+//!
+//! Chatroom bookmarks from [XEP-0402](https://xmpp.org/extensions/xep-0402.html) for newer servers
+//! which advertise `urn:xmpp:bookmarks:1#compat` on the user's BareJID in a disco info request.
+//! On legacy non-compliant servers, use the [`crate::bookmarks`] module instead.
+//!
+//! See [ModernXMPP docs](https://docs.modernxmpp.org/client/groupchat/#bookmarks) on how to handle all historic
+//! and newer specifications for your clients.
+//!
+//! This module exposes the [`Autojoin`][crate::bookmarks2::Autojoin] boolean flag, the [`Conference`][crate::bookmarks2::Conference] chatroom element, and the [BOOKMARKS2][crate::ns::BOOKMARKS2] XML namespace.
+
 use crate::ns;
 use crate::util::error::Error;
 use crate::Element;
