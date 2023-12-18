@@ -14,12 +14,13 @@ license = "MPL-2.0"
 edition = "2021"
 
 [dependencies]
-tokio-xmpp = "3.4"
 futures = "0.3"
 tokio = { version = "1", features = ["fs"] }
 log = "0.4"
 reqwest = { version = "0.11.8", features = ["stream"] }
 tokio-util = { version = "0.7", features = ["codec"] }
+# same repository dependencies
+tokio-xmpp = { version = "3.4", path = "../tokio-xmpp" }
 
 [dev-dependencies]
 env_logger = { version = "0.10", default-features = false, features = ["auto-color", "humantime"] }

@@ -14,8 +14,6 @@ license = "MPL-2.0"
 edition = "2021"
 
 [dependencies]
-minidom = "0.15"
-jid = { version = "0.10", features = ["minidom"] }
 base64 = "0.21"
 digest = "0.10"
 sha1 = "0.10"
@@ -23,6 +21,9 @@ sha2 = "0.10"
 sha3 = "0.10"
 blake2 = "0.10.4"
 chrono = { version = "0.4.5", default-features = false, features = ["std"] }
+# same repository dependencies
+jid = { version = "0.10", features = ["minidom"], path = "../jid" }
+minidom = { version = "0.15", path = "../minidom" }
 
 [features]
 # Build xmpp-parsers to make components instead of clients.

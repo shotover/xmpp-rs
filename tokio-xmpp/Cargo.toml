@@ -17,19 +17,20 @@ futures = "0.3"
 idna = "0.4"
 log = "0.4"
 native-tls = { version = "0.2", optional = true }
-sasl = "0.5"
 tokio = { version = "1", features = ["net", "rt", "rt-multi-thread", "macros"] }
 tokio-native-tls = { version = "0.3", optional = true }
 tokio-rustls = { version = "0.24", optional = true }
 tokio-stream = { version = "0.1", features = [] }
 tokio-util = { version = "0.7", features = ["codec"] }
 hickory-resolver = "0.24"
-xmpp-parsers = "0.20"
-minidom = "0.15"
 rxml = "0.9.1"
 webpki-roots = { version = "0.25", optional = true }
 rand = "^0.8"
 syntect = { version = "5", optional = true }
+# same repository dependencies
+minidom = { version = "0.15", path = "../minidom" }
+sasl = { version = "0.5", path = "../sasl" }
+xmpp-parsers = { version = "0.20", path = "../parsers" }
 
 [dev-dependencies]
 env_logger = { version = "0.10", default-features = false, features = ["auto-color", "humantime"] }
