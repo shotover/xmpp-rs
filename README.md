@@ -58,7 +58,8 @@ Code changes should try to include documentation as possible. They should also
 include tests where appropriate, and pass the existing test suite.
 
 CI should pass to submit your changes. This is done by ensuring `cargo fmt`
-and `cargo test` pass (in the workspace).
+and `cargo test` pass (in the workspace). Please do not run `cargo fmt` as a
+separate commit but do it as part of each of your commits.
 
 More thorough tests can be done locally with `act` or `forgejo-runner
 exec`, which is also what is run in the CI. We require docker to be setup for
