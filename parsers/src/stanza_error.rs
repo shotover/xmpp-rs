@@ -245,7 +245,9 @@ impl TryFrom<Element> for StanzaError {
 
     fn try_from(elem: Element) -> Result<StanzaError, Error> {
         check_self!(elem, "error", DEFAULT_NS);
-        check_no_unknown_attributes!(elem, "error", ["type", "by"]);
+        // The code attribute has been deprecated in [XEP-0086](https://xmpp.org/extensions/xep-0086.html)
+        // which was deprecated in 2007. We don't error when it's here, but don't include it in the final struct.
+        check_no_unknown_attributes!(elem, "error", ["type", "by", "code"]);
 
         let mut stanza_error = StanzaError {
             type_: get_attr!(elem, "type", Required),
@@ -387,5 +389,17 @@ mod tests {
             _ => panic!(),
         };
         assert_eq!(message, "Error must have a defined-condition.");
+    }
+
+    #[test]
+    fn test_error_code() {
+        let elem: Element = r#"<error code="501" type="cancel" xmlns='jabber:client'>
+    <feature-not-implemented xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
+    <text xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'>The feature requested is not implemented by the recipient or server and therefore cannot be processed.</text>
+</error>"#
+            .parse()
+            .unwrap();
+        let stanza_error = StanzaError::try_from(elem).unwrap();
+        assert_eq!(stanza_error.type_, ErrorType::Cancel);
     }
 }
