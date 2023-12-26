@@ -104,4 +104,11 @@ impl<C: ServerConnector> Agent<C> {
     pub async fn upload_file_with(&mut self, service: &str, path: &Path) {
         upload::send::upload_file_with(self, service, path).await
     }
+
+    /// Get the bound jid of the client.
+    ///
+    /// If the client is not connected, this will be None.
+    pub fn bound_jid(&self) -> Option<&Jid> {
+        self.client.bound_jid()
+    }
 }
