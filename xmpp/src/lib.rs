@@ -12,7 +12,6 @@ pub use tokio_xmpp::parsers;
 use tokio_xmpp::parsers::{
     disco::DiscoInfoResult,
     message::{Body, Message, MessageType},
-    muc::user::MucUser,
 };
 use tokio_xmpp::AsyncClient as TokioXmppClient;
 pub use tokio_xmpp::{BareJid, Element, FullJid, Jid};
@@ -120,13 +119,7 @@ impl Agent {
         lang: &str,
         text: &str,
     ) {
-        let recipient: Jid = room.with_resource_str(&recipient).unwrap().into();
-        let mut message = Message::new(recipient).with_payload(MucUser::new());
-        message.type_ = MessageType::Chat;
-        message
-            .bodies
-            .insert(String::from(lang), Body(String::from(text)));
-        let _ = self.client.send_stanza(message.into()).await;
+        muc::private_message::send_room_private_message(self, room, recipient, lang, text).await
     }
 
     /// Wait for new events.
