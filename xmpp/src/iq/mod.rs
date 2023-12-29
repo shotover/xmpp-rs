@@ -71,7 +71,8 @@ pub async fn handle_iq(agent: &mut Agent, iq: Iq) -> Vec<Event> {
             let new_events = pubsub::handle_iq_result(&from, payload);
             events.extend(new_events);
         } else if payload.is("slot", ns::HTTP_UPLOAD) {
-            let new_events = upload::handle_upload_result(&from, iq.id, payload, agent).await;
+            let new_events =
+                upload::receive::handle_upload_result(&from, iq.id, payload, agent).await;
             events.extend(new_events);
         } else if payload.is("query", ns::PRIVATE) {
             match PrivateXMLQuery::try_from(payload) {
