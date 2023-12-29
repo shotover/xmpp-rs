@@ -54,7 +54,7 @@ pub use parts::{DomainPart, NodePart, ResourcePart};
 /// An enum representing a Jabber ID. It can be either a `FullJid` or a `BareJid`.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(untagged))]
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Jid {
     /// Contains a [`BareJid`], without a resource part
     Bare(BareJid),
@@ -281,7 +281,7 @@ impl PartialEq<BareJid> for Jid {
 /// Unlike a [`BareJid`], it always contains a resource, and should only be used when you are
 /// certain there is no case where a resource can be missing.  Otherwise, use a [`Jid`] or
 /// [`BareJid`].
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct FullJid {
     inner: InnerJid,
 }
@@ -294,7 +294,7 @@ pub struct FullJid {
 ///
 /// Unlike a [`FullJid`], it can’t contain a resource, and should only be used when you are certain
 /// there is no case where a resource can be set.  Otherwise, use a [`Jid`] or [`FullJid`].
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct BareJid {
     inner: InnerJid,
 }

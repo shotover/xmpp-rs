@@ -27,7 +27,7 @@ fn length_check(len: usize, error_empty: Error, error_too_long: Error) -> Result
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub(crate) struct InnerJid {
     pub(crate) normalized: String,
     pub(crate) at: Option<NonZeroU16>,
