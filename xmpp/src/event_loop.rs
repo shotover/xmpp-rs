@@ -57,7 +57,7 @@ pub async fn wait_for_events(agent: &mut Agent) -> Option<Vec<Event>> {
                     events.extend(new_events);
                 } else if elem.is("message", "jabber:client") {
                     let message = Message::try_from(elem).unwrap();
-                    let new_events = message::handle_message(agent, message).await;
+                    let new_events = message::receive::handle_message(agent, message).await;
                     events.extend(new_events);
                 } else if elem.is("presence", "jabber:client") {
                     let presence = Presence::try_from(elem).unwrap();
