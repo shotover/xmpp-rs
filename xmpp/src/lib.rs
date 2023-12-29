@@ -33,6 +33,7 @@ pub use tokio_xmpp::{BareJid, Element, FullJid, Jid};
 extern crate log;
 
 pub mod builder;
+pub mod feature;
 pub mod iq;
 pub mod message;
 pub mod presence;
@@ -41,18 +42,11 @@ pub mod upload;
 
 // Module re-exports
 pub use builder::{ClientBuilder, ClientType};
+pub use feature::ClientFeature;
 
 pub type Error = tokio_xmpp::Error;
 pub type Id = Option<String>;
 pub type RoomNick = String;
-
-#[derive(PartialEq)]
-pub enum ClientFeature {
-    #[cfg(feature = "avatars")]
-    Avatars,
-    ContactList,
-    JoinRooms,
-}
 
 #[derive(Debug)]
 pub enum Event {
