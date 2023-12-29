@@ -23,10 +23,7 @@ use tokio_xmpp::parsers::{
     http_upload::{Header as HttpUploadHeader, SlotRequest, SlotResult},
     iq::{Iq, IqType},
     message::{Body, Message, MessageType},
-    muc::{
-        user::{MucUser, Status},
-        Muc,
-    },
+    muc::{user::MucUser, Muc},
     ns,
     presence::{Presence, Type as PresenceType},
     private::Query as PrivateXMLQuery,
@@ -40,8 +37,9 @@ pub use tokio_xmpp::{BareJid, Element, FullJid, Jid};
 #[macro_use]
 extern crate log;
 
-mod message;
-mod pubsub;
+pub mod message;
+pub mod presence;
+pub mod pubsub;
 
 pub type Error = tokio_xmpp::Error;
 
@@ -497,44 +495,6 @@ impl Agent {
         }
     }
 
-    /// Translate a `Presence` stanza into a list of higher-level `Event`s.
-    async fn handle_presence(&mut self, presence: Presence) -> Vec<Event> {
-        // Allocate an empty vector to store the events.
-        let mut events = vec![];
-
-        // Extract the JID of the sender (i.e. the one whose presence is being sent).
-        let from = presence.from.unwrap().to_bare();
-
-        // Search through the payloads for a MUC user status.
-
-        if let Some(muc) = presence
-            .payloads
-            .iter()
-            .filter_map(|p| MucUser::try_from(p.clone()).ok())
-            .next()
-        {
-            // If a MUC user status was found, search through the statuses for a self-presence.
-            if muc.status.iter().any(|s| *s == Status::SelfPresence) {
-                // If a self-presence was found, then the stanza is about the client's own presence.
-
-                match presence.type_ {
-                    PresenceType::None => {
-                        // According to https://xmpp.org/extensions/xep-0045.html#enter-pres, no type should be seen as "available".
-                        events.push(Event::RoomJoined(from.clone()));
-                    }
-                    PresenceType::Unavailable => {
-                        // According to https://xmpp.org/extensions/xep-0045.html#exit, the server will use type "unavailable" to notify the client that it has left the room/
-                        events.push(Event::RoomLeft(from.clone()));
-                    }
-                    _ => unimplemented!("Presence type {:?}", presence.type_), // TODO: What to do here?
-                }
-            }
-        }
-
-        // Return the list of events.
-        events
-    }
-
     /// Wait for new events.
     ///
     /// # Returns
@@ -581,7 +541,7 @@ impl Agent {
                         events.extend(new_events);
                     } else if elem.is("presence", "jabber:client") {
                         let presence = Presence::try_from(elem).unwrap();
-                        let new_events = self.handle_presence(presence).await;
+                        let new_events = presence::handle_presence(self, presence).await;
                         events.extend(new_events);
                     } else if elem.is("error", "http://etherx.jabber.org/streams") {
                         println!("Received a fatal stream error: {}", String::from(&elem));
