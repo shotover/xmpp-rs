@@ -40,6 +40,7 @@ pub use tokio_xmpp::{BareJid, Element, FullJid, Jid};
 #[macro_use]
 extern crate log;
 
+mod message;
 mod pubsub;
 
 pub type Error = tokio_xmpp::Error;
@@ -496,70 +497,6 @@ impl Agent {
         }
     }
 
-    async fn handle_message(&mut self, message: Message) -> Vec<Event> {
-        let mut events = vec![];
-        let from = message.from.clone().unwrap();
-        let langs: Vec<&str> = self.lang.iter().map(String::as_str).collect();
-        match message.get_best_body(langs) {
-            Some((_lang, body)) => match message.type_ {
-                MessageType::Groupchat => {
-                    let event = match from.clone() {
-                        Jid::Full(full) => Event::RoomMessage(
-                            message.id.clone(),
-                            from.to_bare(),
-                            full.resource_str().to_owned(),
-                            body.clone(),
-                        ),
-                        Jid::Bare(bare) => {
-                            Event::ServiceMessage(message.id.clone(), bare, body.clone())
-                        }
-                    };
-                    events.push(event)
-                }
-                MessageType::Chat | MessageType::Normal => {
-                    let mut found_special_message = false;
-
-                    for payload in &message.payloads {
-                        if let Ok(_) = MucUser::try_from(payload.clone()) {
-                            let event = match from.clone() {
-                                Jid::Bare(bare) => {
-                                    // TODO: Can a service message be of type Chat/Normal and not Groupchat?
-                                    warn!("Received misformed MessageType::Chat in muc#user namespace from a bare JID.");
-                                    Event::ServiceMessage(message.id.clone(), bare, body.clone())
-                                }
-                                Jid::Full(full) => Event::RoomPrivateMessage(
-                                    message.id.clone(),
-                                    full.to_bare(),
-                                    full.resource_str().to_owned(),
-                                    body.clone(),
-                                ),
-                            };
-
-                            found_special_message = true;
-                            events.push(event);
-                        }
-                    }
-
-                    if !found_special_message {
-                        let event =
-                            Event::ChatMessage(message.id.clone(), from.to_bare(), body.clone());
-                        events.push(event)
-                    }
-                }
-                _ => (),
-            },
-            None => (),
-        }
-        for child in message.payloads {
-            if child.is("event", ns::PUBSUB_EVENT) {
-                let new_events = pubsub::handle_event(&from, child, self).await;
-                events.extend(new_events);
-            }
-        }
-
-        events
-    }
-
     /// Translate a `Presence` stanza into a list of higher-level `Event`s.
     async fn handle_presence(&mut self, presence: Presence) -> Vec<Event> {
         // Allocate an empty vector to store the events.
@@ -640,7 +577,7 @@ impl Agent {
                         events.extend(new_events);
                     } else if elem.is("message", "jabber:client") {
                         let message = Message::try_from(elem).unwrap();
-                        let new_events = self.handle_message(message).await;
+                        let new_events = message::handle_message(self, message).await;
                         events.extend(new_events);
                     } else if elem.is("presence", "jabber:client") {
                         let presence = Presence::try_from(elem).unwrap();
