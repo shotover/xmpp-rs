@@ -7,20 +7,16 @@
 #![deny(bare_trait_objects)]
 
 use futures::stream::StreamExt;
-use reqwest::{
-    header::HeaderMap as ReqwestHeaderMap, Body as ReqwestBody, Client as ReqwestClient,
-};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
 use tokio::fs::File;
-use tokio_util::codec::{BytesCodec, FramedRead};
 pub use tokio_xmpp::parsers;
 use tokio_xmpp::parsers::{
     bookmarks, bookmarks2,
     caps::{compute_disco, hash_caps, Caps},
     disco::{DiscoInfoQuery, DiscoInfoResult, Feature, Identity},
     hashes::Algo,
-    http_upload::{Header as HttpUploadHeader, SlotRequest, SlotResult},
+    http_upload::SlotRequest,
     iq::Iq,
     message::{Body, Message, MessageType},
     muc::{user::MucUser, Muc},
@@ -40,6 +36,7 @@ pub mod iq;
 pub mod message;
 pub mod presence;
 pub mod pubsub;
+pub mod upload;
 
 pub type Error = tokio_xmpp::Error;
 
@@ -483,53 +480,6 @@ impl Agent {
             .push((String::from("upload1"), to, path.to_path_buf()));
         self.client.send_stanza(request.into()).await.unwrap();
     }
-}
-
-async fn handle_upload_result(
-    from: &Jid,
-    iqid: String,
-    elem: Element,
-    agent: &mut Agent,
-) -> impl IntoIterator<Item = Event> {
-    let mut res: Option<(usize, PathBuf)> = None;
-
-    for (i, (id, to, filepath)) in agent.uploads.iter().enumerate() {
-        if to == from && id == &iqid {
-            res = Some((i, filepath.to_path_buf()));
-            break;
-        }
-    }
-
-    if let Some((index, file)) = res {
-        agent.uploads.remove(index);
-        let slot = SlotResult::try_from(elem).unwrap();
-
-        let mut headers = ReqwestHeaderMap::new();
-        for header in slot.put.headers {
-            let (attr, val) = match header {
-                HttpUploadHeader::Authorization(val) => ("Authorization", val),
-                HttpUploadHeader::Cookie(val) => ("Cookie", val),
-                HttpUploadHeader::Expires(val) => ("Expires", val),
-            };
-            headers.insert(attr, val.parse().unwrap());
-        }
-
-        let web = ReqwestClient::new();
-        let stream = FramedRead::new(File::open(file).await.unwrap(), BytesCodec::new());
-        let body = ReqwestBody::wrap_stream(stream);
-        let res = web
-            .put(slot.put.url.as_str())
-            .headers(headers)
-            .body(body)
-            .send()
-            .await
-            .unwrap();
-        if res.status() == 201 {
-            return vec![Event::HttpUploadedFile(slot.get.url)];
-        }
-    }
-
-    return vec![];
 }
 
 #[cfg(test)]
