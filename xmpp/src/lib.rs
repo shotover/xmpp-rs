@@ -10,9 +10,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
 pub use tokio_xmpp::parsers;
 use tokio_xmpp::parsers::{
-    caps::{compute_disco, hash_caps, Caps},
     disco::DiscoInfoResult,
-    hashes::Algo,
     message::{Body, Message, MessageType},
     muc::{user::MucUser, Muc},
     presence::{Presence, Type as PresenceType},
@@ -156,16 +154,6 @@ impl Agent {
             .bodies
             .insert(String::from(lang), Body(String::from(text)));
         let _ = self.client.send_stanza(message.into()).await;
-    }
-
-    fn make_initial_presence(disco: &DiscoInfoResult, node: &str) -> Presence {
-        let caps_data = compute_disco(disco);
-        let hash = hash_caps(&caps_data, Algo::Sha_1).unwrap();
-        let caps = Caps::new(node, hash);
-
-        let mut presence = Presence::new(PresenceType::None);
-        presence.add_payload(caps);
-        presence
     }
 
     /// Wait for new events.

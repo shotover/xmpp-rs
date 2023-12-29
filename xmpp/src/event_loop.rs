@@ -26,7 +26,8 @@ pub async fn wait_for_events(agent: &mut Agent) -> Option<Vec<Event>> {
 
         match event {
             TokioXmppEvent::Online { resumed: false, .. } => {
-                let presence = Agent::make_initial_presence(&agent.disco, &agent.node).into();
+                let presence =
+                    presence::send::make_initial_presence(&agent.disco, &agent.node).into();
                 let _ = agent.client.send_stanza(presence).await;
                 events.push(Event::Online);
                 // TODO: only send this when the ContactList feature is enabled.
