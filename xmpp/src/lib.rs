@@ -7,6 +7,7 @@
 #![deny(bare_trait_objects)]
 
 pub use tokio_xmpp::parsers;
+use tokio_xmpp::{AsyncClient, AsyncServerConfig};
 pub use tokio_xmpp::{BareJid, Element, FullJid, Jid};
 #[macro_use]
 extern crate log;
@@ -30,6 +31,8 @@ pub use agent::Agent;
 pub use builder::{ClientBuilder, ClientType};
 pub use event::Event;
 pub use feature::ClientFeature;
+
+type TokioXmppClient = AsyncClient<AsyncServerConfig>;
 
 pub type Error = tokio_xmpp::Error;
 pub type Id = Option<String>;

@@ -10,10 +10,10 @@ use tokio_xmpp::{
         disco::{DiscoInfoResult, Feature, Identity},
         ns,
     },
-    AsyncClient as TokioXmppClient, BareJid, Jid,
+    BareJid, Jid,
 };
 
-use crate::{Agent, ClientFeature};
+use crate::{Agent, ClientFeature, TokioXmppClient};
 
 #[derive(Debug)]
 pub enum ClientType {

@@ -19,8 +19,11 @@ mod happy_eyeballs;
 pub mod stream_features;
 pub mod xmpp_stream;
 pub use client::{
-    async_client::Client as AsyncClient, async_client::Config as AsyncConfig,
-    async_client::ServerConfig as AsyncServerConfig, simple_client::Client as SimpleClient,
+    async_client::{
+        AsyncReadAndWrite, Client as AsyncClient, Config as AsyncConfig,
+        ServerConfig as AsyncServerConfig, ServerConnector as AsyncServerConnector,
+    },
+    simple_client::Client as SimpleClient,
 };
 mod component;
 pub use crate::component::Component;

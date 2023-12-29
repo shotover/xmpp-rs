@@ -8,10 +8,9 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
 pub use tokio_xmpp::parsers;
 use tokio_xmpp::parsers::{disco::DiscoInfoResult, message::MessageType};
-use tokio_xmpp::AsyncClient as TokioXmppClient;
 pub use tokio_xmpp::{BareJid, Element, FullJid, Jid};
 
-use crate::{event_loop, message, muc, upload, Error, Event, RoomNick};
+use crate::{event_loop, message, muc, upload, Error, Event, RoomNick, TokioXmppClient};
 
 pub struct Agent {
     pub(crate) client: TokioXmppClient,
