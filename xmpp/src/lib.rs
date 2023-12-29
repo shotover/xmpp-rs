@@ -21,7 +21,7 @@ use tokio_xmpp::parsers::{
     disco::{DiscoInfoQuery, DiscoInfoResult, Feature, Identity},
     hashes::Algo,
     http_upload::{Header as HttpUploadHeader, SlotRequest, SlotResult},
-    iq::{Iq, IqType},
+    iq::Iq,
     message::{Body, Message, MessageType},
     muc::{user::MucUser, Muc},
     ns,
@@ -29,7 +29,6 @@ use tokio_xmpp::parsers::{
     private::Query as PrivateXMLQuery,
     pubsub::pubsub::{Items, PubSub},
     roster::{Item as RosterItem, Roster},
-    stanza_error::{DefinedCondition, ErrorType, StanzaError},
     Error as ParsersError,
 };
 use tokio_xmpp::{AsyncClient as TokioXmppClient, Event as TokioXmppEvent};
@@ -37,6 +36,7 @@ pub use tokio_xmpp::{BareJid, Element, FullJid, Jid};
 #[macro_use]
 extern crate log;
 
+pub mod iq;
 pub mod message;
 pub mod presence;
 pub mod pubsub;
@@ -333,95 +333,6 @@ impl Agent {
         presence
     }
 
-    async fn handle_iq(&mut self, iq: Iq) -> Vec<Event> {
-        let mut events = vec![];
-        let from = iq
-            .from
-            .clone()
-            .unwrap_or_else(|| self.client.bound_jid().unwrap().clone());
-        if let IqType::Get(payload) = iq.payload {
-            if payload.is("query", ns::DISCO_INFO) {
-                let query = DiscoInfoQuery::try_from(payload);
-                match query {
-                    Ok(query) => {
-                        let mut disco_info = self.disco.clone();
-                        disco_info.node = query.node;
-                        let iq = Iq::from_result(iq.id, Some(disco_info))
-                            .with_to(iq.from.unwrap())
-                            .into();
-                        let _ = self.client.send_stanza(iq).await;
-                    }
-                    Err(err) => {
-                        let error = StanzaError::new(
-                            ErrorType::Modify,
-                            DefinedCondition::BadRequest,
-                            "en",
-                            &format!("{}", err),
-                        );
-                        let iq = Iq::from_error(iq.id, error)
-                            .with_to(iq.from.unwrap())
-                            .into();
-                        let _ = self.client.send_stanza(iq).await;
-                    }
-                }
-            } else {
-                // We MUST answer unhandled get iqs with a service-unavailable error.
-                let error = StanzaError::new(
-                    ErrorType::Cancel,
-                    DefinedCondition::ServiceUnavailable,
-                    "en",
-                    "No handler defined for this kind of iq.",
-                );
-                let iq = Iq::from_error(iq.id, error)
-                    .with_to(iq.from.unwrap())
-                    .into();
-                let _ = self.client.send_stanza(iq).await;
-            }
-        } else if let IqType::Result(Some(payload)) = iq.payload {
-            // TODO: move private iqs like this one somewhere else, for
-            // security reasons.
-            if payload.is("query", ns::ROSTER) && Some(from.clone()) == iq.from {
-                let roster = Roster::try_from(payload).unwrap();
-                for item in roster.items.into_iter() {
-                    events.push(Event::ContactAdded(item));
-                }
-            } else if payload.is("pubsub", ns::PUBSUB) {
-                let new_events = pubsub::handle_iq_result(&from, payload);
-                events.extend(new_events);
-            } else if payload.is("slot", ns::HTTP_UPLOAD) {
-                let new_events = handle_upload_result(&from, iq.id, payload, self).await;
-                events.extend(new_events);
-            } else if payload.is("query", ns::PRIVATE) {
-                match PrivateXMLQuery::try_from(payload) {
-                    Ok(query) => {
-                        for conf in query.storage.conferences {
-                            let (jid, room) = conf.into_bookmarks2();
-                            events.push(Event::JoinRoom(jid, room));
-                        }
-                    }
-                    Err(e) => {
-                        panic!("Wrong XEP-0048 v1.0 Bookmark format: {}", e);
-                    }
-                }
-            } else if payload.is("query", ns::DISCO_INFO) {
-                self.handle_disco_info_result_payload(payload, from).await;
-            }
-        } else if let IqType::Set(_) = iq.payload {
-            // We MUST answer unhandled set iqs with a service-unavailable error.
-            let error = StanzaError::new(
-                ErrorType::Cancel,
-                DefinedCondition::ServiceUnavailable,
-                "en",
-                "No handler defined for this kind of iq.",
-            );
-            let iq = Iq::from_error(iq.id, error)
-                .with_to(iq.from.unwrap())
-                .into();
-            let _ = self.client.send_stanza(iq).await;
-        }
-        events
-    }
-
     // This method is a workaround due to prosody bug https://issues.prosody.im/1664
     // FIXME: To be removed in the future
     // The server doesn't return disco#info feature when querying the account
@@ -533,7 +444,7 @@ impl Agent {
                 TokioXmppEvent::Stanza(elem) => {
                     if elem.is("iq", "jabber:client") {
                         let iq = Iq::try_from(elem).unwrap();
-                        let new_events = self.handle_iq(iq).await;
+                        let new_events = iq::handle_iq(self, iq).await;
                         events.extend(new_events);
                     } else if elem.is("message", "jabber:client") {
                         let message = Message::try_from(elem).unwrap();
