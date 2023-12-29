@@ -9,10 +9,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
 pub use tokio_xmpp::parsers;
-use tokio_xmpp::parsers::{
-    disco::DiscoInfoResult,
-    message::{Body, Message, MessageType},
-};
+use tokio_xmpp::parsers::{disco::DiscoInfoResult, message::MessageType};
 use tokio_xmpp::AsyncClient as TokioXmppClient;
 pub use tokio_xmpp::{BareJid, Element, FullJid, Jid};
 #[macro_use]
@@ -104,12 +101,7 @@ impl Agent {
         lang: &str,
         text: &str,
     ) {
-        let mut message = Message::new(Some(recipient));
-        message.type_ = type_;
-        message
-            .bodies
-            .insert(String::from(lang), Body(String::from(text)));
-        let _ = self.client.send_stanza(message.into()).await;
+        message::send::send_message(self, recipient, type_, lang, text).await
     }
 
     pub async fn send_room_private_message(
