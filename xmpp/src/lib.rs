@@ -9,13 +9,11 @@
 use futures::stream::StreamExt;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
-use tokio::fs::File;
 pub use tokio_xmpp::parsers;
 use tokio_xmpp::parsers::{
     caps::{compute_disco, hash_caps, Caps},
     disco::{DiscoInfoQuery, DiscoInfoResult},
     hashes::Algo,
-    http_upload::SlotRequest,
     iq::Iq,
     message::{Body, Message, MessageType},
     muc::{user::MucUser, Muc},
@@ -235,19 +233,7 @@ impl Agent {
     }
 
     pub async fn upload_file_with(&mut self, service: &str, path: &Path) {
-        let name = path.file_name().unwrap().to_str().unwrap().to_string();
-        let file = File::open(path).await.unwrap();
-        let size = file.metadata().await.unwrap().len();
-        let slot_request = SlotRequest {
-            filename: name,
-            size: size,
-            content_type: None,
-        };
-        let to = service.parse::<Jid>().unwrap();
-        let request = Iq::from_get("upload1", slot_request).with_to(to.clone());
-        self.uploads
-            .push((String::from("upload1"), to, path.to_path_buf()));
-        self.client.send_stanza(request.into()).await.unwrap();
+        upload::send::upload_file_with(self, service, path).await
     }
 }
 
