@@ -12,8 +12,7 @@ pub use tokio_xmpp::parsers;
 use tokio_xmpp::parsers::{
     disco::DiscoInfoResult,
     message::{Body, Message, MessageType},
-    muc::{user::MucUser, Muc},
-    presence::{Presence, Type as PresenceType},
+    muc::user::MucUser,
 };
 use tokio_xmpp::AsyncClient as TokioXmppClient;
 pub use tokio_xmpp::{BareJid, Element, FullJid, Jid};
@@ -27,6 +26,7 @@ pub mod event_loop;
 pub mod feature;
 pub mod iq;
 pub mod message;
+pub mod muc;
 pub mod presence;
 pub mod pubsub;
 pub mod upload;
@@ -63,17 +63,7 @@ impl Agent {
         lang: &str,
         status: &str,
     ) {
-        let mut muc = Muc::new();
-        if let Some(password) = password {
-            muc = muc.with_password(password);
-        }
-
-        let nick = nick.unwrap_or_else(|| self.default_nick.read().unwrap().clone());
-        let room_jid = room.with_resource_str(&nick).unwrap();
-        let mut presence = Presence::new(PresenceType::None).with_to(room_jid);
-        presence.add_payload(muc);
-        presence.set_status(String::from(lang), String::from(status));
-        let _ = self.client.send_stanza(presence.into()).await;
+        muc::room::join_room(self, room, nick, password, lang, status).await
     }
 
     /// Send a "leave room" request to the server (specifically, an "unavailable" presence stanza).
@@ -105,24 +95,7 @@ impl Agent {
         lang: impl Into<String>,
         status: impl Into<String>,
     ) {
-        // XEP-0045 specifies that, to leave a room, the client must send a presence stanza
-        // with type="unavailable".
-        let mut presence = Presence::new(PresenceType::Unavailable).with_to(
-            room_jid
-                .with_resource_str(nickname.as_str())
-                .expect("Invalid room JID after adding resource part."),
-        );
-
-        // Optionally, the client may include a status message in the presence stanza.
-        // TODO: Should this be optional? The XEP says "MAY", but the method signature requires the arguments.
-        // XEP-0045: "The occupant MAY include normal <status/> information in the unavailable presence stanzas"
-        presence.set_status(lang, status);
-
-        // Send the presence stanza.
-        if let Err(e) = self.client.send_stanza(presence.into()).await {
-            // Report any errors to the log.
-            error!("Failed to send leave room presence: {}", e);
-        }
+        muc::room::leave_room(self, room_jid, nickname, lang, status).await
     }
 
     pub async fn send_message(
