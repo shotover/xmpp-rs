@@ -60,7 +60,7 @@ pub async fn wait_for_events(agent: &mut Agent) -> Option<Vec<Event>> {
                     events.extend(new_events);
                 } else if elem.is("presence", "jabber:client") {
                     let presence = Presence::try_from(elem).unwrap();
-                    let new_events = presence::handle_presence(agent, presence).await;
+                    let new_events = presence::receive::handle_presence(agent, presence).await;
                     events.extend(new_events);
                 } else if elem.is("error", "http://etherx.jabber.org/streams") {
                     println!("Received a fatal stream error: {}", String::from(&elem));
