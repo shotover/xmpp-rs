@@ -13,7 +13,7 @@ use tokio_xmpp::parsers::{
     stanza_error::{DefinedCondition, ErrorType, StanzaError},
 };
 
-use crate::{pubsub, upload, Agent, Event};
+use crate::{disco, pubsub, upload, Agent, Event};
 
 pub async fn handle_iq(agent: &mut Agent, iq: Iq) -> Vec<Event> {
     let mut events = vec![];
@@ -86,7 +86,7 @@ pub async fn handle_iq(agent: &mut Agent, iq: Iq) -> Vec<Event> {
                 }
             }
         } else if payload.is("query", ns::DISCO_INFO) {
-            agent.handle_disco_info_result_payload(payload, from).await;
+            disco::handle_disco_info_result_payload(agent, payload, from).await;
         }
     } else if let IqType::Set(_) = iq.payload {
         // We MUST answer unhandled set iqs with a service-unavailable error.

@@ -12,20 +12,15 @@ use std::sync::{Arc, RwLock};
 use tokio::fs::File;
 pub use tokio_xmpp::parsers;
 use tokio_xmpp::parsers::{
-    bookmarks,
     caps::{compute_disco, hash_caps, Caps},
-    disco::{DiscoInfoQuery, DiscoInfoResult, Feature},
+    disco::{DiscoInfoQuery, DiscoInfoResult},
     hashes::Algo,
     http_upload::SlotRequest,
     iq::Iq,
     message::{Body, Message, MessageType},
     muc::{user::MucUser, Muc},
-    ns,
     presence::{Presence, Type as PresenceType},
-    private::Query as PrivateXMLQuery,
-    pubsub::pubsub::{Items, PubSub},
     roster::Roster,
-    Error as ParsersError,
 };
 use tokio_xmpp::{AsyncClient as TokioXmppClient, Event as TokioXmppEvent};
 pub use tokio_xmpp::{BareJid, Element, FullJid, Jid};
@@ -33,6 +28,7 @@ pub use tokio_xmpp::{BareJid, Element, FullJid, Jid};
 extern crate log;
 
 pub mod builder;
+pub mod disco;
 pub mod event;
 pub mod feature;
 pub mod iq;
@@ -174,79 +170,6 @@ impl Agent {
         let mut presence = Presence::new(PresenceType::None);
         presence.add_payload(caps);
         presence
-    }
-
-    // This method is a workaround due to prosody bug https://issues.prosody.im/1664
-    // FIXME: To be removed in the future
-    // The server doesn't return disco#info feature when querying the account
-    // so we add it manually because we know it's true
-    async fn handle_disco_info_result_payload(&mut self, payload: Element, from: Jid) {
-        match DiscoInfoResult::try_from(payload.clone()) {
-            Ok(disco) => {
-                self.handle_disco_info_result(disco, from).await;
-            }
-            Err(e) => match e {
-                ParsersError::ParseError(reason) => {
-                    if reason == "disco#info feature not present in disco#info." {
-                        let mut payload = payload.clone();
-                        let disco_feature =
-                            Feature::new("http://jabber.org/protocol/disco#info").into();
-                        payload.append_child(disco_feature);
-                        match DiscoInfoResult::try_from(payload) {
-                            Ok(disco) => {
-                                self.handle_disco_info_result(disco, from).await;
-                            }
-                            Err(e) => {
-                                panic!("Wrong disco#info format after workaround: {}", e)
-                            }
-                        }
-                    } else {
-                        panic!(
-                            "Wrong disco#info format (reason cannot be worked around): {}",
-                            e
-                        )
-                    }
-                }
-                _ => panic!("Wrong disco#info format: {}", e),
-            },
-        }
-    }
-
-    async fn handle_disco_info_result(&mut self, disco: DiscoInfoResult, from: Jid) {
-        // Safe unwrap because no DISCO is received when we are not online
-        if from == self.client.bound_jid().unwrap().to_bare() && self.awaiting_disco_bookmarks_type
-        {
-            info!("Received disco info about bookmarks type");
-            // Trigger bookmarks query
-            // TODO: only send this when the JoinRooms feature is enabled.
-            self.awaiting_disco_bookmarks_type = false;
-            let mut perform_bookmarks2 = false;
-            info!("{:#?}", disco.features);
-            for feature in disco.features {
-                if feature.var == "urn:xmpp:bookmarks:1#compat" {
-                    perform_bookmarks2 = true;
-                }
-            }
-
-            if perform_bookmarks2 {
-                // XEP-0402 bookmarks (modern)
-                let iq =
-                    Iq::from_get("bookmarks", PubSub::Items(Items::new(ns::BOOKMARKS2))).into();
-                let _ = self.client.send_stanza(iq).await;
-            } else {
-                // XEP-0048 v1.0 bookmarks (legacy)
-                let iq = Iq::from_get(
-                    "bookmarks-legacy",
-                    PrivateXMLQuery {
-                        storage: bookmarks::Storage::new(),
-                    },
-                )
-                .into();
-                let _ = self.client.send_stanza(iq).await;
-            }
-        } else {
-            unimplemented!("Ignored disco#info response from {}", from);
-        }
     }
 
     /// Wait for new events.
