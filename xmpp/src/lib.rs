@@ -12,7 +12,7 @@ use std::sync::{Arc, RwLock};
 use tokio::fs::File;
 pub use tokio_xmpp::parsers;
 use tokio_xmpp::parsers::{
-    bookmarks, bookmarks2,
+    bookmarks,
     caps::{compute_disco, hash_caps, Caps},
     disco::{DiscoInfoQuery, DiscoInfoResult, Feature},
     hashes::Algo,
@@ -24,7 +24,7 @@ use tokio_xmpp::parsers::{
     presence::{Presence, Type as PresenceType},
     private::Query as PrivateXMLQuery,
     pubsub::pubsub::{Items, PubSub},
-    roster::{Item as RosterItem, Roster},
+    roster::Roster,
     Error as ParsersError,
 };
 use tokio_xmpp::{AsyncClient as TokioXmppClient, Event as TokioXmppEvent};
@@ -33,6 +33,7 @@ pub use tokio_xmpp::{BareJid, Element, FullJid, Jid};
 extern crate log;
 
 pub mod builder;
+pub mod event;
 pub mod feature;
 pub mod iq;
 pub mod message;
@@ -42,34 +43,12 @@ pub mod upload;
 
 // Module re-exports
 pub use builder::{ClientBuilder, ClientType};
+pub use event::Event;
 pub use feature::ClientFeature;
 
 pub type Error = tokio_xmpp::Error;
 pub type Id = Option<String>;
 pub type RoomNick = String;
-
-#[derive(Debug)]
-pub enum Event {
-    Online,
-    Disconnected(Error),
-    ContactAdded(RosterItem),
-    ContactRemoved(RosterItem),
-    ContactChanged(RosterItem),
-    #[cfg(feature = "avatars")]
-    AvatarRetrieved(Jid, String),
-    ChatMessage(Id, BareJid, Body),
-    JoinRoom(BareJid, bookmarks2::Conference),
-    LeaveRoom(BareJid),
-    LeaveAllRooms,
-    RoomJoined(BareJid),
-    RoomLeft(BareJid),
-    RoomMessage(Id, BareJid, RoomNick, Body),
-    /// A private message received from a room, containing the message ID, the room's BareJid,
-    /// the sender's nickname, and the message body.
-    RoomPrivateMessage(Id, BareJid, RoomNick, Body),
-    ServiceMessage(Id, BareJid, Body),
-    HttpUploadedFile(String),
-}
 
 pub struct Agent {
     client: TokioXmppClient,
