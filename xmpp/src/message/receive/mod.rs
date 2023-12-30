@@ -15,26 +15,24 @@ use tokio_xmpp::{
 
 use crate::{pubsub, Agent, Event};
 
+pub mod group_chat;
+
 pub async fn handle_message(agent: &mut Agent, message: Message) -> Vec<Event> {
     let mut events = vec![];
     let from = message.from.clone().unwrap();
-    let langs: Vec<&str> = agent.lang.iter().map(String::as_str).collect();
+    //let langs: Vec<&str> = agent.lang.iter().map(String::as_str).collect();
+    let langs = agent.lang.to_vec();
+    let langs = langs.iter().map(|x| x.as_str()).collect();
+
+    match message.type_ {
+        MessageType::Groupchat => {
+            group_chat::handle_message_group_chat(agent, &mut events, from.clone(), &message).await;
+        }
+        _ => {}
+    }
+
     match message.get_best_body(langs) {
         Some((_lang, body)) => match message.type_ {
-            MessageType::Groupchat => {
-                let event = match from.clone() {
-                    Jid::Full(full) => Event::RoomMessage(
-                        message.id.clone(),
-                        from.to_bare(),
-                        full.resource_str().to_owned(),
-                        body.clone(),
-                    ),
-                    Jid::Bare(bare) => {
-                        Event::ServiceMessage(message.id.clone(), bare, body.clone())
-                    }
-                };
-                events.push(event)
-            }
             MessageType::Chat | MessageType::Normal => {
                 let mut found_special_message = false;
 
