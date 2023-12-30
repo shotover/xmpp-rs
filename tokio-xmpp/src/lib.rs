@@ -20,9 +20,9 @@ pub mod stream_features;
 pub mod xmpp_stream;
 pub use client::{
     async_client::{
-        AsyncReadAndWrite, Client as AsyncClient, Config as AsyncConfig,
-        ServerConfig as AsyncServerConfig, ServerConnector as AsyncServerConnector,
+        Client as AsyncClient, Config as AsyncConfig, ServerConfig as AsyncServerConfig,
     },
+    connect::{client_login, AsyncReadAndWrite, ServerConnector},
     simple_client::Client as SimpleClient,
 };
 mod component;

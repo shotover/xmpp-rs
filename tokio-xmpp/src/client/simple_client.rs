@@ -1,117 +1,49 @@
 use futures::{sink::SinkExt, Sink, Stream};
-use idna;
-#[cfg(feature = "tls-native")]
-use log::warn;
-use sasl::common::{ChannelBinding, Credentials};
 use std::pin::Pin;
 use std::str::FromStr;
 use std::task::{Context, Poll};
-use tokio::net::TcpStream;
-#[cfg(feature = "tls-native")]
-use tokio_native_tls::TlsStream;
-#[cfg(all(feature = "tls-rust", not(feature = "tls-native")))]
-use tokio_rustls::{client::TlsStream, rustls::ProtocolVersion};
 use tokio_stream::StreamExt;
 use xmpp_parsers::{ns, Element, Jid};
 
-use super::auth::auth;
-use super::bind::bind;
-use crate::happy_eyeballs::connect_with_srv;
-use crate::starttls::starttls;
 use crate::xmpp_codec::Packet;
-use crate::xmpp_stream::{self, add_stanza_id};
-use crate::{Error, ProtocolError};
+use crate::xmpp_stream::{add_stanza_id, XMPPStream};
+use crate::{client_login, AsyncServerConfig, Error, ServerConnector};
 
 /// A simple XMPP client connection
 ///
 /// This implements the `futures` crate's [`Stream`](#impl-Stream) and
 /// [`Sink`](#impl-Sink<Packet>) traits.
-pub struct Client {
-    stream: XMPPStream,
+pub struct Client<C: ServerConnector> {
+    stream: XMPPStream<C::Stream>,
 }
 
-type XMPPStream = xmpp_stream::XMPPStream<TlsStream<TcpStream>>;
-
-impl Client {
+impl Client<AsyncServerConfig> {
     /// Start a new XMPP client and wait for a usable session
     pub async fn new<P: Into<String>>(jid: &str, password: P) -> Result<Self, Error> {
         let jid = Jid::from_str(jid)?;
-        let client = Self::new_with_jid(jid, password.into()).await?;
-        Ok(client)
+        Self::new_with_jid(jid, password.into()).await
     }
 
     /// Start a new client given that the JID is already parsed.
     pub async fn new_with_jid(jid: Jid, password: String) -> Result<Self, Error> {
-        let stream = Self::connect(jid, password).await?;
+        Self::new_with_jid_connector(AsyncServerConfig::UseSrv, jid, password).await
+    }
+}
+
+impl<C: ServerConnector> Client<C> {
+    /// Start a new client given that the JID is already parsed.
+    pub async fn new_with_jid_connector(
+        connector: C,
+        jid: Jid,
+        password: String,
+    ) -> Result<Self, Error> {
+        let stream = client_login(connector, jid, password).await?;
         Ok(Client { stream })
     }
 
     /// Get direct access to inner XMPP Stream
-    pub fn into_inner(self) -> XMPPStream {
+    pub fn into_inner(self) -> XMPPStream<C::Stream> {
         self.stream
-    }
-
-    async fn connect(jid: Jid, password: String) -> Result<XMPPStream, Error> {
-        let username = jid.node_str().unwrap();
-        let password = password;
-        let domain = idna::domain_to_ascii(jid.domain_str()).map_err(|_| Error::Idna)?;
-
-        // TCP connection
-        let tcp_stream = connect_with_srv(&domain, "_xmpp-client._tcp", 5222).await?;
-
-        // Unencryped XMPPStream
-        let xmpp_stream =
-            xmpp_stream::XMPPStream::start(tcp_stream, jid.clone(), ns::JABBER_CLIENT.to_owned())
-                .await?;
-
-        let channel_binding;
-        let xmpp_stream = if xmpp_stream.stream_features.can_starttls() {
-            // TlsStream
-            let tls_stream = starttls(xmpp_stream).await?;
-            #[cfg(feature = "tls-native")]
-            {
-                warn!("tls-native doesn’t support channel binding, please use tls-rust if you want this feature!");
-                channel_binding = ChannelBinding::None;
-            }
-            #[cfg(all(feature = "tls-rust", not(feature = "tls-native")))]
-            {
-                let (_, connection) = tls_stream.get_ref();
-                match connection.protocol_version() {
-                    // TODO: Add support for TLS 1.2 and earlier.
-                    Some(ProtocolVersion::TLSv1_3) => {
-                        let data = vec![0u8; 32];
-                        let data = connection.export_keying_material(
-                            data,
-                            b"EXPORTER-Channel-Binding",
-                            None,
-                        )?;
-                        channel_binding = ChannelBinding::TlsExporter(data);
-                    }
-                    _ => {
-                        channel_binding = ChannelBinding::None;
-                    }
-                }
-            }
-            // Encrypted XMPPStream
-            xmpp_stream::XMPPStream::start(tls_stream, jid.clone(), ns::JABBER_CLIENT.to_owned())
-                .await?
-        } else {
-            return Err(Error::Protocol(ProtocolError::NoTls));
-        };
-
-        let creds = Credentials::default()
-            .with_username(username)
-            .with_password(password)
-            .with_channel_binding(channel_binding);
-        // Authenticated (unspecified) stream
-        let stream = auth(xmpp_stream, creds).await?;
-        // Authenticated XMPPStream
-        let xmpp_stream =
-            xmpp_stream::XMPPStream::start(stream, jid, ns::JABBER_CLIENT.to_owned()).await?;
-
-        // XMPPStream bound to user session
-        let xmpp_stream = bind(xmpp_stream).await?;
-        Ok(xmpp_stream)
     }
 
     /// Get the client's bound JID (the one reported by the XMPP
@@ -150,7 +82,7 @@ impl Client {
 ///
 /// In an `async fn` you may want to use this with `use
 /// futures::stream::StreamExt;`
-impl Stream for Client {
+impl<C: ServerConnector> Stream for Client<C> {
     type Item = Result<Element, Error>;
 
     /// Low-level read on the XMPP stream
@@ -177,7 +109,7 @@ impl Stream for Client {
 /// Outgoing XMPP packets
 ///
 /// See `send_stanza()` for an `async fn`
-impl Sink<Packet> for Client {
+impl<C: ServerConnector> Sink<Packet> for Client<C> {
     type Error = Error;
 
     fn start_send(mut self: Pin<&mut Self>, item: Packet) -> Result<(), Self::Error> {

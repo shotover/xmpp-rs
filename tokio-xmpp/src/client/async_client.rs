@@ -1,5 +1,5 @@
 use futures::{sink::SinkExt, task::Poll, Future, Sink, Stream};
-use sasl::common::{ChannelBinding, Credentials};
+use sasl::common::ChannelBinding;
 use std::mem::replace;
 use std::pin::Pin;
 use std::task::Context;
@@ -7,14 +7,13 @@ use tokio::net::TcpStream;
 use tokio::task::JoinHandle;
 use xmpp_parsers::{ns, Element, Jid};
 
-use super::auth::auth;
-use super::bind::bind;
+use super::connect::{AsyncReadAndWrite, ServerConnector};
 use crate::event::Event;
 use crate::happy_eyeballs::{connect_to_host, connect_with_srv};
 use crate::starttls::starttls;
 use crate::xmpp_codec::Packet;
 use crate::xmpp_stream::{self, add_stanza_id, XMPPStream};
-use crate::{Error, ProtocolError};
+use crate::{client_login, Error, ProtocolError};
 #[cfg(feature = "tls-native")]
 use tokio_native_tls::TlsStream;
 #[cfg(all(feature = "tls-rust", not(feature = "tls-native")))]
@@ -42,17 +41,6 @@ pub struct Config<C> {
     pub password: String,
     /// server configuration for the account
     pub server: C,
-}
-
-/// Trait called to connect to an XMPP server, perhaps called multiple times
-pub trait ServerConnector: Clone + core::fmt::Debug + Send + Unpin + 'static {
-    /// The type of Stream this ServerConnector produces
-    type Stream: AsyncReadAndWrite;
-    /// This must return the connection ready to login, ie if starttls is involved, after TLS has been started, and then after the <stream headers are exchanged
-    fn connect(
-        &self,
-        jid: &Jid,
-    ) -> impl std::future::Future<Output = Result<XMPPStream<Self::Stream>, Error>> + Send;
 }
 
 /// XMPP server connection configuration
@@ -96,11 +84,34 @@ impl ServerConnector for ServerConfig {
             return Err(Error::Protocol(ProtocolError::NoTls));
         }
     }
-}
 
-/// trait used by XMPPStream type
-pub trait AsyncReadAndWrite: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin + Send {}
-impl<T: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin + Send> AsyncReadAndWrite for T {}
+    fn channel_binding(
+        #[allow(unused_variables)] stream: &Self::Stream,
+    ) -> Result<sasl::common::ChannelBinding, Error> {
+        #[cfg(feature = "tls-native")]
+        {
+            log::warn!("tls-native doesn’t support channel binding, please use tls-rust if you want this feature!");
+            Ok(ChannelBinding::None)
+        }
+        #[cfg(all(feature = "tls-rust", not(feature = "tls-native")))]
+        {
+            let (_, connection) = stream.get_ref();
+            Ok(match connection.protocol_version() {
+                // TODO: Add support for TLS 1.2 and earlier.
+                Some(tokio_rustls::rustls::ProtocolVersion::TLSv1_3) => {
+                    let data = vec![0u8; 32];
+                    let data = connection.export_keying_material(
+                        data,
+                        b"EXPORTER-Channel-Binding",
+                        None,
+                    )?;
+                    ChannelBinding::TlsExporter(data)
+                }
+                _ => ChannelBinding::None,
+            })
+        }
+    }
+}
 
 enum ClientState<S: AsyncReadAndWrite> {
     Invalid,
@@ -127,7 +138,7 @@ impl Client<ServerConfig> {
 impl<C: ServerConnector> Client<C> {
     /// Start a new client given that the JID is already parsed.
     pub fn new_with_config(config: Config<C>) -> Self {
-        let connect = tokio::spawn(Self::connect(
+        let connect = tokio::spawn(client_login(
             config.server.clone(),
             config.jid.clone(),
             config.password.clone(),
@@ -145,31 +156,6 @@ impl<C: ServerConnector> Client<C> {
     pub fn set_reconnect(&mut self, reconnect: bool) -> &mut Self {
         self.reconnect = reconnect;
         self
-    }
-
-    async fn connect(
-        server: C,
-        jid: Jid,
-        password: String,
-    ) -> Result<XMPPStream<C::Stream>, Error> {
-        let username = jid.node_str().unwrap();
-        let password = password;
-
-        let xmpp_stream = server.connect(&jid).await?;
-
-        let creds = Credentials::default()
-            .with_username(username)
-            .with_password(password)
-            .with_channel_binding(ChannelBinding::None);
-        // Authenticated (unspecified) stream
-        let stream = auth(xmpp_stream, creds).await?;
-        // Authenticated XMPPStream
-        let xmpp_stream =
-            xmpp_stream::XMPPStream::start(stream, jid, ns::JABBER_CLIENT.to_owned()).await?;
-
-        // XMPPStream bound to user session
-        let xmpp_stream = bind(xmpp_stream).await?;
-        Ok(xmpp_stream)
     }
 
     /// Get the client's bound JID (the one reported by the XMPP
@@ -222,7 +208,7 @@ impl<C: ServerConnector> Stream for Client<C> {
             ClientState::Invalid => panic!("Invalid client state"),
             ClientState::Disconnected if self.reconnect => {
                 // TODO: add timeout
-                let connect = tokio::spawn(Self::connect(
+                let connect = tokio::spawn(client_login(
                     self.config.server.clone(),
                     self.config.jid.clone(),
                     self.config.password.clone(),
