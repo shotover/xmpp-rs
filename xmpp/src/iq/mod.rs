@@ -5,7 +5,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use tokio_xmpp::parsers::{
-    disco::DiscoInfoQuery,
     iq::{Iq, IqType},
     ns,
     private::Query as PrivateXMLQuery,
@@ -15,6 +14,8 @@ use tokio_xmpp::parsers::{
 
 use crate::{disco, pubsub, upload, Agent, Event};
 
+pub mod get;
+
 pub async fn handle_iq(agent: &mut Agent, iq: Iq) -> Vec<Event> {
     let mut events = vec![];
     let from = iq
@@ -22,43 +23,7 @@ pub async fn handle_iq(agent: &mut Agent, iq: Iq) -> Vec<Event> {
         .clone()
         .unwrap_or_else(|| agent.client.bound_jid().unwrap().clone());
     if let IqType::Get(payload) = iq.payload {
-        if payload.is("query", ns::DISCO_INFO) {
-            let query = DiscoInfoQuery::try_from(payload);
-            match query {
-                Ok(query) => {
-                    let mut disco_info = agent.disco.clone();
-                    disco_info.node = query.node;
-                    let iq = Iq::from_result(iq.id, Some(disco_info))
-                        .with_to(iq.from.unwrap())
-                        .into();
-                    let _ = agent.client.send_stanza(iq).await;
-                }
-                Err(err) => {
-                    let error = StanzaError::new(
-                        ErrorType::Modify,
-                        DefinedCondition::BadRequest,
-                        "en",
-                        &format!("{}", err),
-                    );
-                    let iq = Iq::from_error(iq.id, error)
-                        .with_to(iq.from.unwrap())
-                        .into();
-                    let _ = agent.client.send_stanza(iq).await;
-                }
-            }
-        } else {
-            // We MUST answer unhandled get iqs with a service-unavailable error.
-            let error = StanzaError::new(
-                ErrorType::Cancel,
-                DefinedCondition::ServiceUnavailable,
-                "en",
-                "No handler defined for this kind of iq.",
-            );
-            let iq = Iq::from_error(iq.id, error)
-                .with_to(iq.from.unwrap())
-                .into();
-            let _ = agent.client.send_stanza(iq).await;
-        }
+        get::handle_iq_get(agent, &mut events, from, iq.to, iq.id, payload).await;
     } else if let IqType::Result(Some(payload)) = iq.payload {
         // TODO: move private iqs like this one somewhere else, for
         // security reasons.
