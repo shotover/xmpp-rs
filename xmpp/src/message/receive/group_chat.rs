@@ -17,7 +17,11 @@ pub async fn handle_message_group_chat(
     let langs: Vec<&str> = agent.lang.iter().map(String::as_str).collect();
 
     if let Some((_lang, subject)) = message.get_best_subject(langs.clone()) {
-        events.push(Event::RoomSubject(from.to_bare(), from.resource_str().map(String::from), subject.0.clone()));
+        events.push(Event::RoomSubject(
+            from.to_bare(),
+            from.resource_str().map(String::from),
+            subject.0.clone(),
+        ));
     }
 
     if let Some((_lang, body)) = message.get_best_body(langs) {
