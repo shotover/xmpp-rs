@@ -17,7 +17,7 @@ pub async fn handle_iq(agent: &mut Agent, iq: Iq) -> Vec<Event> {
     let from = iq
         .from
         .clone()
-        .unwrap_or_else(|| agent.client.bound_jid().unwrap().clone());
+        .unwrap_or_else(|| agent.client.bound_jid().unwrap().to_bare().into());
     if let IqType::Get(payload) = iq.payload {
         get::handle_iq_get(agent, &mut events, from, iq.to, iq.id, payload).await;
     } else if let IqType::Result(Some(payload)) = iq.payload {
