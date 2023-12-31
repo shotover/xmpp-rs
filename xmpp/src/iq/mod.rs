@@ -6,15 +6,13 @@
 
 use tokio_xmpp::parsers::{
     iq::{Iq, IqType},
-    ns,
-    private::Query as PrivateXMLQuery,
-    roster::Roster,
     stanza_error::{DefinedCondition, ErrorType, StanzaError},
 };
 
-use crate::{disco, pubsub, upload, Agent, Event};
+use crate::{Agent, Event};
 
 pub mod get;
+pub mod result;
 
 pub async fn handle_iq(agent: &mut Agent, iq: Iq) -> Vec<Event> {
     let mut events = vec![];
@@ -25,46 +23,15 @@ pub async fn handle_iq(agent: &mut Agent, iq: Iq) -> Vec<Event> {
     if let IqType::Get(payload) = iq.payload {
         get::handle_iq_get(agent, &mut events, from, iq.to, iq.id, payload).await;
     } else if let IqType::Result(Some(payload)) = iq.payload {
-        // TODO: move private iqs like this one somewhere else, for
-        // security reasons.
-        if payload.is("query", ns::ROSTER) && Some(from.clone()) == iq.from {
-            let roster = Roster::try_from(payload).unwrap();
-            for item in roster.items.into_iter() {
-                events.push(Event::ContactAdded(item));
-            }
-        } else if payload.is("pubsub", ns::PUBSUB) {
-            let new_events = pubsub::handle_iq_result(&from, payload);
-            events.extend(new_events);
-        } else if payload.is("slot", ns::HTTP_UPLOAD) {
-            let new_events =
-                upload::receive::handle_upload_result(&from, iq.id, payload, agent).await;
-            events.extend(new_events);
-        } else if payload.is("query", ns::PRIVATE) {
-            match PrivateXMLQuery::try_from(payload) {
-                Ok(query) => {
-                    for conf in query.storage.conferences {
-                        let (jid, room) = conf.into_bookmarks2();
-                        events.push(Event::JoinRoom(jid, room));
-                    }
-                }
-                Err(e) => {
-                    panic!("Wrong XEP-0048 v1.0 Bookmark format: {}", e);
-                }
-            }
-        } else if payload.is("query", ns::DISCO_INFO) {
-            disco::handle_disco_info_result_payload(agent, payload, from).await;
-        }
-    } else if let IqType::Set(_) = iq.payload {
-        // We MUST answer unhandled set iqs with a service-unavailable error.
+        result::handle_iq_result(agent, &mut events, from, iq.to, iq.id, payload).await;
+    } else if let IqType::Set(_payload) = iq.payload {
         let error = StanzaError::new(
             ErrorType::Cancel,
             DefinedCondition::ServiceUnavailable,
             "en",
             "No handler defined for this kind of iq.",
         );
-        let iq = Iq::from_error(iq.id, error)
-            .with_to(iq.from.unwrap())
-            .into();
+        let iq = Iq::from_error(iq.id, error).with_to(from).into();
         let _ = agent.client.send_stanza(iq).await;
     }
     events
