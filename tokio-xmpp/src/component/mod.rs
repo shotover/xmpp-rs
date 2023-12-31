@@ -5,51 +5,37 @@ use futures::{sink::SinkExt, task::Poll, Sink, Stream};
 use std::pin::Pin;
 use std::str::FromStr;
 use std::task::Context;
-use tokio::net::TcpStream;
 use xmpp_parsers::{ns, Element, Jid};
 
-use super::happy_eyeballs::connect_to_host;
+use self::connect::component_login;
+
 use super::xmpp_codec::Packet;
-use super::xmpp_stream;
 use super::Error;
+use crate::connect::ServerConnector;
 use crate::xmpp_stream::add_stanza_id;
+use crate::xmpp_stream::XMPPStream;
 
 mod auth;
+
+pub(crate) mod connect;
 
 /// Component connection to an XMPP server
 ///
 /// This simplifies the `XMPPStream` to a `Stream`/`Sink` of `Element`
 /// (stanzas). Connection handling however is up to the user.
-pub struct Component {
+pub struct Component<C: ServerConnector> {
     /// The component's Jabber-Id
     pub jid: Jid,
-    stream: XMPPStream,
+    stream: XMPPStream<C::Stream>,
 }
 
-type XMPPStream = xmpp_stream::XMPPStream<TcpStream>;
-
-impl Component {
+impl<C: ServerConnector> Component<C> {
     /// Start a new XMPP component
-    pub async fn new(jid: &str, password: &str, server: &str, port: u16) -> Result<Self, Error> {
+    pub async fn new(jid: &str, password: &str, connector: C) -> Result<Self, Error> {
         let jid = Jid::from_str(jid)?;
         let password = password.to_owned();
-        let stream = Self::connect(jid.clone(), password, server, port).await?;
+        let stream = component_login(connector, jid.clone(), password).await?;
         Ok(Component { jid, stream })
-    }
-
-    async fn connect(
-        jid: Jid,
-        password: String,
-        server: &str,
-        port: u16,
-    ) -> Result<XMPPStream, Error> {
-        let password = password;
-        let tcp_stream = connect_to_host(server, port).await?;
-        let mut xmpp_stream =
-            xmpp_stream::XMPPStream::start(tcp_stream, jid, ns::COMPONENT_ACCEPT.to_owned())
-                .await?;
-        auth::auth(&mut xmpp_stream, password).await?;
-        Ok(xmpp_stream)
     }
 
     /// Send stanza
@@ -63,7 +49,7 @@ impl Component {
     }
 }
 
-impl Stream for Component {
+impl<C: ServerConnector> Stream for Component<C> {
     type Item = Element;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
@@ -86,7 +72,7 @@ impl Stream for Component {
     }
 }
 
-impl Sink<Element> for Component {
+impl<C: ServerConnector> Sink<Element> for Component<C> {
     type Error = Error;
 
     fn start_send(mut self: Pin<&mut Self>, item: Element) -> Result<(), Self::Error> {

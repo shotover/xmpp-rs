@@ -31,7 +31,7 @@ name = "hello_bot"
 required-features = ["avatars"]
 
 [features]
-default = ["avatars", "tls-native"]
-tls-native = ["tokio-xmpp/tls-native"]
-tls-rust = ["tokio-xmpp/tls-rust"]
+default = ["avatars", "starttls-rust"]
+starttls-native = ["tokio-xmpp/starttls", "tokio-xmpp/tls-native"]
+starttls-rust = ["tokio-xmpp/starttls", "tokio-xmpp/tls-rust"]
 avatars = []

@@ -1,23 +1,16 @@
 use futures::{sink::SinkExt, task::Poll, Future, Sink, Stream};
-use sasl::common::ChannelBinding;
 use std::mem::replace;
 use std::pin::Pin;
 use std::task::Context;
-use tokio::net::TcpStream;
 use tokio::task::JoinHandle;
 use xmpp_parsers::{ns, Element, Jid};
 
-use super::connect::{AsyncReadAndWrite, ServerConnector};
+use super::connect::client_login;
+use crate::connect::{AsyncReadAndWrite, ServerConnector};
 use crate::event::Event;
-use crate::happy_eyeballs::{connect_to_host, connect_with_srv};
-use crate::starttls::starttls;
 use crate::xmpp_codec::Packet;
-use crate::xmpp_stream::{self, add_stanza_id, XMPPStream};
-use crate::{client_login, Error, ProtocolError};
-#[cfg(feature = "tls-native")]
-use tokio_native_tls::TlsStream;
-#[cfg(all(feature = "tls-rust", not(feature = "tls-native")))]
-use tokio_rustls::client::TlsStream;
+use crate::xmpp_stream::{add_stanza_id, XMPPStream};
+use crate::{Error, ProtocolError};
 
 /// XMPP client connection and state
 ///
@@ -43,96 +36,11 @@ pub struct Config<C> {
     pub server: C,
 }
 
-/// XMPP server connection configuration
-#[derive(Clone, Debug)]
-pub enum ServerConfig {
-    /// Use SRV record to find server host
-    UseSrv,
-    #[allow(unused)]
-    /// Manually define server host and port
-    Manual {
-        /// Server host name
-        host: String,
-        /// Server port
-        port: u16,
-    },
-}
-
-impl ServerConnector for ServerConfig {
-    type Stream = TlsStream<TcpStream>;
-    async fn connect(&self, jid: &Jid) -> Result<XMPPStream<Self::Stream>, Error> {
-        // TCP connection
-        let tcp_stream = match self {
-            ServerConfig::UseSrv => {
-                connect_with_srv(jid.domain_str(), "_xmpp-client._tcp", 5222).await?
-            }
-            ServerConfig::Manual { host, port } => connect_to_host(host.as_str(), *port).await?,
-        };
-
-        // Unencryped XMPPStream
-        let xmpp_stream =
-            xmpp_stream::XMPPStream::start(tcp_stream, jid.clone(), ns::JABBER_CLIENT.to_owned())
-                .await?;
-
-        if xmpp_stream.stream_features.can_starttls() {
-            // TlsStream
-            let tls_stream = starttls(xmpp_stream).await?;
-            // Encrypted XMPPStream
-            xmpp_stream::XMPPStream::start(tls_stream, jid.clone(), ns::JABBER_CLIENT.to_owned())
-                .await
-        } else {
-            return Err(Error::Protocol(ProtocolError::NoTls));
-        }
-    }
-
-    fn channel_binding(
-        #[allow(unused_variables)] stream: &Self::Stream,
-    ) -> Result<sasl::common::ChannelBinding, Error> {
-        #[cfg(feature = "tls-native")]
-        {
-            log::warn!("tls-native doesn’t support channel binding, please use tls-rust if you want this feature!");
-            Ok(ChannelBinding::None)
-        }
-        #[cfg(all(feature = "tls-rust", not(feature = "tls-native")))]
-        {
-            let (_, connection) = stream.get_ref();
-            Ok(match connection.protocol_version() {
-                // TODO: Add support for TLS 1.2 and earlier.
-                Some(tokio_rustls::rustls::ProtocolVersion::TLSv1_3) => {
-                    let data = vec![0u8; 32];
-                    let data = connection.export_keying_material(
-                        data,
-                        b"EXPORTER-Channel-Binding",
-                        None,
-                    )?;
-                    ChannelBinding::TlsExporter(data)
-                }
-                _ => ChannelBinding::None,
-            })
-        }
-    }
-}
-
 enum ClientState<S: AsyncReadAndWrite> {
     Invalid,
     Disconnected,
     Connecting(JoinHandle<Result<XMPPStream<S>, Error>>),
     Connected(XMPPStream<S>),
-}
-
-impl Client<ServerConfig> {
-    /// Start a new XMPP client
-    ///
-    /// Start polling the returned instance so that it will connect
-    /// and yield events.
-    pub fn new<J: Into<Jid>, P: Into<String>>(jid: J, password: P) -> Self {
-        let config = Config {
-            jid: jid.into(),
-            password: password.into(),
-            server: ServerConfig::UseSrv,
-        };
-        Self::new_with_config(config)
-    }
 }
 
 impl<C: ServerConnector> Client<C> {

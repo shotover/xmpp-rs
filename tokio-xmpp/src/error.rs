@@ -1,41 +1,26 @@
-use hickory_resolver::{error::ResolveError, proto::error::ProtoError};
-#[cfg(feature = "tls-native")]
-use native_tls::Error as TlsError;
 use sasl::client::MechanismError as SaslMechanismError;
 use std::borrow::Cow;
 use std::error::Error as StdError;
 use std::fmt;
 use std::io::Error as IoError;
 use std::str::Utf8Error;
-#[cfg(all(feature = "tls-rust", not(feature = "tls-native")))]
-use tokio_rustls::rustls::client::InvalidDnsNameError;
-#[cfg(all(feature = "tls-rust", not(feature = "tls-native")))]
-use tokio_rustls::rustls::Error as TlsError;
 
 use xmpp_parsers::sasl::DefinedCondition as SaslDefinedCondition;
 use xmpp_parsers::{Error as ParsersError, JidParseError};
+
+use crate::connect::ServerConnectorError;
 
 /// Top-level error type
 #[derive(Debug)]
 pub enum Error {
     /// I/O error
     Io(IoError),
-    /// Error resolving DNS and establishing a connection
-    Connection(ConnecterError),
-    /// DNS label conversion error, no details available from module
-    /// `idna`
-    Idna,
     /// Error parsing Jabber-Id
     JidParse(JidParseError),
     /// Protocol-level error
     Protocol(ProtocolError),
     /// Authentication error
     Auth(AuthError),
-    /// TLS error
-    Tls(TlsError),
-    #[cfg(all(feature = "tls-rust", not(feature = "tls-native")))]
-    /// DNS name parsing error
-    DnsNameError(InvalidDnsNameError),
     /// Connection closed
     Disconnected,
     /// Shoud never happen
@@ -44,6 +29,8 @@ pub enum Error {
     Fmt(fmt::Error),
     /// Utf8 error
     Utf8(Utf8Error),
+    /// Error resolving DNS and/or establishing a connection, returned by a ServerConnector impl
+    Connection(Box<dyn ServerConnectorError>),
 }
 
 impl fmt::Display for Error {
@@ -51,13 +38,9 @@ impl fmt::Display for Error {
         match self {
             Error::Io(e) => write!(fmt, "IO error: {}", e),
             Error::Connection(e) => write!(fmt, "connection error: {}", e),
-            Error::Idna => write!(fmt, "IDNA error"),
             Error::JidParse(e) => write!(fmt, "jid parse error: {}", e),
             Error::Protocol(e) => write!(fmt, "protocol error: {}", e),
             Error::Auth(e) => write!(fmt, "authentication error: {}", e),
-            Error::Tls(e) => write!(fmt, "TLS error: {}", e),
-            #[cfg(all(feature = "tls-rust", not(feature = "tls-native")))]
-            Error::DnsNameError(e) => write!(fmt, "DNS name error: {}", e),
             Error::Disconnected => write!(fmt, "disconnected"),
             Error::InvalidState => write!(fmt, "invalid state"),
             Error::Fmt(e) => write!(fmt, "Fmt error: {}", e),
@@ -74,9 +57,9 @@ impl From<IoError> for Error {
     }
 }
 
-impl From<ConnecterError> for Error {
-    fn from(e: ConnecterError) -> Self {
-        Error::Connection(e)
+impl<T: ServerConnectorError + 'static> From<T> for Error {
+    fn from(e: T) -> Self {
+        Error::Connection(Box::new(e))
     }
 }
 
@@ -98,12 +81,6 @@ impl From<AuthError> for Error {
     }
 }
 
-impl From<TlsError> for Error {
-    fn from(e: TlsError) -> Self {
-        Error::Tls(e)
-    }
-}
-
 impl From<fmt::Error> for Error {
     fn from(e: fmt::Error) -> Self {
         Error::Fmt(e)
@@ -113,13 +90,6 @@ impl From<fmt::Error> for Error {
 impl From<Utf8Error> for Error {
     fn from(e: Utf8Error) -> Self {
         Error::Utf8(e)
-    }
-}
-
-#[cfg(all(feature = "tls-rust", not(feature = "tls-native")))]
-impl From<InvalidDnsNameError> for Error {
-    fn from(e: InvalidDnsNameError) -> Self {
-        Error::DnsNameError(e)
     }
 }
 
@@ -225,24 +195,5 @@ impl fmt::Display for AuthError {
             AuthError::Fail(c) => write!(fmt, "failure from the server: {:?}", c),
             AuthError::ComponentFail => write!(fmt, "component authentication failure"),
         }
-    }
-}
-
-/// Error establishing connection
-#[derive(Debug)]
-pub enum ConnecterError {
-    /// All attempts failed, no error available
-    AllFailed,
-    /// DNS protocol error
-    Dns(ProtoError),
-    /// DNS resolution error
-    Resolve(ResolveError),
-}
-
-impl StdError for ConnecterError {}
-
-impl std::fmt::Display for ConnecterError {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(fmt, "{:?}", self)
     }
 }
