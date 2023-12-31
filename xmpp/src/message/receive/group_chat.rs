@@ -6,13 +6,14 @@
 
 use tokio_xmpp::{parsers::message::Message, Jid};
 
-use crate::{Agent, Event};
+use crate::{delay::StanzaTimeInfo, Agent, Event};
 
 pub async fn handle_message_group_chat(
     agent: &mut Agent,
     events: &mut Vec<Event>,
     from: Jid,
     message: &Message,
+    time_info: StanzaTimeInfo,
 ) {
     let langs: Vec<&str> = agent.lang.iter().map(String::as_str).collect();
 
@@ -21,6 +22,7 @@ pub async fn handle_message_group_chat(
             from.to_bare(),
             from.resource_str().map(String::from),
             subject.0.clone(),
+            time_info.clone(),
         ));
     }
 
@@ -31,8 +33,11 @@ pub async fn handle_message_group_chat(
                 from.to_bare(),
                 full.resource_str().to_owned(),
                 body.clone(),
+                time_info,
             ),
-            Jid::Bare(bare) => Event::ServiceMessage(message.id.clone(), bare, body.clone()),
+            Jid::Bare(bare) => {
+                Event::ServiceMessage(message.id.clone(), bare, body.clone(), time_info)
+            }
         };
         events.push(event)
     }

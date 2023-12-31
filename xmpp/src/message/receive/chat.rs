@@ -9,13 +9,14 @@ use tokio_xmpp::{
     Jid,
 };
 
-use crate::{Agent, Event};
+use crate::{delay::StanzaTimeInfo, Agent, Event};
 
 pub async fn handle_message_chat(
     agent: &mut Agent,
     events: &mut Vec<Event>,
     from: Jid,
     message: &Message,
+    time_info: StanzaTimeInfo,
 ) {
     let langs: Vec<&str> = agent.lang.iter().map(String::as_str).collect();
     if let Some((_lang, body)) = message.get_best_body(langs) {
@@ -27,13 +28,19 @@ pub async fn handle_message_chat(
                     Jid::Bare(bare) => {
                         // TODO: Can a service message be of type Chat/Normal and not Groupchat?
                         warn!("Received misformed MessageType::Chat in muc#user namespace from a bare JID.");
-                        Event::ServiceMessage(message.id.clone(), bare, body.clone())
+                        Event::ServiceMessage(
+                            message.id.clone(),
+                            bare,
+                            body.clone(),
+                            time_info.clone(),
+                        )
                     }
                     Jid::Full(full) => Event::RoomPrivateMessage(
                         message.id.clone(),
                         full.to_bare(),
                         full.resource_str().to_owned(),
                         body.clone(),
+                        time_info.clone(),
                     ),
                 };
 
@@ -43,7 +50,8 @@ pub async fn handle_message_chat(
         }
 
         if !found_special_message {
-            let event = Event::ChatMessage(message.id.clone(), from.to_bare(), body.clone());
+            let event =
+                Event::ChatMessage(message.id.clone(), from.to_bare(), body.clone(), time_info);
             events.push(event);
         }
     }

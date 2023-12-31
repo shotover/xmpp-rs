@@ -9,7 +9,7 @@ use tokio_xmpp::parsers::{
     ns,
 };
 
-use crate::{pubsub, Agent, Event};
+use crate::{delay::message_time_info, pubsub, Agent, Event};
 
 pub mod chat;
 pub mod group_chat;
@@ -17,13 +17,21 @@ pub mod group_chat;
 pub async fn handle_message(agent: &mut Agent, message: Message) -> Vec<Event> {
     let mut events = vec![];
     let from = message.from.clone().unwrap();
+    let time_info = message_time_info(&message);
 
     match message.type_ {
         MessageType::Groupchat => {
-            group_chat::handle_message_group_chat(agent, &mut events, from.clone(), &message).await;
+            group_chat::handle_message_group_chat(
+                agent,
+                &mut events,
+                from.clone(),
+                &message,
+                time_info,
+            )
+            .await;
         }
         MessageType::Chat | MessageType::Normal => {
-            chat::handle_message_chat(agent, &mut events, from.clone(), &message).await;
+            chat::handle_message_chat(agent, &mut events, from.clone(), &message, time_info).await;
         }
         _ => {}
     }

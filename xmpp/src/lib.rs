@@ -13,6 +13,7 @@ extern crate log;
 
 pub mod agent;
 pub mod builder;
+pub mod delay;
 pub mod disco;
 pub mod event;
 pub mod event_loop;

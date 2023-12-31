@@ -52,8 +52,8 @@ async fn main() -> Result<(), Option<()>> {
                 Event::ContactChanged(contact) => {
                     println!("Contact {} changed.", contact.jid);
                 }
-                Event::ChatMessage(_id, jid, body) => {
-                    println!("Message from {}: {}", jid, body.0);
+                Event::ChatMessage(_id, jid, body, time_info) => {
+                    println!("Message from {} at {}: {}", jid, time_info.received, body.0);
                 }
                 Event::JoinRoom(jid, conference) => {
                     println!("Joining room {} ({:?})…", jid, conference.name);
@@ -82,8 +82,11 @@ async fn main() -> Result<(), Option<()>> {
                 Event::RoomLeft(jid) => {
                     println!("Left room {}.", jid);
                 }
-                Event::RoomMessage(_id, jid, nick, body) => {
-                    println!("Message in room {} from {}: {}", jid, nick, body.0);
+                Event::RoomMessage(_id, jid, nick, body, time_info) => {
+                    println!(
+                        "Message in room {} from {} at {}: {}",
+                        jid, nick, time_info.received, body.0
+                    );
                 }
                 Event::AvatarRetrieved(jid, path) => {
                     println!("Received avatar for {} in {}.", jid, path);
