@@ -8,6 +8,7 @@ use super::Agent;
 use crate::Event;
 use std::fs::{self, File};
 use std::io::{self, Write};
+use tokio_xmpp::connect::ServerConnector;
 use tokio_xmpp::parsers::{
     avatar::{Data, Metadata},
     iq::Iq,
@@ -20,9 +21,9 @@ use tokio_xmpp::parsers::{
     Jid,
 };
 
-pub(crate) async fn handle_metadata_pubsub_event(
+pub(crate) async fn handle_metadata_pubsub_event<C: ServerConnector>(
     from: &Jid,
-    agent: &mut Agent,
+    agent: &mut Agent<C>,
     items: Vec<Item>,
 ) -> Vec<Event> {
     let mut events = Vec::new();

@@ -4,12 +4,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use tokio_xmpp::connect::ServerConnector;
 use tokio_xmpp::{parsers::message::Message, Jid};
 
 use crate::{delay::StanzaTimeInfo, Agent, Event};
 
-pub async fn handle_message_group_chat(
-    agent: &mut Agent,
+pub async fn handle_message_group_chat<C: ServerConnector>(
+    agent: &mut Agent<C>,
     events: &mut Vec<Event>,
     from: Jid,
     message: &Message,

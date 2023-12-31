@@ -4,6 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use tokio_xmpp::connect::ServerConnector;
 use tokio_xmpp::{
     parsers::{
         bookmarks,
@@ -23,7 +24,11 @@ use crate::Agent;
 // FIXME: To be removed in the future
 // The server doesn't return disco#info feature when querying the account
 // so we add it manually because we know it's true
-pub async fn handle_disco_info_result_payload(agent: &mut Agent, payload: Element, from: Jid) {
+pub async fn handle_disco_info_result_payload<C: ServerConnector>(
+    agent: &mut Agent<C>,
+    payload: Element,
+    from: Jid,
+) {
     match DiscoInfoResult::try_from(payload.clone()) {
         Ok(disco) => {
             handle_disco_info_result(agent, disco, from).await;
@@ -55,7 +60,11 @@ pub async fn handle_disco_info_result_payload(agent: &mut Agent, payload: Elemen
     }
 }
 
-pub async fn handle_disco_info_result(agent: &mut Agent, disco: DiscoInfoResult, from: Jid) {
+pub async fn handle_disco_info_result<C: ServerConnector>(
+    agent: &mut Agent<C>,
+    disco: DiscoInfoResult,
+    from: Jid,
+) {
     // Safe unwrap because no DISCO is received when we are not online
     if from == agent.client.bound_jid().unwrap().to_bare() && agent.awaiting_disco_bookmarks_type {
         info!("Received disco info about bookmarks type");

@@ -4,6 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use tokio_xmpp::connect::ServerConnector;
 use tokio_xmpp::{
     parsers::{
         iq::Iq,
@@ -14,8 +15,8 @@ use tokio_xmpp::{
 
 use crate::{Agent, Event};
 
-pub async fn handle_iq_set(
-    agent: &mut Agent,
+pub async fn handle_iq_set<C: ServerConnector>(
+    agent: &mut Agent<C>,
     _events: &mut Vec<Event>,
     from: Jid,
     _to: Option<Jid>,

@@ -7,18 +7,25 @@
 use super::Agent;
 use crate::Event;
 use std::str::FromStr;
-use tokio_xmpp::parsers::{
-    bookmarks2::{self, Autojoin},
-    ns,
-    pubsub::event::PubSubEvent,
-    pubsub::pubsub::PubSub,
-    BareJid, Element, Jid,
+use tokio_xmpp::{
+    connect::ServerConnector,
+    parsers::{
+        bookmarks2::{self, Autojoin},
+        ns,
+        pubsub::event::PubSubEvent,
+        pubsub::pubsub::PubSub,
+        BareJid, Element, Jid,
+    },
 };
 
 #[cfg(feature = "avatars")]
 pub(crate) mod avatar;
 
-pub(crate) async fn handle_event(from: &Jid, elem: Element, agent: &mut Agent) -> Vec<Event> {
+pub(crate) async fn handle_event<C: ServerConnector>(
+    from: &Jid,
+    elem: Element,
+    agent: &mut Agent<C>,
+) -> Vec<Event> {
     let mut events = Vec::new();
     let event = PubSubEvent::try_from(elem);
     trace!("PubSub event: {:#?}", event);

@@ -4,6 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use tokio_xmpp::connect::ServerConnector;
 use tokio_xmpp::parsers::{
     muc::user::{MucUser, Status},
     presence::{Presence, Type as PresenceType},
@@ -12,7 +13,10 @@ use tokio_xmpp::parsers::{
 use crate::{Agent, Event};
 
 /// Translate a `Presence` stanza into a list of higher-level `Event`s.
-pub async fn handle_presence(_agent: &mut Agent, presence: Presence) -> Vec<Event> {
+pub async fn handle_presence<C: ServerConnector>(
+    _agent: &mut Agent<C>,
+    presence: Presence,
+) -> Vec<Event> {
     // Allocate an empty vector to store the events.
     let mut events = vec![];
 

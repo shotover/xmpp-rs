@@ -10,6 +10,7 @@ use reqwest::{
 use std::path::PathBuf;
 use tokio::fs::File;
 use tokio_util::codec::{BytesCodec, FramedRead};
+use tokio_xmpp::connect::ServerConnector;
 use tokio_xmpp::{
     parsers::http_upload::{Header as HttpUploadHeader, SlotResult},
     Element, Jid,
@@ -17,11 +18,11 @@ use tokio_xmpp::{
 
 use crate::{Agent, Event};
 
-pub async fn handle_upload_result(
+pub async fn handle_upload_result<C: ServerConnector>(
     from: &Jid,
     iqid: String,
     elem: Element,
-    agent: &mut Agent,
+    agent: &mut Agent<C>,
 ) -> impl IntoIterator<Item = Event> {
     let mut res: Option<(usize, PathBuf)> = None;
 

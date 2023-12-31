@@ -6,14 +6,15 @@
 
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
+use tokio_xmpp::connect::ServerConnector;
 pub use tokio_xmpp::parsers;
 use tokio_xmpp::parsers::{disco::DiscoInfoResult, message::MessageType};
-pub use tokio_xmpp::{BareJid, Element, FullJid, Jid};
+pub use tokio_xmpp::{AsyncClient as TokioXmppClient, BareJid, Element, FullJid, Jid};
 
-use crate::{event_loop, message, muc, upload, Error, Event, RoomNick, TokioXmppClient};
+use crate::{event_loop, message, muc, upload, Error, Event, RoomNick};
 
-pub struct Agent {
-    pub(crate) client: TokioXmppClient,
+pub struct Agent<C: ServerConnector> {
+    pub(crate) client: TokioXmppClient<C>,
     pub(crate) default_nick: Arc<RwLock<String>>,
     pub(crate) lang: Arc<Vec<String>>,
     pub(crate) disco: DiscoInfoResult,
@@ -22,7 +23,7 @@ pub struct Agent {
     pub(crate) awaiting_disco_bookmarks_type: bool,
 }
 
-impl Agent {
+impl<C: ServerConnector> Agent<C> {
     pub async fn disconnect(&mut self) -> Result<(), Error> {
         self.client.send_end().await
     }

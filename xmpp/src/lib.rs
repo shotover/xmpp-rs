@@ -7,7 +7,6 @@
 #![deny(bare_trait_objects)]
 
 pub use tokio_xmpp::parsers;
-use tokio_xmpp::AsyncClient;
 pub use tokio_xmpp::{BareJid, Element, FullJid, Jid};
 #[macro_use]
 extern crate log;
@@ -32,15 +31,13 @@ pub use builder::{ClientBuilder, ClientType};
 pub use event::Event;
 pub use feature::ClientFeature;
 
-type TokioXmppClient = AsyncClient<tokio_xmpp::starttls::ServerConfig>;
-
 pub type Error = tokio_xmpp::Error;
 pub type Id = Option<String>;
 pub type RoomNick = String;
 
 #[cfg(test)]
 mod tests {
-    use super::{Agent, BareJid, ClientBuilder, ClientFeature, ClientType, Event};
+    use super::{BareJid, ClientBuilder, ClientFeature, ClientType, Event};
     use std::str::FromStr;
     use tokio_xmpp::AsyncClient as TokioXmppClient;
 
@@ -60,7 +57,7 @@ mod tests {
         #[cfg(feature = "avatars")]
         let client_builder = client_builder.enable_feature(ClientFeature::Avatars);
 
-        let mut agent: Agent = client_builder.build_impl(client);
+        let mut agent = client_builder.build_impl(client);
 
         while let Some(events) = agent.wait_for_events().await {
             assert!(match events[0] {

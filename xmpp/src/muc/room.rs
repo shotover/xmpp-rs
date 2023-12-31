@@ -4,6 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+use tokio_xmpp::connect::ServerConnector;
 use tokio_xmpp::{
     parsers::{
         muc::Muc,
@@ -14,8 +15,8 @@ use tokio_xmpp::{
 
 use crate::{Agent, RoomNick};
 
-pub async fn join_room(
-    agent: &mut Agent,
+pub async fn join_room<C: ServerConnector>(
+    agent: &mut Agent<C>,
     room: BareJid,
     nick: Option<String>,
     password: Option<String>,
@@ -57,8 +58,8 @@ pub async fn join_room(
 /// * `nickname`: The nickname to use in the room.
 /// * `lang`: The language of the status message.
 /// * `status`: The status message to send.
-pub async fn leave_room(
-    agent: &mut Agent,
+pub async fn leave_room<C: ServerConnector>(
+    agent: &mut Agent<C>,
     room_jid: BareJid,
     nickname: RoomNick,
     lang: impl Into<String>,

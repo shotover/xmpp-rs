@@ -5,15 +5,16 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use std::sync::{Arc, RwLock};
+use tokio_xmpp::connect::ServerConnector;
 use tokio_xmpp::{
     parsers::{
         disco::{DiscoInfoResult, Feature, Identity},
         ns,
     },
-    BareJid, Jid,
+    AsyncClient as TokioXmppClient, AsyncConfig, BareJid, Jid,
 };
 
-use crate::{Agent, ClientFeature, TokioXmppClient};
+use crate::{Agent, ClientFeature};
 
 #[derive(Debug)]
 pub enum ClientType {
@@ -36,9 +37,10 @@ impl ToString for ClientType {
     }
 }
 
-pub struct ClientBuilder<'a> {
+pub struct ClientBuilder<'a, C: ServerConnector> {
     jid: BareJid,
     password: &'a str,
+    server_connector: C,
     website: String,
     default_nick: String,
     lang: Vec<String>,
@@ -47,11 +49,26 @@ pub struct ClientBuilder<'a> {
     resource: Option<String>,
 }
 
-impl ClientBuilder<'_> {
-    pub fn new<'a>(jid: BareJid, password: &'a str) -> ClientBuilder<'a> {
+#[cfg(any(feature = "starttls-rust", feature = "starttls-native"))]
+impl ClientBuilder<'_, tokio_xmpp::starttls::ServerConfig> {
+    pub fn new<'a>(
+        jid: BareJid,
+        password: &'a str,
+    ) -> ClientBuilder<'a, tokio_xmpp::starttls::ServerConfig> {
+        Self::new_with_server(jid, password, tokio_xmpp::starttls::ServerConfig::UseSrv)
+    }
+}
+
+impl<C: ServerConnector> ClientBuilder<'_, C> {
+    pub fn new_with_server<'a>(
+        jid: BareJid,
+        password: &'a str,
+        server_connector: C,
+    ) -> ClientBuilder<'a, C> {
         ClientBuilder {
             jid,
             password,
+            server_connector,
             website: String::from("https://gitlab.com/xmpp-rs/tokio-xmpp"),
             default_nick: String::from("xmpp-rs"),
             lang: vec![String::from("en")],
@@ -117,19 +134,24 @@ impl ClientBuilder<'_> {
         }
     }
 
-    pub fn build(self) -> Agent {
+    pub fn build(self) -> Agent<C> {
         let jid: Jid = if let Some(resource) = &self.resource {
             self.jid.with_resource_str(resource).unwrap().into()
         } else {
             self.jid.clone().into()
         };
 
-        let client = TokioXmppClient::new(jid, self.password);
+        let config = AsyncConfig {
+            jid,
+            password: self.password.into(),
+            server: self.server_connector.clone(),
+        };
+        let client = TokioXmppClient::new_with_config(config);
         self.build_impl(client)
     }
 
     // This function is meant to be used for testing build
-    pub(crate) fn build_impl(self, client: TokioXmppClient) -> Agent {
+    pub(crate) fn build_impl(self, client: TokioXmppClient<C>) -> Agent<C> {
         let disco = self.make_disco();
         let node = self.website;
 

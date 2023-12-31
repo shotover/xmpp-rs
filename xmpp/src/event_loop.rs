@@ -5,6 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use futures::StreamExt;
+use tokio_xmpp::connect::ServerConnector;
 use tokio_xmpp::{
     parsers::{
         disco::DiscoInfoQuery, iq::Iq, message::Message, presence::Presence, roster::Roster,
@@ -20,7 +21,7 @@ use crate::{iq, message, presence, Agent, Event};
 ///
 /// - `Some(events)` if there are new events; multiple may be returned at once.
 /// - `None` if the underlying stream is closed.
-pub async fn wait_for_events(agent: &mut Agent) -> Option<Vec<Event>> {
+pub async fn wait_for_events<C: ServerConnector>(agent: &mut Agent<C>) -> Option<Vec<Event>> {
     if let Some(event) = agent.client.next().await {
         let mut events = Vec::new();
 

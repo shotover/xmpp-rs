@@ -6,6 +6,7 @@
 
 use std::path::Path;
 use tokio::fs::File;
+use tokio_xmpp::connect::ServerConnector;
 use tokio_xmpp::{
     parsers::{http_upload::SlotRequest, iq::Iq},
     Jid,
@@ -13,7 +14,11 @@ use tokio_xmpp::{
 
 use crate::Agent;
 
-pub async fn upload_file_with(agent: &mut Agent, service: &str, path: &Path) {
+pub async fn upload_file_with<C: ServerConnector>(
+    agent: &mut Agent<C>,
+    service: &str,
+    path: &Path,
+) {
     let name = path.file_name().unwrap().to_str().unwrap().to_string();
     let file = File::open(path).await.unwrap();
     let size = file.metadata().await.unwrap().len();
