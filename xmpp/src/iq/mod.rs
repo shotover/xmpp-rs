@@ -4,15 +4,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use tokio_xmpp::parsers::{
-    iq::{Iq, IqType},
-    stanza_error::{DefinedCondition, ErrorType, StanzaError},
-};
+use tokio_xmpp::parsers::iq::{Iq, IqType};
 
 use crate::{Agent, Event};
 
 pub mod get;
 pub mod result;
+pub mod set;
 
 pub async fn handle_iq(agent: &mut Agent, iq: Iq) -> Vec<Event> {
     let mut events = vec![];
@@ -24,15 +22,8 @@ pub async fn handle_iq(agent: &mut Agent, iq: Iq) -> Vec<Event> {
         get::handle_iq_get(agent, &mut events, from, iq.to, iq.id, payload).await;
     } else if let IqType::Result(Some(payload)) = iq.payload {
         result::handle_iq_result(agent, &mut events, from, iq.to, iq.id, payload).await;
-    } else if let IqType::Set(_payload) = iq.payload {
-        let error = StanzaError::new(
-            ErrorType::Cancel,
-            DefinedCondition::ServiceUnavailable,
-            "en",
-            "No handler defined for this kind of iq.",
-        );
-        let iq = Iq::from_error(iq.id, error).with_to(from).into();
-        let _ = agent.client.send_stanza(iq).await;
+    } else if let IqType::Set(payload) = iq.payload {
+        set::handle_iq_set(agent, &mut events, from, iq.to, iq.id, payload).await;
     }
     events
 }
