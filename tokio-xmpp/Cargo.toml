@@ -36,6 +36,8 @@ tokio-rustls = { version = "0.24", optional = true }
 
 [dev-dependencies]
 env_logger = { version = "0.10", default-features = false, features = ["auto-color", "humantime"] }
+# this is needed for echo-component example
+tokio-xmpp = { path = ".", features = ["insecure-tcp"]}
 
 [features]
 default = ["starttls-rust"]
@@ -44,4 +46,5 @@ tls-rust = ["tokio-rustls", "webpki-roots"]
 tls-native = ["tokio-native-tls", "native-tls"]
 starttls-native = ["starttls", "tls-native"]
 starttls-rust = ["starttls", "tls-rust"]
+insecure-tcp = []
 syntax-highlighting = ["syntect"]

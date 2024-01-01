@@ -2,7 +2,7 @@ use futures::stream::StreamExt;
 use std::env::args;
 use std::process::exit;
 use std::str::FromStr;
-use tokio_xmpp::Component;
+use tokio_xmpp::tcp::TcpComponent as Component;
 use xmpp_parsers::message::{Body, Message, MessageType};
 use xmpp_parsers::presence::{Presence, Show as PresenceShow, Type as PresenceType};
 use xmpp_parsers::{Element, Jid};
@@ -12,22 +12,21 @@ async fn main() {
     env_logger::init();
 
     let args: Vec<String> = args().collect();
-    if args.len() < 3 || args.len() > 5 {
-        println!("Usage: {} <jid> <password> [server] [port]", args[0]);
+    if args.len() < 3 || args.len() > 4 {
+        println!("Usage: {} <jid> <password> [server:port]", args[0]);
         exit(1);
     }
     let jid = &args[1];
     let password = &args[2];
-    let server = &args
+    let server = args
         .get(3)
         .unwrap()
         .parse()
-        .unwrap_or("127.0.0.1".to_owned());
-    let port: u16 = args.get(4).unwrap().parse().unwrap_or(5347u16);
+        .unwrap_or("127.0.0.1:5347".to_owned());
 
     // Component instance
-    println!("{} {} {} {}", jid, password, server, port);
-    let mut component = Component::new(jid, password, server, port).await.unwrap();
+    println!("{} {} {}", jid, password, server);
+    let mut component = Component::new(jid, password, server).await.unwrap();
 
     // Make the two interfaces for sending and receiving independent
     // of each other so we can move one into a closure.

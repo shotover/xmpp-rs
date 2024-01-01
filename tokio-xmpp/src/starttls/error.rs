@@ -1,3 +1,5 @@
+//! StartTLS ServerConnector Error
+
 use hickory_resolver::{error::ResolveError, proto::error::ProtoError};
 #[cfg(feature = "tls-native")]
 use native_tls::Error as TlsError;
@@ -9,7 +11,7 @@ use tokio_rustls::rustls::client::InvalidDnsNameError;
 #[cfg(all(feature = "tls-rust", not(feature = "tls-native")))]
 use tokio_rustls::rustls::Error as TlsError;
 
-/// Top-level error type
+/// StartTLS ServerConnector Error
 #[derive(Debug)]
 pub enum Error {
     /// Error resolving DNS and establishing a connection

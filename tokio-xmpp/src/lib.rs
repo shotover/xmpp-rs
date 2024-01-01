@@ -17,6 +17,8 @@ compile_error!(
 #[cfg(feature = "starttls")]
 pub mod starttls;
 mod stream_start;
+#[cfg(feature = "insecure-tcp")]
+pub mod tcp;
 mod xmpp_codec;
 pub use crate::xmpp_codec::Packet;
 mod event;

@@ -26,15 +26,20 @@ use tokio::{
 };
 use xmpp_parsers::{ns, Element, Jid};
 
-use crate::{connect::ServerConnector, xmpp_codec::Packet};
+use crate::{connect::ServerConnector, xmpp_codec::Packet, AsyncClient, SimpleClient};
 use crate::{connect::ServerConnectorError, xmpp_stream::XMPPStream};
 
 use self::error::Error;
 use self::happy_eyeballs::{connect_to_host, connect_with_srv};
 
 mod client;
-mod error;
+pub mod error;
 mod happy_eyeballs;
+
+/// AsyncClient that connects over StartTls
+pub type StartTlsAsyncClient = AsyncClient<ServerConfig>;
+/// SimpleClient that connects over StartTls
+pub type StartTlsSimpleClient = SimpleClient<ServerConfig>;
 
 /// StartTLS XMPP server connection configuration
 #[derive(Clone, Debug)]

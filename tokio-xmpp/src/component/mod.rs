@@ -31,7 +31,11 @@ pub struct Component<C: ServerConnector> {
 
 impl<C: ServerConnector> Component<C> {
     /// Start a new XMPP component
-    pub async fn new(jid: &str, password: &str, connector: C) -> Result<Self, Error> {
+    pub async fn new_with_connector(
+        jid: &str,
+        password: &str,
+        connector: C,
+    ) -> Result<Self, Error> {
         let jid = Jid::from_str(jid)?;
         let password = password.to_owned();
         let stream = component_login(connector, jid.clone(), password).await?;
