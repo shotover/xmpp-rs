@@ -35,7 +35,7 @@ pub type Error = tokio_xmpp::Error;
 pub type Id = Option<String>;
 pub type RoomNick = String;
 
-#[cfg(test)]
+#[cfg(all(test, any(feature = "starttls-rust", feature = "starttls-native")))]
 mod tests {
     use super::{BareJid, ClientBuilder, ClientFeature, ClientType, Event};
     use std::str::FromStr;
