@@ -84,6 +84,27 @@ impl WhitespaceAwareBase64 {
     }
 }
 
+/// Codec for bytes of lowercase hexadecimal.
+pub struct Hex;
+
+impl Hex {
+    pub fn decode(s: &str) -> Result<Vec<u8>, Error> {
+        let mut bytes = Vec::with_capacity(s.len() / 2);
+        for i in 0..s.len() / 2 {
+            bytes.push(u8::from_str_radix(&s[2 * i..2 * i + 2], 16)?);
+        }
+        Ok(bytes)
+    }
+
+    pub fn encode(b: &[u8]) -> Option<String> {
+        let mut bytes = String::with_capacity(b.len() * 2);
+        for byte in b {
+            bytes.extend(format!("{:02x}", byte).chars());
+        }
+        Some(bytes)
+    }
+}
+
 /// Codec for colon-separated bytes of uppercase hexadecimal.
 pub struct ColonSeparatedHex;
 
@@ -119,5 +140,32 @@ impl JidCodec {
 
     pub fn encode(jid: &Jid) -> Option<String> {
         Some(jid.to_string())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn hex() {
+        let value = [0x01, 0xfe, 0xef];
+
+        // Test that we support both lowercase and uppercase as input.
+        let hex = Hex::decode("01feEF").unwrap();
+        assert_eq!(hex, &value);
+
+        // Test that we do output lowercase.
+        let hex = Hex::encode(&value).unwrap();
+        assert_eq!(hex, "01feef");
+    }
+
+    #[test]
+    fn bad_hex() {
+        // No colon supported.
+        Hex::decode("01:fe:EF").unwrap_err();
+
+        // No non-hex character allowed.
+        Hex::decode("01defg").unwrap_err();
     }
 }
