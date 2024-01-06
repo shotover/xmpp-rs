@@ -6,7 +6,7 @@
 
 use crate::hashes::{Algo, Hash};
 use crate::util::error::Error;
-use crate::util::helpers::ColonSeparatedHex;
+use crate::util::text_node_codecs::{Codec, ColonSeparatedHex};
 
 generate_attribute!(
     /// Indicates which of the end points should initiate the TCP connection establishment.
@@ -43,7 +43,7 @@ generate_element!(
     ],
     text: (
         /// Hash value of this fingerprint.
-        value: ColonSeparatedHex<Vec<u8>>
+        value: ColonSeparatedHex
     )
 );
 

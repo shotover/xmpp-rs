@@ -618,13 +618,13 @@ macro_rules! generate_element {
     ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, children: [$($(#[$child_meta:meta])* $child_ident:ident: $coucou:tt<$child_type:ty> = ($child_name:tt, $child_ns:tt) => $child_constructor:ident),+$(,)?]) => (
         generate_element!($(#[$meta])* $elem, $name, $ns, attributes: [], children: [$($(#[$child_meta])* $child_ident: $coucou<$child_type> = ($child_name, $child_ns) => $child_constructor),*]);
     );
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, text: ($(#[$text_meta:meta])* $text_ident:ident: $codec:ident < $text_type:ty >)) => (
-        generate_element!($(#[$meta])* $elem, $name, $ns, attributes: [], children: [], text: ($(#[$text_meta])* $text_ident: $codec<$text_type>));
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, text: ($(#[$text_meta:meta])* $text_ident:ident: $codec:ty )) => (
+        generate_element!($(#[$meta])* $elem, $name, $ns, attributes: [], children: [], text: ($(#[$text_meta])* $text_ident: $codec));
     );
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_action:tt<$attr_type:ty> = $attr_name:tt),+$(,)?], text: ($(#[$text_meta:meta])* $text_ident:ident: $codec:ident < $text_type:ty >)) => (
-        generate_element!($(#[$meta])* $elem, $name, $ns, attributes: [$($(#[$attr_meta])* $attr: $attr_action<$attr_type> = $attr_name),*], children: [], text: ($(#[$text_meta])* $text_ident: $codec<$text_type>));
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_action:tt<$attr_type:ty> = $attr_name:tt),+$(,)?], text: ($(#[$text_meta:meta])* $text_ident:ident: $codec:ty )) => (
+        generate_element!($(#[$meta])* $elem, $name, $ns, attributes: [$($(#[$attr_meta])* $attr: $attr_action<$attr_type> = $attr_name),*], children: [], text: ($(#[$text_meta])* $text_ident: $codec));
     );
-    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_action:tt<$attr_type:ty> = $attr_name:tt),*$(,)?], children: [$($(#[$child_meta:meta])* $child_ident:ident: $coucou:tt<$child_type:ty> = ($child_name:tt, $child_ns:tt) => $child_constructor:ident),*$(,)?] $(, text: ($(#[$text_meta:meta])* $text_ident:ident: $codec:ident < $text_type:ty >))*) => (
+    ($(#[$meta:meta])* $elem:ident, $name:tt, $ns:ident, attributes: [$($(#[$attr_meta:meta])* $attr:ident: $attr_action:tt<$attr_type:ty> = $attr_name:tt),*$(,)?], children: [$($(#[$child_meta:meta])* $child_ident:ident: $coucou:tt<$child_type:ty> = ($child_name:tt, $child_ns:tt) => $child_constructor:ident),*$(,)?] $(, text: ($(#[$text_meta:meta])* $text_ident:ident: $codec:ty ))*) => (
         $(#[$meta])*
         #[derive(Debug, Clone, PartialEq)]
         pub struct $elem {
@@ -638,7 +638,7 @@ macro_rules! generate_element {
             )*
             $(
                 $(#[$text_meta])*
-                pub $text_ident: $text_type,
+                pub $text_ident: <$codec as Codec>::Decoded,
             )*
         }
 
@@ -668,7 +668,7 @@ macro_rules! generate_element {
                         $child_ident: finish_parse_elem!($child_ident: $coucou = $child_name, $name),
                     )*
                     $(
-                        $text_ident: $codec::decode(&elem.text())?,
+                        $text_ident: <$codec>::decode(&elem.text())?,
                     )*
                 })
             }
@@ -684,7 +684,7 @@ macro_rules! generate_element {
                     builder = generate_serialiser!(builder, elem, $child_ident, $coucou, $child_constructor, ($child_name, $child_ns));
                 )*
                 $(
-                    builder = builder.append_all($codec::encode(&elem.$text_ident).map(::minidom::Node::Text).into_iter());
+                    builder = builder.append_all(<$codec>::encode(&elem.$text_ident).map(::minidom::Node::Text).into_iter());
                 )*
 
                 builder.build()

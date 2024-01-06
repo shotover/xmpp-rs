@@ -6,7 +6,7 @@
 
 use crate::hashes::{Algo, Hash};
 use crate::util::error::Error;
-use crate::util::helpers::Base64;
+use crate::util::text_node_codecs::{Base64, Codec};
 use minidom::IntoAttributeValue;
 use std::str::FromStr;
 
@@ -81,7 +81,7 @@ generate_element!(
     ],
     text: (
         /// The actual data.
-        data: Base64<Vec<u8>>
+        data: Base64
     )
 );
 

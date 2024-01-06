@@ -6,7 +6,7 @@
 
 use crate::ns;
 use crate::util::error::Error;
-use crate::util::helpers::PlainText;
+use crate::util::text_node_codecs::{Codec, OptionalCodec, Text};
 use crate::Element;
 
 generate_attribute!(
@@ -39,7 +39,7 @@ generate_element!(
     ],
     text: (
         /// Text to insert.
-        text: PlainText<Option<String>>
+        text: OptionalCodec<Text>
     )
 );
 

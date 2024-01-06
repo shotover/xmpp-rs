@@ -5,15 +5,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::iq::{IqGetPayload, IqResultPayload};
-use crate::util::helpers::{JidCodec, Text};
-use jid::Jid;
+use crate::util::text_node_codecs::{Codec, JidCodec, Text};
 
 generate_element!(
     /// Request from a client to stringprep/PRECIS a string into a JID.
     JidPrepQuery, "jid", JID_PREP,
     text: (
         /// The potential JID.
-        data: Text<String>
+        data: Text
     )
 );
 
@@ -31,7 +30,7 @@ generate_element!(
     JidPrepResponse, "jid", JID_PREP,
     text: (
         /// The JID.
-        jid: JidCodec<Jid>
+        jid: JidCodec
     )
 );
 

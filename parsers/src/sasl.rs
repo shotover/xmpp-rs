@@ -6,7 +6,7 @@
 
 use crate::ns;
 use crate::util::error::Error;
-use crate::util::helpers::Base64;
+use crate::util::text_node_codecs::{Base64, Codec};
 use crate::Element;
 use std::collections::BTreeMap;
 
@@ -52,7 +52,7 @@ generate_element!(
     ],
     text: (
         /// The content of the handshake.
-        data: Base64<Vec<u8>>
+        data: Base64
     )
 );
 
@@ -63,7 +63,7 @@ generate_element!(
     Challenge, "challenge", SASL,
     text: (
         /// The challenge data.
-        data: Base64<Vec<u8>>
+        data: Base64
     )
 );
 
@@ -74,7 +74,7 @@ generate_element!(
     Response, "response", SASL,
     text: (
         /// The response data.
-        data: Base64<Vec<u8>>
+        data: Base64
     )
 );
 
@@ -91,7 +91,7 @@ generate_element!(
     Success, "success", SASL,
     text: (
         /// Possible data sent on success.
-        data: Base64<Vec<u8>>
+        data: Base64
     )
 );
 

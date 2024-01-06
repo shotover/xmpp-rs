@@ -5,7 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::util::error::Error;
-use crate::util::helpers::Base64;
+use crate::util::text_node_codecs::{Base64, Codec};
 use base64::{engine::general_purpose::STANDARD as Base64Engine, Engine};
 use minidom::IntoAttributeValue;
 use std::num::ParseIntError;
@@ -105,7 +105,7 @@ generate_element!(
     ],
     text: (
         /// The hash value, as a vector of bytes.
-        hash: Base64<Vec<u8>>
+        hash: Base64
     )
 );
 

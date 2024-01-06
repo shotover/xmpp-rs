@@ -6,7 +6,7 @@
 
 use crate::message::MessagePayload;
 use crate::pubsub::PubSubPayload;
-use crate::util::helpers::Base64;
+use crate::util::text_node_codecs::{Base64, Codec};
 
 generate_element!(
     /// Element of the device list
@@ -39,7 +39,7 @@ generate_element!(
     ],
     text: (
         /// Serialized PublicKey
-        data: Base64<Vec<u8>>
+        data: Base64
     )
 );
 
@@ -49,7 +49,7 @@ generate_element!(
     SignedPreKeySignature, "signedPreKeySignature", LEGACY_OMEMO,
     text: (
         /// Signature bytes
-        data: Base64<Vec<u8>>
+        data: Base64
     )
 );
 
@@ -58,7 +58,7 @@ generate_element!(
     IdentityKey, "identityKey", LEGACY_OMEMO,
     text: (
         /// Serialized PublicKey
-        data: Base64<Vec<u8>>
+        data: Base64
     )
 );
 
@@ -82,7 +82,7 @@ generate_element!(
     ],
     text: (
         /// Serialized PublicKey
-        data: Base64<Vec<u8>>
+        data: Base64
     )
 );
 
@@ -125,7 +125,7 @@ generate_element!(
     IV, "iv", LEGACY_OMEMO,
     text: (
         /// IV bytes
-        data: Base64<Vec<u8>>
+        data: Base64
     )
 );
 
@@ -151,7 +151,7 @@ generate_element!(
         /// The 16 bytes key and the GCM authentication tag concatenated together
         /// and encrypted using the corresponding long-standing SignalProtocol
         /// session
-        data: Base64<Vec<u8>>
+        data: Base64
     )
 );
 
@@ -160,7 +160,7 @@ generate_element!(
     Payload, "payload", LEGACY_OMEMO,
     text: (
         /// Encrypted with AES-128 in Galois/Counter Mode (GCM)
-        data: Base64<Vec<u8>>
+        data: Base64
     )
 );
 

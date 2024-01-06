@@ -7,7 +7,7 @@
 use crate::date::DateTime;
 use crate::message::MessagePayload;
 use crate::presence::PresencePayload;
-use crate::util::helpers::PlainText;
+use crate::util::text_node_codecs::{Codec, OptionalCodec, Text};
 use jid::Jid;
 
 generate_element!(
@@ -22,7 +22,7 @@ generate_element!(
     ],
     text: (
         /// The optional reason this message got delayed.
-        data: PlainText<Option<String>>
+        data: OptionalCodec<Text>
     )
 );
 

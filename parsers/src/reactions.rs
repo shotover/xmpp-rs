@@ -5,7 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::message::MessagePayload;
-use crate::util::helpers::Text;
+use crate::util::text_node_codecs::{Codec, Text};
 
 generate_element!(
     /// Container for a set of reactions.
@@ -27,7 +27,7 @@ generate_element!(
     Reaction, "reaction", REACTIONS,
     text: (
         /// The text of this reaction.
-        emoji: Text<String>
+        emoji: Text
     )
 );
 

@@ -4,7 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use crate::util::helpers::TrimmedPlainText;
+use crate::util::text_node_codecs::{Codec, Text, Trimmed};
 
 generate_element!(
     /// Represents an URI used in a media element.
@@ -21,7 +21,7 @@ generate_element!(
     ],
     text: (
         /// The actual URI contained.
-        uri: TrimmedPlainText<String>
+        uri: Trimmed<Text>
     )
 );
 
@@ -168,7 +168,10 @@ mod tests {
             Error::ParseError(string) => string,
             _ => panic!(),
         };
-        assert_eq!(message, "URI missing in uri.");
+        assert_eq!(
+            message,
+            "The text in the element's text node was empty after trimming."
+        );
     }
 
     #[test]

@@ -5,7 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::iq::IqSetPayload;
-use crate::util::helpers::Base64;
+use crate::util::text_node_codecs::{Base64, Codec};
 
 generate_id!(
     /// An identifier matching a stream.
@@ -53,7 +53,7 @@ Data, "data", IBB,
     ],
     text: (
         /// Vector of bytes to be exchanged.
-        data: Base64<Vec<u8>>
+        data: Base64
     )
 );
 

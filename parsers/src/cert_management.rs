@@ -5,7 +5,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 use crate::iq::{IqGetPayload, IqResultPayload, IqSetPayload};
-use crate::util::helpers::Base64;
+use crate::util::text_node_codecs::{Base64, Codec};
 
 generate_elem_id!(
     /// The name of a certificate.
@@ -19,7 +19,7 @@ generate_element!(
     Cert, "x509cert", SASL_CERT,
     text: (
         /// The BER X.509 data.
-        data: Base64<Vec<u8>>
+        data: Base64
     )
 );
 

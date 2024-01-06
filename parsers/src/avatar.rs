@@ -6,7 +6,7 @@
 
 use crate::hashes::Sha1HexAttribute;
 use crate::pubsub::PubSubPayload;
-use crate::util::helpers::WhitespaceAwareBase64;
+use crate::util::text_node_codecs::{Codec, WhitespaceAwareBase64};
 
 generate_element!(
     /// Communicates information about an avatar.
@@ -48,7 +48,7 @@ generate_element!(
     Data, "data", AVATAR_DATA,
     text: (
         /// Vector of bytes representing the avatar’s image.
-        data: WhitespaceAwareBase64<Vec<u8>>
+        data: WhitespaceAwareBase64
     )
 );
 

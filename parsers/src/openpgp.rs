@@ -6,7 +6,7 @@
 
 use crate::date::DateTime;
 use crate::pubsub::PubSubPayload;
-use crate::util::helpers::Base64;
+use crate::util::text_node_codecs::{Base64, Codec};
 
 // TODO: Merge this container with the PubKey struct
 generate_element!(
@@ -14,7 +14,7 @@ generate_element!(
     PubKeyData, "data", OX,
     text: (
         /// Base64 data
-        data: Base64<Vec<u8>>
+        data: Base64
     )
 );
 

@@ -8,7 +8,7 @@
 pub mod error;
 
 /// Various helpers.
-pub(crate) mod helpers;
+pub(crate) mod text_node_codecs;
 
 /// Helper macros to parse and serialise more easily.
 #[macro_use]

@@ -4,7 +4,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-use crate::util::helpers::PlainText;
+use crate::util::text_node_codecs::{Codec, OptionalCodec, Text};
 use digest::Digest;
 use sha1::Sha1;
 
@@ -19,7 +19,7 @@ generate_element!(
         ///
         /// If None, it is the successful reply from the server, the stream is now
         /// fully established and both sides can now exchange stanzas.
-        data: PlainText<Option<String>>
+        data: OptionalCodec<Text>
     )
 );
 
