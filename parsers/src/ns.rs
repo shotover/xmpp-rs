@@ -97,6 +97,9 @@ pub const CAPS: &str = "http://jabber.org/protocol/caps";
 /// XEP-0118: User Tune
 pub const TUNE: &str = "http://jabber.org/protocol/tune";
 
+/// XEP-0153: vCard-Based Avatars
+pub const VCARD_UPDATE: &str = "vcard-temp:x:update";
+
 /// XEP-0157: Contact Addresses for XMPP Services
 pub const SERVER_INFO: &str = "http://jabber.org/network/serverinfo";
 

@@ -112,6 +112,9 @@ pub mod caps;
 /// XEP-0118: User Tune
 pub mod tune;
 
+///XEP-0153: vCard-Based Avatars
+pub mod vcard_update;
+
 /// XEP-0157: Contact Addresses for XMPP Services
 pub mod server_info;
 

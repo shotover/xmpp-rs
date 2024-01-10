@@ -9,6 +9,9 @@
 //!
 //! Only the <PHOTO> element is supported as a member of this legacy vCard. For more modern and complete
 //! user profile management, see [XEP-0292](https://xmpp.org/extensions/xep-0292.html): vCard4 Over XMPP.
+//!
+//! For vCard updates defined in [XEP-0153](https://xmpp.org/extensions/xep-0153.html),
+//! see [`vcard_update`][crate::vcard_update] module.
 
 use crate::iq::{IqGetPayload, IqResultPayload, IqSetPayload};
 use crate::util::text_node_codecs::{Base64, Codec, Text};
