@@ -73,6 +73,9 @@ pub mod bookmarks;
 /// XEP-0049: Private XML storage
 pub mod private;
 
+/// XEP-0054: vcard-temp
+pub mod vcard;
+
 /// XEP-0059: Result Set Management
 pub mod rsm;
 
