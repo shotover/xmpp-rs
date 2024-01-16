@@ -28,6 +28,11 @@ pub use crate::util::error::Error;
 pub use jid::{self, BareJid, Error as JidParseError, FullJid, Jid};
 pub use minidom::Element;
 
+pub use blake2;
+pub use sha1;
+pub use sha2;
+pub use sha3;
+
 /// XML namespace definitions used through XMPP.
 pub mod ns;
 
