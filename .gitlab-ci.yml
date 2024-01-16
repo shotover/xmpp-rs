@@ -31,6 +31,8 @@ variables:
   script:
     - cargo test --verbose --release -- --include-ignored
     - cargo test --verbose --no-default-features
+  variables:
+    RUSTFLAGS: " -D warnings"
 
 rustfmt:
   stage: lint
