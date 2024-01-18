@@ -35,6 +35,8 @@ jobs:
         run: cargo test --verbose --release -- --include-ignored
       - name: Run tests without default features
         run: cargo test --verbose --no-default-features
+    env:
+      RUSTFLAGS: " -D warnings"
 
   test-nightly:
     needs: [lint]
@@ -50,3 +52,5 @@ jobs:
         run: cargo test --verbose --release -- --include-ignored
       - name: Run tests without default features
         run: cargo test --verbose --no-default-features
+    env:
+      RUSTFLAGS: " -D warnings"
