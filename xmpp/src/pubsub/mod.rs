@@ -22,9 +22,9 @@ use tokio_xmpp::{
 pub(crate) mod avatar;
 
 pub(crate) async fn handle_event<C: ServerConnector>(
-    from: &Jid,
+    #[cfg_attr(not(feature = "avatars"), allow(unused_variables))] from: &Jid,
     elem: Element,
-    agent: &mut Agent<C>,
+    #[cfg_attr(not(feature = "avatars"), allow(unused_variables))] agent: &mut Agent<C>,
 ) -> Vec<Event> {
     let mut events = Vec::new();
     let event = PubSubEvent::try_from(elem);
@@ -87,7 +87,10 @@ pub(crate) async fn handle_event<C: ServerConnector>(
     events
 }
 
-pub(crate) fn handle_iq_result(from: &Jid, elem: Element) -> impl IntoIterator<Item = Event> {
+pub(crate) fn handle_iq_result(
+    #[cfg_attr(not(feature = "avatars"), allow(unused_variables))] from: &Jid,
+    elem: Element,
+) -> impl IntoIterator<Item = Event> {
     let mut events = Vec::new();
     let pubsub = PubSub::try_from(elem).unwrap();
     trace!("PubSub: {:#?}", pubsub);
