@@ -3,10 +3,18 @@
 stages:
   - lint
   - test
+  - docs
+  - bot
 
 variables:
+  DOCS_BASEURL: "https://xmpp-rs.gitlab.io/xmpp-rs/"
   FEATURES: ""
   RUST_BACKTRACE: "full"
+
+cache:
+  # Required to keep docs artifacts from old builds
+  paths:
+    - public
 
 .show-version:
   before_script:
@@ -33,6 +41,30 @@ variables:
     - cargo test --verbose --no-default-features
   variables:
     RUSTFLAGS: " -D warnings"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_PIPELINE_SOURCE == 'push' && $CI_COMMIT_REF_NAME == 'main'
+
+.docs:
+  stage: docs
+  script:
+    - echo "Building docs to CI_DOC_TARGET=$CI_DOC_TARGET"
+    - cargo doc
+    - rm -rf "$CI_DOC_TARGET"
+    - mkdir -p "$(dirname "$CI_DOC_TARGET")"
+    - mv target/doc "$CI_DOC_TARGET"
+    - echo "<a href='jid'>jid</a><br><a href='minidom'>minidom</a><br><a href='sasl'>sasl</a><br><a href='tokio_xmpp'>tokio_xmpp</a><br><a href='xmpp'>xmpp</a><br><a href='xmpp_parsers'>xmpp_parsers</a>" > "$CI_DOC_TARGET"/index.html
+  artifacts:
+    name: "$CI_DOC_TARGET"
+    paths:
+      - public
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+      variables:
+        CI_DOC_TARGET: "public/$CI_MERGE_REQUEST_IID"
+    - if: $CI_PIPELINE_SOURCE == 'push' && $CI_COMMIT_REF_NAME == 'main'
+      variables:
+        CI_DOC_TARGET: "public/main"
 
 rustfmt:
   stage: lint
@@ -41,6 +73,9 @@ rustfmt:
     - cargo fmt --check
   extends:
     - .stable
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_PIPELINE_SOURCE == 'push' && $CI_COMMIT_REF_NAME == 'main'
 
 stable-test:
   extends:
@@ -51,3 +86,19 @@ nightly-test:
   extends:
     - .test
     - .nightly
+
+pages:
+  extends:
+    - .docs
+    - .stable
+
+bot-comment:
+  stage: bot
+  image: alpine:latest
+  script:
+    - apk add --no-cache glab
+    - glab mr --repo "$CI_PROJECT_PATH" comment $CI_MERGE_REQUEST_IID --unique --message "Thanks for your MR! You can preview the docs [here]($DOCS_BASEURL/$CI_MERGE_REQUEST_IID/)."
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+      variables:
+        GITLAB_TOKEN: $MR_AUTOMATION_TOKEN
