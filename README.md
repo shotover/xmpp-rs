@@ -21,6 +21,15 @@ There is an XMPP MUC for the discussion of this library, feel free to join! :)
 
 [chat@xmpp.rs](xmpp:chat@xmpp.rs?join)
 
+Community
+---------
+
+A Code of Conduct is available as
+[CODE\_OF\_CONDUCT.md](https://gitlab.com/xmpp-rs/xmpp-rs/-/raw/main/CODE_OF_CONDUCT.md)
+in the repository for the well-being of the community. Please refer to it in
+case of a possible conflict in any of the xmpp-rs venues (channel, forge,
+etc.).
+
 License
 -------
 
