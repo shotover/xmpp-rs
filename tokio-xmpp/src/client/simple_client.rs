@@ -5,6 +5,7 @@ use tokio_stream::StreamExt;
 use xmpp_parsers::{ns, Element, Jid};
 
 use crate::connect::ServerConnector;
+use crate::stream_features::StreamFeatures;
 use crate::xmpp_codec::Packet;
 use crate::xmpp_stream::{add_stanza_id, XMPPStream};
 use crate::Error;
@@ -51,6 +52,11 @@ impl<C: ServerConnector> Client<C> {
             ns::JABBER_CLIENT,
         )))
         .await
+    }
+
+    /// Get the stream features (`<stream:features/>`) of the underlying stream
+    pub fn get_stream_features(&self) -> &StreamFeatures {
+        &self.stream.stream_features
     }
 
     /// End connection by sending `</stream:stream>`

@@ -8,6 +8,7 @@ use xmpp_parsers::{ns, Element, Jid};
 use super::connect::client_login;
 use crate::connect::{AsyncReadAndWrite, ServerConnector};
 use crate::event::Event;
+use crate::stream_features::StreamFeatures;
 use crate::xmpp_codec::Packet;
 use crate::xmpp_stream::{add_stanza_id, XMPPStream};
 use crate::{Error, ProtocolError};
@@ -79,6 +80,14 @@ impl<C: ServerConnector> Client<C> {
     pub async fn send_stanza(&mut self, stanza: Element) -> Result<(), Error> {
         self.send(Packet::Stanza(add_stanza_id(stanza, ns::JABBER_CLIENT)))
             .await
+    }
+
+    /// Get the stream features (`<stream:features/>`) of the underlying stream
+    pub fn get_stream_features(&self) -> Option<&StreamFeatures> {
+        match self.state {
+            ClientState::Connected(ref stream) => Some(&stream.stream_features),
+            _ => None,
+        }
     }
 
     /// End connection by sending `</stream:stream>`

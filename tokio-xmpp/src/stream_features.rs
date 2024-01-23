@@ -8,6 +8,7 @@ use xmpp_parsers::{ns, Element};
 ///
 /// TODO: should this rather go into xmpp-parsers, kept in a decoded
 /// struct?
+#[derive(Debug)]
 pub struct StreamFeatures(pub Element);
 
 impl StreamFeatures {
