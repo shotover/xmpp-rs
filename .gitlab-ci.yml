@@ -3,7 +3,6 @@
 stages:
   - lint
   - test
-  - docs
   - bot
 
 variables:
@@ -11,14 +10,9 @@ variables:
   FEATURES: ""
   RUST_BACKTRACE: "full"
 
-cache:
-  # Required to keep docs artifacts from old builds
-  paths:
-    - public
-
 .show-version:
   before_script:
-    - apt-get update; apt-get install -y --no-install-recommends pkg-config libssl-dev libicu-dev
+    - apt-get update; apt-get install -y --no-install-recommends pkg-config libssl-dev
     - rustc --version
     - cargo --version
 
@@ -46,25 +40,23 @@ cache:
     - if: $CI_PIPELINE_SOURCE == 'push' && $CI_COMMIT_REF_NAME == 'main'
 
 .docs:
-  stage: docs
+  stage: test
   script:
     - echo "Building docs to CI_DOC_TARGET=$CI_DOC_TARGET"
-    - cargo doc
-    - rm -rf "$CI_DOC_TARGET"
-    - mkdir -p "$(dirname "$CI_DOC_TARGET")"
-    - mv target/doc "$CI_DOC_TARGET"
-    - echo "<a href='jid'>jid</a><br><a href='minidom'>minidom</a><br><a href='sasl'>sasl</a><br><a href='tokio_xmpp'>tokio_xmpp</a><br><a href='xmpp'>xmpp</a><br><a href='xmpp_parsers'>xmpp_parsers</a>" > "$CI_DOC_TARGET"/index.html
-  artifacts:
-    name: "$CI_DOC_TARGET"
-    paths:
-      - public
+    - cargo +nightly doc --no-deps -Zrustdoc-map
+    - apt install -y rsync openssh-client
+    - mkdir -p $HOME/.ssh
+    - echo -e "Host docs\n\tHostname docs.xmpp.rs\n\tPort 1312\n\tUser xmpp-rs\n\tStrictHostKeyChecking no" > $HOME/.ssh/config
+    - echo "$SECRET_DOCS_SSH_PRIVATE" > $HOME/.ssh/id_ed25519
+    - chmod 400 $HOME/.ssh/id_ed25519
+    - rsync -av target/doc/ docs:$CI_DOC_TARGET
   rules:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
       variables:
-        CI_DOC_TARGET: "public/$CI_MERGE_REQUEST_IID"
+        CI_DOC_TARGET: "$CI_MERGE_REQUEST_IID"
     - if: $CI_PIPELINE_SOURCE == 'push' && $CI_COMMIT_REF_NAME == 'main'
       variables:
-        CI_DOC_TARGET: "public/main"
+        CI_DOC_TARGET: "main"
 
 rustfmt:
   stage: lint
@@ -87,10 +79,10 @@ nightly-test:
     - .test
     - .nightly
 
-pages:
+docs:
   extends:
     - .docs
-    - .stable
+    - .nightly
 
 bot-comment:
   stage: bot
