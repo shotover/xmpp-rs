@@ -6,7 +6,7 @@ stages:
   - bot
 
 variables:
-  DOCS_BASEURL: "https://xmpp-rs.gitlab.io/xmpp-rs/"
+  DOCS_BASEURL: "https://docs.xmpp.rs"
   FEATURES: ""
   RUST_BACKTRACE: "full"
 
