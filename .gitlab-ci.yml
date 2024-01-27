@@ -9,6 +9,8 @@ variables:
   DOCS_BASEURL: "https://docs.xmpp.rs"
   FEATURES: ""
   RUST_BACKTRACE: "full"
+  RUSTFLAGS: " -D warnings"
+  RUSTDOCFLAGS: " -D warnings"
 
 .show-version:
   before_script:
@@ -23,8 +25,6 @@ variables:
 
 .nightly:
   image: rustlang/rust:nightly-slim
-  # It's not often, but it happens nightly breaks, surprisingly.
-  allow_failure: true
   extends:
     - .show-version
 
@@ -33,8 +33,6 @@ variables:
   script:
     - cargo test --verbose --release -- --include-ignored
     - cargo test --verbose --no-default-features
-  variables:
-    RUSTFLAGS: " -D warnings"
   rules:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
     - if: $CI_PIPELINE_SOURCE == 'push' && $CI_COMMIT_REF_NAME == 'main'
@@ -75,6 +73,8 @@ stable-test:
     - .stable
 
 nightly-test:
+  # It's not often, but it happens nightly breaks, surprisingly.
+  allow_failure: true
   extends:
     - .test
     - .nightly
