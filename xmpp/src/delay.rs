@@ -38,7 +38,7 @@ impl StanzaTimeInfo {
 /// Parsing a [`Message`], store the current time it was processed, as well [XEP-0203](https://xmpp.org/extensions/xep-0203.html#protocol)
 /// [`Delay`] contained in the message's payloads.
 ///
-/// Specifically, this method will look for any <delay/> element in the message's payloads. If they were found,
+/// Specifically, this method will look for any `<delay/>` element in the message's payloads. If they were found,
 /// they will be added to the [`StanzaTimeInfo`] result.
 pub fn message_time_info(message: &Message) -> StanzaTimeInfo {
     let mut delays = vec![];

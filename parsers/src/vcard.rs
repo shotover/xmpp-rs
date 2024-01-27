@@ -7,7 +7,7 @@
 //! This module implements vCard, for the purpose of vCard-based avatars as defined in
 //! [XEP-0054](https://xmpp.org/extensions/xep-0054.html).
 //!
-//! Only the <PHOTO> element is supported as a member of this legacy vCard. For more modern and complete
+//! Only the `<PHOTO>` element is supported as a member of this legacy vCard. For more modern and complete
 //! user profile management, see [XEP-0292](https://xmpp.org/extensions/xep-0292.html): vCard4 Over XMPP.
 //!
 //! For vCard updates defined in [XEP-0153](https://xmpp.org/extensions/xep-0153.html),
@@ -48,7 +48,7 @@ generate_element!(
     )
 );
 
-/// A <vCard> element; only the <PHOTO> element is supported for this legacy vCard ; the rest is ignored.
+/// A `<vCard>` element; only the `<PHOTO>` element is supported for this legacy vCard ; the rest is ignored.
 pub struct VCard {
     /// A photo element.
     pub photo: Option<Photo>,

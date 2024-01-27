@@ -41,16 +41,13 @@ pub async fn join_room<C: ServerConnector>(
 /// The returned future will resolve when the request has been sent,
 /// not when the room has actually been left.
 ///
-/// If successful, a `RoomLeft` event should be received later as a confirmation.
-///
-/// See: https://xmpp.org/extensions/xep-0045.html#exit
+/// If successful, a `RoomLeft` event should be received later as a confirmation. See [XEP-0045](https://xmpp.org/extensions/xep-0045.html#exit).
 ///
 /// Note that this method does NOT remove the room from the auto-join list; the latter
 /// is more a list of bookmarks that the account knows about and that have a flag set
 /// to indicate that they should be joined automatically after connecting (see the JoinRoom event).
 ///
-/// Regarding the latter, see the these minutes about auto-join behavior:
-/// https://docs.modernxmpp.org/meetings/2019-01-brussels/#bookmarks
+/// Regarding the latter, see the these [ModernXMPP minutes about auto-join behavior](https://docs.modernxmpp.org/meetings/2019-01-brussels/#bookmarks).
 ///
 /// # Arguments
 ///

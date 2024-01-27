@@ -39,27 +39,16 @@ impl<C: ServerConnector> Agent<C> {
         muc::room::join_room(self, room, nick, password, lang, status).await
     }
 
-    /// Send a "leave room" request to the server (specifically, an "unavailable" presence stanza).
+    /// Request to leave a chatroom.
     ///
-    /// The returned future will resolve when the request has been sent,
-    /// not when the room has actually been left.
-    ///
-    /// If successful, a `RoomLeft` event should be received later as a confirmation.
-    ///
-    /// See: https://xmpp.org/extensions/xep-0045.html#exit
-    ///
-    /// Note that this method does NOT remove the room from the auto-join list; the latter
-    /// is more a list of bookmarks that the account knows about and that have a flag set
-    /// to indicate that they should be joined automatically after connecting (see the JoinRoom event).
-    ///
-    /// Regarding the latter, see the these minutes about auto-join behavior:
-    /// https://docs.modernxmpp.org/meetings/2019-01-brussels/#bookmarks
+    /// If successful, an [Event::RoomLeft] event will be produced. This method does not remove the room
+    /// from bookmarks nor remove the autojoin flag. See [muc::room::leave_room] for more information.
     ///
     /// # Arguments
     ///
     /// * `room_jid`: The JID of the room to leave.
     /// * `nickname`: The nickname to use in the room.
-    /// * `lang`: The language of the status message.
+    /// * `lang`: The language of the status message (empty string when unknown).
     /// * `status`: The status message to send.
     pub async fn leave_room(
         &mut self,

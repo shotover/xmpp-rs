@@ -7,8 +7,7 @@
 //! This module implements vCard avatar updates defined in
 //! [XEP-0153](https://xmpp.org/extensions/xep-0153.html).
 //!
-//! Specifically, as it appears in <presence> stanzas, as shown in this example:
-//! https://xmpp.org/extensions/xep-0153.html#example-3
+//! Specifically, as it appears in `<presence>` stanzas, as shown in [XEP-0153 example 3](https://xmpp.org/extensions/xep-0153.html#example-3).
 //!
 //! For [XEP-0054](https://xmpp.org/extensions/xep-0054.html) vCard support,
 //! see [`vcard`][crate::vcard] module.
