@@ -587,6 +587,34 @@ impl Element {
         self.children.push(Node::Text(child.into()));
     }
 
+    /// Appends a string as plain text to an `Element`.
+    ///
+    /// If the last child node of the element is a text node, the string will be appended to it.
+    /// Otherwise, a new text node will be created.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use minidom::Element;
+    ///
+    /// let mut elem = Element::bare("node", "ns1");
+    ///
+    /// assert_eq!(elem.text(), "");
+    ///
+    /// elem.append_text_node("text");
+    ///
+    /// elem.append_text(" and more text");
+    ///
+    /// assert_eq!(elem.nodes().count(), 1);
+    /// ```
+    pub fn append_text<S: Into<String>>(&mut self, text: S) {
+        if let Some(Node::Text(ref mut child)) = self.children.last_mut() {
+            child.push_str(&text.into());
+        } else {
+            self.append_text_node(text);
+        }
+    }
+
     /// Appends a node to an `Element`.
     ///
     /// # Examples
