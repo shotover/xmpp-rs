@@ -97,7 +97,7 @@ impl TreeBuilder {
     fn process_text(&mut self, text: String) {
         if self.depth() > 0 {
             let top = self.stack.len() - 1;
-            self.stack[top].append_text_node(text);
+            self.stack[top].append_text(text);
         }
     }
 
