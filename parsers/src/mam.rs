@@ -8,37 +8,107 @@ use crate::data_forms::DataForm;
 use crate::forwarding::Forwarded;
 use crate::iq::{IqGetPayload, IqResultPayload, IqSetPayload};
 use crate::message::MessagePayload;
+use crate::ns;
 use crate::pubsub::NodeName;
 use crate::rsm::{SetQuery, SetResult};
+use crate::util::error::Error;
+use crate::Element;
+use minidom::Node;
 
 generate_id!(
     /// An identifier matching a result message to the query requesting it.
     QueryId
 );
 
-generate_element!(
-    /// Starts a query to the archive.
-    Query, "query", MAM,
-    attributes: [
-        /// An optional identifier for matching forwarded messages to this
-        /// query.
-        queryid: Option<QueryId> = "queryid",
-
-        /// Must be set to Some when querying a PubSub node’s archive.
-        node: Option<NodeName> = "node"
-    ],
-    children: [
-        /// Used for filtering the results.
-        form: Option<DataForm> = ("x", DATA_FORMS) => DataForm,
-
-        /// Used for paging through results.
-        set: Option<SetQuery> = ("set", RSM) => SetQuery
-    ]
-);
+/// Starts a query to the archive.
+#[derive(Debug)]
+pub struct Query {
+    /// An optional identifier for matching forwarded messages to this
+    /// query.
+    pub queryid: Option<QueryId>,
+    /// Must be set to Some when querying a PubSub node’s archive.
+    pub node: Option<NodeName>,
+    /// Used for filtering the results.
+    pub form: Option<DataForm>,
+    /// Used for paging through results.
+    pub set: Option<SetQuery>,
+    /// Used for reversing the order of the results.
+    pub flip_page: bool,
+}
 
 impl IqGetPayload for Query {}
 impl IqSetPayload for Query {}
 impl IqResultPayload for Query {}
+
+impl TryFrom<Element> for Query {
+    type Error = Error;
+    fn try_from(elem: Element) -> Result<Query, Error> {
+        check_self!(elem, "query", MAM);
+        check_no_unknown_attributes!(elem, "query", ["queryid", "node"]);
+
+        let mut form = None;
+        let mut set = None;
+        let mut flip_page = None;
+        for child in elem.children() {
+            if child.is("x", ns::DATA_FORMS) {
+                if form.is_some() {
+                    return Err(Error::ParseError(
+                        "Element query must not have more than one x child.",
+                    ));
+                }
+                form = Some(DataForm::try_from(child.clone())?);
+                continue;
+            }
+            if child.is("set", ns::RSM) {
+                if set.is_some() {
+                    return Err(Error::ParseError(
+                        "Element query must not have more than one set child.",
+                    ));
+                }
+                set = Some(SetQuery::try_from(child.clone())?);
+                continue;
+            }
+            if child.is("flip-page", ns::MAM) {
+                if flip_page.is_some() {
+                    return Err(Error::ParseError(
+                        "Element query must not have more than one flip-page child.",
+                    ));
+                }
+                flip_page = Some(true);
+                continue;
+            }
+            return Err(Error::ParseError("Unknown child in query element."));
+        }
+        Ok(Query {
+            queryid: match elem.attr("queryid") {
+                Some(value) => Some(value.parse()?),
+                None => None,
+            },
+            node: match elem.attr("node") {
+                Some(value) => Some(value.parse()?),
+                None => None,
+            },
+            form,
+            set,
+            flip_page: flip_page.is_some(),
+        })
+    }
+}
+
+impl From<Query> for Element {
+    fn from(elem: Query) -> Element {
+        let mut builder = Element::builder("query", ns::MAM);
+        builder = builder.attr("queryid", elem.queryid);
+        builder = builder.attr("node", elem.node);
+        builder = builder.append_all(elem.form.map(|elem| Node::Element(Element::from(elem))));
+        builder = builder.append_all(elem.set.map(|elem| Node::Element(Element::from(elem))));
+        if elem.flip_page {
+            let flip_page = Element::builder("flip-page", ns::MAM).build();
+            builder = builder.append(Node::Element(flip_page));
+        }
+        builder.build()
+    }
+}
 
 generate_element!(
     /// The wrapper around forwarded stanzas.
@@ -107,7 +177,7 @@ mod tests {
     #[test]
     fn test_size() {
         assert_size!(QueryId, 24);
-        assert_size!(Query, 232);
+        assert_size!(Query, 240);
         assert_size!(Result_, 336);
         assert_size!(Complete, 1);
         assert_size!(Fin, 88);
@@ -200,6 +270,28 @@ mod tests {
     }
 
     #[test]
+    fn test_query_x_set_flipped() {
+        let elem: Element = r#"<query xmlns='urn:xmpp:mam:2'>
+  <x xmlns='jabber:x:data' type='submit'>
+    <field var='FORM_TYPE' type='hidden'>
+      <value>urn:xmpp:mam:2</value>
+    </field>
+    <field var='start'>
+      <value>2010-08-07T00:00:00Z</value>
+    </field>
+  </x>
+  <set xmlns='http://jabber.org/protocol/rsm'>
+    <max>10</max>
+  </set>
+  <flip-page/>
+</query>
+"#
+        .parse()
+        .unwrap();
+        Query::try_from(elem).unwrap();
+    }
+
+    #[test]
     fn test_invalid_child() {
         let elem: Element = "<query xmlns='urn:xmpp:mam:2'><coucou/></query>"
             .parse()
@@ -220,6 +312,7 @@ mod tests {
             node: None,
             form: None,
             set: None,
+            flip_page: false,
         };
         let elem2 = replace.into();
         assert_eq!(elem, elem2);
@@ -227,7 +320,7 @@ mod tests {
 
     #[test]
     fn test_serialize_query_with_form() {
-        let reference: Element = "<query xmlns='urn:xmpp:mam:2'><x xmlns='jabber:x:data' type='submit'><field xmlns='jabber:x:data' var='FORM_TYPE' type='hidden'><value xmlns='jabber:x:data'>urn:xmpp:mam:2</value></field><field xmlns='jabber:x:data' var='with'><value xmlns='jabber:x:data'>juliet@capulet.lit</value></field></x></query>"
+        let reference: Element = "<query xmlns='urn:xmpp:mam:2'><x xmlns='jabber:x:data' type='submit'><field xmlns='jabber:x:data' var='FORM_TYPE' type='hidden'><value xmlns='jabber:x:data'>urn:xmpp:mam:2</value></field><field xmlns='jabber:x:data' var='with'><value xmlns='jabber:x:data'>juliet@capulet.lit</value></field></x><flip-page/></query>"
         .parse()
         .unwrap();
 
@@ -242,6 +335,7 @@ mod tests {
             node: None,
             set: None,
             form: Some(form),
+            flip_page: true,
         };
         let serialized: Element = query.into();
         assert_eq!(serialized, reference);
@@ -262,7 +356,7 @@ mod tests {
         let result = Result_ {
             id: String::from("28482-98726-73623"),
             queryid: Some(QueryId(String::from("f27"))),
-            forwarded: forwarded,
+            forwarded,
         };
         let serialized: Element = result.into();
         assert_eq!(serialized, reference);
@@ -281,7 +375,7 @@ mod tests {
         let set = SetResult::try_from(elem).unwrap();
 
         let fin = Fin {
-            set: set,
+            set,
             complete: Complete::default(),
         };
         let serialized: Element = fin.into();
