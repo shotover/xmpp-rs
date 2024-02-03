@@ -168,6 +168,9 @@ pub const JINGLE_S5B: &str = "urn:xmpp:jingle:transports:s5b:1";
 /// XEP-0261: Jingle In-Band Bytestreams Transport Method
 pub const JINGLE_IBB: &str = "urn:xmpp:jingle:transports:ibb:1";
 
+/// XEP-0264: Jingle Content Thumbnails
+pub const JINGLE_THUMBNAILS: &str = "urn:xmpp:thumbs:1";
+
 /// XEP-0277: Microblogging over XMPP
 pub const MICROBLOG: &str = "urn:xmpp:microblog:0";
 
