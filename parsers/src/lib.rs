@@ -180,6 +180,9 @@ pub mod jingle_s5b;
 /// XEP-0261: Jingle In-Band Bytestreams Transport Method
 pub mod jingle_ibb;
 
+/// XEP-0264: Jingle Content Thumbnails
+pub mod jingle_thumnails;
+
 /// XEP-0280: Message Carbons
 pub mod carbons;
 
