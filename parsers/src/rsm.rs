@@ -78,10 +78,13 @@ impl From<SetQuery> for Element {
                 set.after
                     .map(|after| Element::builder("after", ns::RSM).append(after)),
             )
-            .append_all(
-                set.before
-                    .map(|before| Element::builder("before", ns::RSM).append(before)),
-            )
+            .append_all(set.before.map(|before| {
+                let mut builder = Element::builder("before", ns::RSM);
+                if !before.is_empty() {
+                    builder = builder.append(before);
+                }
+                builder
+            }))
             .append_all(
                 set.index
                     .map(|index| Element::builder("index", ns::RSM).append(format!("{}", index))),
@@ -273,6 +276,21 @@ mod tests {
             first_index: None,
             last: None,
             count: None,
+        };
+        let elem2 = rsm.into();
+        assert_eq!(elem, elem2);
+    }
+
+    #[test]
+    fn test_serialise_empty_before() {
+        let elem: Element = "<set xmlns='http://jabber.org/protocol/rsm'><before/></set>"
+            .parse()
+            .unwrap();
+        let rsm = SetQuery {
+            max: None,
+            after: None,
+            before: Some("".into()),
+            index: None,
         };
         let elem2 = rsm.into();
         assert_eq!(elem, elem2);
