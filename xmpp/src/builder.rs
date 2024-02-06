@@ -55,12 +55,12 @@ impl ClientBuilder<'_, tokio_xmpp::starttls::ServerConfig> {
         jid: BareJid,
         password: &'a str,
     ) -> ClientBuilder<'a, tokio_xmpp::starttls::ServerConfig> {
-        Self::new_with_server(jid, password, tokio_xmpp::starttls::ServerConfig::UseSrv)
+        Self::new_with_connector(jid, password, tokio_xmpp::starttls::ServerConfig::UseSrv)
     }
 }
 
 impl<C: ServerConnector> ClientBuilder<'_, C> {
-    pub fn new_with_server<'a>(
+    pub fn new_with_connector<'a>(
         jid: BareJid,
         password: &'a str,
         server_connector: C,
