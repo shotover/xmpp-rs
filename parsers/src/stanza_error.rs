@@ -262,7 +262,7 @@ impl TryFrom<Element> for StanzaError {
             if child.is("text", ns::XMPP_STANZAS) {
                 check_no_children!(child, "text");
                 check_no_unknown_attributes!(child, "text", ["xml:lang"]);
-                let lang = get_attr!(elem, "xml:lang", Default);
+                let lang = get_attr!(child, "xml:lang", Default);
                 if stanza_error.texts.insert(lang, child.text()).is_some() {
                     return Err(Error::ParseError(
                         "Text element present twice for the same xml:lang.",
@@ -396,6 +396,19 @@ mod tests {
         let elem: Element = r#"<error code="501" type="cancel" xmlns='jabber:client'>
     <feature-not-implemented xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
     <text xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'>The feature requested is not implemented by the recipient or server and therefore cannot be processed.</text>
+</error>"#
+            .parse()
+            .unwrap();
+        let stanza_error = StanzaError::try_from(elem).unwrap();
+        assert_eq!(stanza_error.type_, ErrorType::Cancel);
+    }
+
+    #[test]
+    fn test_error_multiple_text() {
+        let elem: Element = r#"<error type="cancel" xmlns='jabber:client'>
+    <item-not-found xmlns='urn:ietf:params:xml:ns:xmpp-stanzas'/>
+    <text xmlns='urn:ietf:params:xml:ns:xmpp-stanzas' xml:lang="fr">Nœud non trouvé</text>
+    <text xmlns='urn:ietf:params:xml:ns:xmpp-stanzas' xml:lang="en">Node not found</text>
 </error>"#
             .parse()
             .unwrap();
