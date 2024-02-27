@@ -160,8 +160,6 @@ impl IqResultPayload for Fin {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::error::Error;
-    use minidom::Element;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

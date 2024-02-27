@@ -1,6 +1,5 @@
 use super::error::{ConnectorError, Error};
 use hickory_resolver::{IntoName, TokioAsyncResolver};
-use idna;
 use log::debug;
 use std::net::SocketAddr;
 use tokio::net::TcpStream;

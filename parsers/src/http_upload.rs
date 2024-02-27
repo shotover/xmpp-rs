@@ -114,7 +114,6 @@ impl IqResultPayload for SlotResult {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Element;
 
     #[test]
     fn test_slot_request() {

@@ -183,7 +183,6 @@ pub fn query_ecaps2(hash: Hash) -> DiscoInfoQuery {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::util::error::Error;
     use crate::Element;
 
     #[cfg(target_pointer_width = "32")]

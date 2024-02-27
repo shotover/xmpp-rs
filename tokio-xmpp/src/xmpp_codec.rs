@@ -5,9 +5,7 @@ use bytes::{BufMut, BytesMut};
 use log::debug;
 use minidom::tree_builder::TreeBuilder;
 use rxml::{Lexer, PushDriver, RawParser};
-use std;
 use std::collections::HashMap;
-use std::default::Default;
 use std::fmt::Write;
 use std::io;
 #[cfg(feature = "syntax-highlighting")]
@@ -252,7 +250,6 @@ impl<'a> std::io::Write for WriteBytes<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bytes::BytesMut;
 
     #[test]
     fn test_stream_start() {

@@ -1,7 +1,4 @@
 use std::collections::HashMap;
-
-use std::convert::From;
-
 use std::string::FromUtf8Error;
 
 #[cfg(feature = "scram")]

@@ -185,7 +185,7 @@ impl From<PubSubOwner> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::data_forms::{DataForm, DataFormType, Field, FieldType};
+    use crate::data_forms::{DataFormType, Field, FieldType};
     use jid::BareJid;
     use std::str::FromStr;
 

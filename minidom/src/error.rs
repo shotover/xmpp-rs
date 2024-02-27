@@ -11,7 +11,6 @@
 
 //! Provides an error type for this crate.
 
-use std::convert::From;
 use std::error::Error as StdError;
 
 /// Our main error type.

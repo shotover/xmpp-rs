@@ -213,7 +213,6 @@ impl From<Failure> for Element {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Element;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

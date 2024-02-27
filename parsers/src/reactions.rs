@@ -35,7 +35,6 @@ generate_element!(
 mod tests {
     use super::*;
     use crate::Element;
-    use std::convert::{TryFrom, TryInto};
 
     #[cfg(target_pointer_width = "32")]
     #[test]

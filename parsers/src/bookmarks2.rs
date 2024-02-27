@@ -132,7 +132,6 @@ impl From<Conference> for Element {
 mod tests {
     use super::*;
     use crate::pubsub::{pubsub::Item as PubSubItem, PubSubEvent};
-    use crate::Element;
 
     #[cfg(target_pointer_width = "32")]
     #[test]

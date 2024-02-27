@@ -2,7 +2,6 @@ use std::env::args;
 use std::io::{stdin, Read};
 use std::process::exit;
 use std::str::FromStr;
-use tokio;
 use tokio_xmpp::SimpleClient as Client;
 use xmpp_parsers::message::{Body, Message};
 use xmpp_parsers::Jid;

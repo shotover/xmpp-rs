@@ -1,5 +1,4 @@
 use futures::{sink::SinkExt, stream::StreamExt};
-use std::marker::Unpin;
 use tokio::io::{AsyncRead, AsyncWrite};
 use tokio_util::codec::Framed;
 use xmpp_parsers::{ns, Element, Jid};

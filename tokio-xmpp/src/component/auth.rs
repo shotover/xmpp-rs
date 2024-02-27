@@ -1,5 +1,4 @@
 use futures::stream::StreamExt;
-use std::marker::Unpin;
 use tokio::io::{AsyncRead, AsyncWrite};
 use xmpp_parsers::{component::Handshake, ns};
 

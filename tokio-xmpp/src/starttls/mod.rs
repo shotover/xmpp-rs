@@ -10,7 +10,6 @@ use {
         rustls::{ClientConfig, OwnedTrustAnchor, RootCertStore, ServerName},
         TlsConnector,
     },
-    webpki_roots,
 };
 
 #[cfg(feature = "tls-native")]

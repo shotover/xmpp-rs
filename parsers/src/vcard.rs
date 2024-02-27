@@ -95,7 +95,6 @@ impl IqResultPayload for VCard {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Element;
     use base64::Engine;
     use std::str::FromStr;
 

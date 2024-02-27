@@ -100,7 +100,6 @@ pub fn generate_address_field<S: Into<String>>(var: S, values: Vec<String>) -> F
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::data_forms::{DataForm, DataFormType, Field, FieldType};
 
     #[cfg(target_pointer_width = "32")]
     #[test]
