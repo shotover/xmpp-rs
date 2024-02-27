@@ -66,7 +66,7 @@ mod tests {
     #[test]
     fn test_size() {
         assert_size!(Metadata, 12);
-        assert_size!(Info, 64);
+        assert_size!(Info, 60);
         assert_size!(Data, 12);
     }
 
@@ -74,7 +74,7 @@ mod tests {
     #[test]
     fn test_size() {
         assert_size!(Metadata, 24);
-        assert_size!(Info, 120);
+        assert_size!(Info, 112);
         assert_size!(Data, 24);
     }
 

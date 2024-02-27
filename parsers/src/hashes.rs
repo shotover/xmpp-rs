@@ -209,15 +209,15 @@ mod tests {
     #[cfg(target_pointer_width = "32")]
     #[test]
     fn test_size() {
-        assert_size!(Algo, 16);
-        assert_size!(Hash, 28);
+        assert_size!(Algo, 12);
+        assert_size!(Hash, 24);
     }
 
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
-        assert_size!(Algo, 32);
-        assert_size!(Hash, 56);
+        assert_size!(Algo, 24);
+        assert_size!(Hash, 48);
     }
 
     #[test]

@@ -78,14 +78,14 @@ mod tests {
     #[test]
     fn test_size() {
         assert_size!(Setup, 1);
-        assert_size!(Fingerprint, 32);
+        assert_size!(Fingerprint, 28);
     }
 
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
         assert_size!(Setup, 1);
-        assert_size!(Fingerprint, 64);
+        assert_size!(Fingerprint, 56);
     }
 
     #[test]

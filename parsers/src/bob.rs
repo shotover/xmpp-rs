@@ -93,15 +93,15 @@ mod tests {
     #[cfg(target_pointer_width = "32")]
     #[test]
     fn test_size() {
-        assert_size!(ContentId, 28);
-        assert_size!(Data, 60);
+        assert_size!(ContentId, 24);
+        assert_size!(Data, 56);
     }
 
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
-        assert_size!(ContentId, 56);
-        assert_size!(Data, 120);
+        assert_size!(ContentId, 48);
+        assert_size!(Data, 112);
     }
 
     #[test]

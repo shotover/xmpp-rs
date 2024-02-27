@@ -504,16 +504,16 @@ mod tests {
     #[test]
     fn test_size() {
         assert_size!(XhtmlIm, 32);
-        assert_size!(Child, 52);
-        assert_size!(Tag, 52);
+        assert_size!(Child, 48);
+        assert_size!(Tag, 48);
     }
 
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
         assert_size!(XhtmlIm, 48);
-        assert_size!(Child, 104);
-        assert_size!(Tag, 104);
+        assert_size!(Child, 96);
+        assert_size!(Tag, 96);
     }
 
     #[test]

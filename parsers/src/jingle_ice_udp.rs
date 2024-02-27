@@ -118,7 +118,7 @@ mod tests {
     #[cfg(target_pointer_width = "32")]
     #[test]
     fn test_size() {
-        assert_size!(Transport, 68);
+        assert_size!(Transport, 64);
         assert_size!(Type, 1);
         assert_size!(Candidate, 88);
     }
@@ -126,7 +126,7 @@ mod tests {
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
-        assert_size!(Transport, 136);
+        assert_size!(Transport, 128);
         assert_size!(Type, 1);
         assert_size!(Candidate, 128);
     }

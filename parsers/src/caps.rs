@@ -222,13 +222,13 @@ mod tests {
     #[cfg(target_pointer_width = "32")]
     #[test]
     fn test_size() {
-        assert_size!(Caps, 52);
+        assert_size!(Caps, 48);
     }
 
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
-        assert_size!(Caps, 104);
+        assert_size!(Caps, 96);
     }
 
     #[test]
