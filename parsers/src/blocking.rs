@@ -37,7 +37,7 @@ macro_rules! generate_blocking_element {
                 check_no_attributes!(elem, $name);
                 let mut items = vec!();
                 for child in elem.children() {
-                    check_self!(child, "item", BLOCKING);
+                    check_child!(child, "item", BLOCKING);
                     check_no_unknown_attributes!(child, "item", ["jid"]);
                     check_no_children!(child, "item");
                     items.push(get_attr!(child, "jid", Required));

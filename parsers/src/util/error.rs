@@ -17,6 +17,12 @@ pub enum Error {
     /// of a freeform string.
     ParseError(&'static str),
 
+    /// Element local-name/namespace mismatch
+    ///
+    /// Returns the original element unaltered, as well as the expected ns and
+    /// local-name.
+    TypeMismatch(&'static str, &'static str, crate::Element),
+
     /// Generated when some base64 content fails to decode, usually due to
     /// extra characters.
     Base64Error(base64::DecodeError),
@@ -40,10 +46,24 @@ pub enum Error {
     ChronoParseError(chrono::ParseError),
 }
 
+impl Error {
+    /// Converts the TypeMismatch error to a generic ParseError
+    ///
+    /// This must be used when TryFrom is called on children to avoid confusing
+    /// user code which assumes that TypeMismatch refers to the top level
+    /// element only.
+    pub(crate) fn hide_type_mismatch(self) -> Self {
+        match self {
+            Error::TypeMismatch(..) => Error::ParseError("Unexpected child element"),
+            other => other,
+        }
+    }
+}
+
 impl StdError for Error {
     fn cause(&self) -> Option<&dyn StdError> {
         match self {
-            Error::ParseError(_) => None,
+            Error::ParseError(_) | Error::TypeMismatch(..) => None,
             Error::Base64Error(e) => Some(e),
             Error::ParseIntError(e) => Some(e),
             Error::ParseStringError(e) => Some(e),
@@ -58,6 +78,14 @@ impl fmt::Display for Error {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Error::ParseError(s) => write!(fmt, "parse error: {}", s),
+            Error::TypeMismatch(ns, localname, element) => write!(
+                fmt,
+                "element type mismatch: expected {{{}}}{}, got {{{}}}{}",
+                ns,
+                localname,
+                element.ns(),
+                element.name()
+            ),
             Error::Base64Error(e) => write!(fmt, "base64 error: {}", e),
             Error::ParseIntError(e) => write!(fmt, "integer parsing error: {}", e),
             Error::ParseStringError(e) => write!(fmt, "string parsing error: {}", e),

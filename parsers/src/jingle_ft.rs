@@ -289,7 +289,7 @@ impl TryFrom<Element> for Checksum {
                     "JingleFT checksum element must have exactly one child.",
                 ));
             }
-            file = Some(File::try_from(child.clone())?);
+            file = Some(File::try_from(child.clone()).map_err(|e| e.hide_type_mismatch())?);
         }
         if file.is_none() {
             return Err(Error::ParseError(
@@ -541,9 +541,9 @@ mod tests {
         let error = Checksum::try_from(elem).unwrap_err();
         let message = match error {
             Error::ParseError(string) => string,
-            _ => panic!(),
+            other => panic!("unexpected error: {:?}", other),
         };
-        assert_eq!(message, "This is not a file element.");
+        assert_eq!(message, "Unexpected child element");
 
         let elem: Element = "<checksum xmlns='urn:xmpp:jingle:apps:file-transfer:5' creator='initiator'><file><hash xmlns='urn:xmpp:hashes:2' algo='sha-1'>w0mcJylzCn+AfvuGdqkty2+KP48=</hash></file></checksum>".parse().unwrap();
         let error = Checksum::try_from(elem).unwrap_err();

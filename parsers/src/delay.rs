@@ -69,12 +69,12 @@ mod tests {
         let elem: Element = "<replace xmlns='urn:xmpp:message-correct:0'/>"
             .parse()
             .unwrap();
-        let error = Delay::try_from(elem).unwrap_err();
-        let message = match error {
-            Error::ParseError(string) => string,
+        let error = Delay::try_from(elem.clone()).unwrap_err();
+        let returned_elem = match error {
+            Error::TypeMismatch(_, _, elem) => elem,
             _ => panic!(),
         };
-        assert_eq!(message, "This is not a delay element.");
+        assert_eq!(elem, returned_elem);
     }
 
     #[test]
