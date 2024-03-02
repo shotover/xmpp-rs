@@ -491,6 +491,22 @@ impl Element {
         }
     }
 
+    /// Returns an iterator over the child Elements, draining the element of
+    /// all its child nodes **including text!**
+    ///
+    /// This is a bit of a footgun, so we make this hidden in the docs (it
+    /// needs to be pub for macro use). Once `extract_if`
+    /// ([rust#43244](https://github.com/rust-lang/rust/issues/43244))
+    /// is stabilized, we can replace this with a take_children which doesn't
+    /// remove text nodes.
+    #[inline]
+    #[doc(hidden)]
+    pub fn take_contents_as_children(&mut self) -> ContentsAsChildren {
+        ContentsAsChildren {
+            iter: self.children.drain(..),
+        }
+    }
+
     /// Returns an iterator over references to every text node of this element.
     ///
     /// # Examples
@@ -750,6 +766,24 @@ impl<'a> Iterator for ChildrenMut<'a> {
     fn next(&mut self) -> Option<&'a mut Element> {
         for item in &mut self.iter {
             if let Node::Element(ref mut child) = *item {
+                return Some(child);
+            }
+        }
+        None
+    }
+}
+
+/// An iterator over references to child elements of an `Element`.
+pub struct ContentsAsChildren<'a> {
+    iter: std::vec::Drain<'a, Node>,
+}
+
+impl<'a> Iterator for ContentsAsChildren<'a> {
+    type Item = Element;
+
+    fn next(&mut self) -> Option<Element> {
+        for item in &mut self.iter {
+            if let Node::Element(child) = item {
                 return Some(child);
             }
         }

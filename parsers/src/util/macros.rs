@@ -486,55 +486,74 @@ macro_rules! start_parse_elem {
 
 macro_rules! do_parse {
     ($elem:ident, Element) => {
-        $elem.clone()
+        Ok($elem)
     };
     ($elem:ident, String) => {
-        $elem.text()
+        Ok($elem.text())
     };
     ($elem:ident, $constructor:ident) => {
-        $constructor::try_from($elem.clone())?
+        $constructor::try_from($elem)
     };
 }
 
 macro_rules! do_parse_elem {
     ($temp:ident: Vec = $constructor:ident => $elem:ident, $name:tt, $parent_name:tt) => {
-        $temp.push(do_parse!($elem, $constructor));
+        match do_parse!($elem, $constructor) {
+            Ok(v) => Ok($temp.push(v)),
+            Err(e) => Err(e),
+        }
     };
     ($temp:ident: Option = $constructor:ident => $elem:ident, $name:tt, $parent_name:tt) => {
         if $temp.is_some() {
-            return Err(crate::util::error::Error::ParseError(concat!(
+            Err(crate::util::error::Error::ParseError(concat!(
                 "Element ",
                 $parent_name,
                 " must not have more than one ",
                 $name,
                 " child."
-            )));
+            )))
+        } else {
+            match do_parse!($elem, $constructor) {
+                Ok(v) => {
+                    $temp = Some(v);
+                    Ok(())
+                }
+                Err(e) => Err(e),
+            }
         }
-        $temp = Some(do_parse!($elem, $constructor));
     };
     ($temp:ident: Required = $constructor:ident => $elem:ident, $name:tt, $parent_name:tt) => {
         if $temp.is_some() {
-            return Err(crate::util::error::Error::ParseError(concat!(
+            Err(crate::util::error::Error::ParseError(concat!(
                 "Element ",
                 $parent_name,
                 " must not have more than one ",
                 $name,
                 " child."
-            )));
+            )))
+        } else {
+            match do_parse!($elem, $constructor) {
+                Ok(v) => {
+                    $temp = Some(v);
+                    Ok(())
+                }
+                Err(e) => Err(e),
+            }
         }
-        $temp = Some(do_parse!($elem, $constructor));
     };
     ($temp:ident: Present = $constructor:ident => $elem:ident, $name:tt, $parent_name:tt) => {
         if $temp {
-            return Err(crate::util::error::Error::ParseError(concat!(
+            Err(crate::util::error::Error::ParseError(concat!(
                 "Element ",
                 $parent_name,
                 " must not have more than one ",
                 $name,
                 " child."
-            )));
+            )))
+        } else {
+            $temp = true;
+            Ok(())
         }
-        $temp = true;
     };
 }
 
@@ -645,19 +664,43 @@ macro_rules! generate_element {
         impl ::std::convert::TryFrom<crate::Element> for $elem {
             type Error = crate::util::error::Error;
 
-            fn try_from(elem: crate::Element) -> Result<$elem, crate::util::error::Error> {
+            fn try_from(mut elem: crate::Element) -> Result<$elem, crate::util::error::Error> {
                 check_self!(elem, $name, $ns);
                 check_no_unknown_attributes!(elem, $name, [$($attr_name),*]);
                 $(
                     start_parse_elem!($child_ident: $coucou);
                 )*
-                for _child in elem.children() {
+                // We must pull the texts out of the Element before we pull
+                // the children, because take_elements_as_children drains
+                // *all* child nodes, including texts.
+                // To deal with the genericity of this macro, we need a local
+                // struct decl to carry the identifier around.
+                struct Texts {
                     $(
-                    if generate_child_test!(_child, $child_name, $child_ns) {
-                        do_parse_elem!($child_ident: $coucou = $child_constructor => _child, $child_name, $name);
-                        continue;
-                    }
+                        $text_ident: <$codec as Codec>::Decoded,
                     )*
+                }
+                #[allow(unused_variables)]
+                let texts = Texts {
+                    $(
+                        $text_ident: <$codec>::decode(&elem.text())?,
+                    )*
+                };
+                for _child in elem.take_contents_as_children() {
+                    let residual = _child;
+                    $(
+                    // TODO: get rid of the explicit generate_child_test here
+                    // once !295 has landed.
+                    let residual = if generate_child_test!(residual, $child_name, $child_ns) {
+                        match do_parse_elem!($child_ident: $coucou = $child_constructor => residual, $child_name, $name) {
+                            Ok(()) => continue,
+                            Err(other) => return Err(other),
+                        }
+                    } else {
+                        residual
+                    };
+                    )*
+                    let _ = residual;
                     return Err(crate::util::error::Error::ParseError(concat!("Unknown child in ", $name, " element.")));
                 }
                 Ok($elem {
@@ -668,7 +711,7 @@ macro_rules! generate_element {
                         $child_ident: finish_parse_elem!($child_ident: $coucou = $child_name, $name),
                     )*
                     $(
-                        $text_ident: <$codec>::decode(&elem.text())?,
+                        $text_ident: texts.$text_ident,
                     )*
                 })
             }
@@ -706,10 +749,10 @@ macro_rules! impl_pubsub_item {
         impl ::std::convert::TryFrom<crate::Element> for $item {
             type Error = Error;
 
-            fn try_from(elem: crate::Element) -> Result<$item, Error> {
+            fn try_from(mut elem: crate::Element) -> Result<$item, Error> {
                 check_self!(elem, "item", $ns);
                 check_no_unknown_attributes!(elem, "item", ["id", "publisher"]);
-                let mut payloads = elem.children().cloned().collect::<Vec<_>>();
+                let mut payloads = elem.take_contents_as_children().collect::<Vec<_>>();
                 let payload = payloads.pop();
                 if !payloads.is_empty() {
                     return Err(Error::ParseError(
