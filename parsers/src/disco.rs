@@ -7,6 +7,7 @@
 use crate::data_forms::{DataForm, DataFormType};
 use crate::iq::{IqGetPayload, IqResultPayload};
 use crate::ns;
+use crate::rsm::{SetQuery, SetResult};
 use crate::util::error::Error;
 use crate::Element;
 use jid::Jid;
@@ -192,6 +193,10 @@ DiscoItemsQuery, "query", DISCO_ITEMS,
 attributes: [
     /// Node on which we are doing the discovery.
     node: Option<String> = "node",
+],
+children: [
+    /// Optional paging via Result Set Management
+    rsm: Option<crate::rsm::SetQuery> = ("set", RSM) => SetQuery,
 ]);
 
 impl IqGetPayload for DiscoItemsQuery {}
@@ -221,7 +226,10 @@ generate_element!(
     ],
     children: [
         /// List of items pointed by this entity.
-        items: Vec<Item> = ("item", DISCO_ITEMS) => Item
+        items: Vec<Item> = ("item", DISCO_ITEMS) => Item,
+
+        /// Optional paging via Result Set Management
+        rsm: Option<crate::rsm::SetResult> = ("set", RSM) => SetResult,
     ]
 );
 
@@ -241,8 +249,8 @@ mod tests {
         assert_size!(DiscoInfoResult, 48);
 
         assert_size!(Item, 44);
-        assert_size!(DiscoItemsQuery, 12);
-        assert_size!(DiscoItemsResult, 24);
+        assert_size!(DiscoItemsQuery, 52);
+        assert_size!(DiscoItemsResult, 64);
     }
 
     #[cfg(target_pointer_width = "64")]
@@ -254,8 +262,8 @@ mod tests {
         assert_size!(DiscoInfoResult, 96);
 
         assert_size!(Item, 88);
-        assert_size!(DiscoItemsQuery, 24);
-        assert_size!(DiscoItemsResult, 48);
+        assert_size!(DiscoItemsQuery, 104);
+        assert_size!(DiscoItemsResult, 128);
     }
 
     #[test]
