@@ -49,7 +49,7 @@ mod inner;
 use inner::InnerJid;
 
 mod parts;
-pub use parts::{DomainPart, NodePart, ResourcePart};
+pub use parts::{DomainPart, DomainRef, NodePart, NodeRef, ResourcePart, ResourceRef};
 
 /// An enum representing a Jabber ID. It can be either a `FullJid` or a `BareJid`.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -798,7 +798,7 @@ mod tests {
 
         assert_eq!(jid.node_str(), Some("a"),);
 
-        assert_eq!(jid.node(), Some(NodePart::new("a").unwrap()));
+        assert_eq!(jid.node(), Some(NodePart::new("a").unwrap().into_owned()));
     }
 
     #[test]
@@ -807,7 +807,7 @@ mod tests {
 
         assert_eq!(jid.domain_str(), "b.c");
 
-        assert_eq!(jid.domain(), DomainPart::new("b.c").unwrap());
+        assert_eq!(jid.domain(), DomainPart::new("b.c").unwrap().into_owned());
     }
 
     #[test]
@@ -816,7 +816,10 @@ mod tests {
 
         assert_eq!(jid.resource_str(), Some("d"),);
 
-        assert_eq!(jid.resource(), Some(ResourcePart::new("d").unwrap()));
+        assert_eq!(
+            jid.resource(),
+            Some(ResourcePart::new("d").unwrap().into_owned())
+        );
     }
 
     #[test]
