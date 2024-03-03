@@ -64,7 +64,7 @@ impl ServerConnector for ServerConfig {
         // TCP connection
         let tcp_stream = match self {
             ServerConfig::UseSrv => {
-                connect_with_srv(jid.domain_str(), "_xmpp-client._tcp", 5222).await?
+                connect_with_srv(jid.domain().as_str(), "_xmpp-client._tcp", 5222).await?
             }
             ServerConfig::Manual { host, port } => connect_to_host(host.as_str(), *port).await?,
         };
@@ -126,7 +126,7 @@ async fn get_tls_stream<S: AsyncRead + AsyncWrite + Unpin>(
 async fn get_tls_stream<S: AsyncRead + AsyncWrite + Unpin>(
     xmpp_stream: XMPPStream<S>,
 ) -> Result<TlsStream<S>, Error> {
-    let domain = xmpp_stream.jid.domain_str().to_owned();
+    let domain = xmpp_stream.jid.domain().to_string();
     let domain = ServerName::try_from(domain.as_str())?;
     let stream = xmpp_stream.into_inner();
     let mut root_store = RootCertStore::empty();

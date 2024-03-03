@@ -15,8 +15,8 @@ pub async fn bind<S: AsyncRead + AsyncWrite + Unpin>(
     if stream.stream_features.can_bind() {
         let resource = stream
             .jid
-            .resource_str()
-            .and_then(|resource| Some(resource.to_owned()));
+            .resource()
+            .and_then(|resource| Some(resource.to_string()));
         let iq = Iq::from_set(BIND_REQ_ID, BindQuery::new(resource));
         stream.send_stanza(iq).await?;
 

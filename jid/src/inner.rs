@@ -17,6 +17,8 @@ use std::borrow::Cow;
 use std::str::FromStr;
 use stringprep::{nameprep, nodeprep, resourceprep};
 
+use crate::parts::{DomainRef, NodeRef, ResourceRef};
+
 fn length_check(len: usize, error_empty: Error, error_too_long: Error) -> Result<(), Error> {
     if len == 0 {
         Err(error_empty)
@@ -107,36 +109,36 @@ impl InnerJid {
         })
     }
 
-    pub(crate) fn node(&self) -> Option<&str> {
+    pub(crate) fn node(&self) -> Option<&NodeRef> {
         self.at.map(|at| {
             let at = u16::from(at) as usize;
-            &self.normalized[..at]
+            NodeRef::from_str_unchecked(&self.normalized[..at])
         })
     }
 
-    pub(crate) fn domain(&self) -> &str {
+    pub(crate) fn domain(&self) -> &DomainRef {
         match (self.at, self.slash) {
             (Some(at), Some(slash)) => {
                 let at = u16::from(at) as usize;
                 let slash = u16::from(slash) as usize;
-                &self.normalized[at + 1..slash]
+                DomainRef::from_str_unchecked(&self.normalized[at + 1..slash])
             }
             (Some(at), None) => {
                 let at = u16::from(at) as usize;
-                &self.normalized[at + 1..]
+                DomainRef::from_str_unchecked(&self.normalized[at + 1..])
             }
             (None, Some(slash)) => {
                 let slash = u16::from(slash) as usize;
-                &self.normalized[..slash]
+                DomainRef::from_str_unchecked(&self.normalized[..slash])
             }
-            (None, None) => &self.normalized,
+            (None, None) => DomainRef::from_str_unchecked(&self.normalized),
         }
     }
 
-    pub(crate) fn resource(&self) -> Option<&str> {
+    pub(crate) fn resource(&self) -> Option<&ResourceRef> {
         self.slash.map(|slash| {
             let slash = u16::from(slash) as usize;
-            &self.normalized[slash + 1..]
+            ResourceRef::from_str_unchecked(&self.normalized[slash + 1..])
         })
     }
 }

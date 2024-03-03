@@ -13,7 +13,7 @@ pub async fn client_login<C: ServerConnector>(
     jid: Jid,
     password: String,
 ) -> Result<XMPPStream<C::Stream>, Error> {
-    let username = jid.node_str().unwrap();
+    let username = jid.node().unwrap().as_str();
     let password = password;
 
     let xmpp_stream = server.connect(&jid, ns::JABBER_CLIENT).await?;

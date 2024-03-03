@@ -1,7 +1,20 @@
 Version xxx, release xxx:
+  * Breaking:
+    - With the addition of `str`-like types for `DomainPart`, `NodePart` and
+      `ResourcePart`, the functions on `Jid`, `BareJid` and `FullJid` which
+      return the respective types have been changed to return references
+      instead. Use `ToOwned::to_owned` to obtain a copy or `.as_str()` to
+      obtain a plain `str` reference.
+    - The `node_str`, `domain_str` and `resource_str` functions returning str
+      references have been removed from the JID types. Use `.as_str()` or
+      `.map(|x| x.as_str())` on the corresponding `node`/`domain`/`resource`
+      functions instead.
   * Additions:
     - Add optional quote support. Implement quote::ToTokens for Jid, FullJid
       and BareJid.
+    - `str`-like reference types have been added for `DomainPart`, `NodePart`
+      and `ResourcePart`, called `DomainRef`, `NodeRef` and `ResourceRef`
+      respectively.
 
 Version 0.10.0, release 2023-08-17:
   * Breaking

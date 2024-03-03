@@ -21,7 +21,7 @@ pub async fn handle_message_group_chat<C: ServerConnector>(
     if let Some((_lang, subject)) = message.get_best_subject(langs.clone()) {
         events.push(Event::RoomSubject(
             from.to_bare(),
-            from.resource_str().map(String::from),
+            from.resource().map(|x| x.to_string()),
             subject.0.clone(),
             time_info.clone(),
         ));
@@ -32,7 +32,7 @@ pub async fn handle_message_group_chat<C: ServerConnector>(
             Jid::Full(full) => Event::RoomMessage(
                 message.id.clone(),
                 from.to_bare(),
-                full.resource_str().to_owned(),
+                full.resource().to_string(),
                 body.clone(),
                 time_info,
             ),

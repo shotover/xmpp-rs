@@ -15,7 +15,7 @@ pub async fn start<S: AsyncRead + AsyncWrite + Unpin>(
     ns: String,
 ) -> Result<XMPPStream<S>, Error> {
     let attrs = [
-        ("to".to_owned(), jid.domain_str().to_owned()),
+        ("to".to_owned(), jid.domain().to_string()),
         ("version".to_owned(), "1.0".to_owned()),
         ("xmlns".to_owned(), ns.clone()),
         ("xmlns:stream".to_owned(), ns::STREAM.to_owned()),

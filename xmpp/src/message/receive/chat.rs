@@ -39,7 +39,7 @@ pub async fn handle_message_chat<C: ServerConnector>(
                     Jid::Full(full) => Event::RoomPrivateMessage(
                         message.id.clone(),
                         full.to_bare(),
-                        full.resource_str().to_owned(),
+                        full.resource().to_string(),
                         body.clone(),
                         time_info.clone(),
                     ),

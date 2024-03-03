@@ -77,10 +77,6 @@ macro_rules! def_part_types {
             pub fn into_inner(self) -> String {
                 self.0
             }
-
-            pub(crate) fn new_unchecked(s: &str) -> Self {
-                $name(s.to_string())
-            }
         }
 
         impl FromStr for $name {
@@ -163,7 +159,7 @@ macro_rules! def_part_types {
         pub struct $borrowed(pub(crate) str);
 
         impl $borrowed {
-            fn from_str_unchecked(s: &str) -> &Self {
+            pub(crate) fn from_str_unchecked(s: &str) -> &Self {
                 // SAFETY: repr(transparent) thing can be transmuted to/from
                 // its inner.
                 unsafe { std::mem::transmute(s) }
