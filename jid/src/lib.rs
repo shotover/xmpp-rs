@@ -301,13 +301,13 @@ pub struct BareJid {
 
 impl fmt::Debug for FullJid {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        write!(fmt, "FullJID({})", self)
+        fmt.debug_tuple("FullJid").field(&self.inner).finish()
     }
 }
 
 impl fmt::Debug for BareJid {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        write!(fmt, "BareJID({})", self)
+        fmt.debug_tuple("BareJid").field(&self.inner).finish()
     }
 }
 
