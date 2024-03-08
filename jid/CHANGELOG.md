@@ -15,6 +15,11 @@ Version xxx, release xxx:
     - `str`-like reference types have been added for `DomainPart`, `NodePart`
       and `ResourcePart`, called `DomainRef`, `NodeRef` and `ResourceRef`
       respectively.
+    - Convenience methods to combine `DomainPart` and `NodePart` to a
+      `BareJid` have been added, including
+      `impl From<DomainPart> for BareJid` and
+      `impl From<DomainPart> for Jid`, both of which are (unlike
+      `::from_parts`) copy-free.
 
 Version 0.10.0, release 2023-08-17:
   * Breaking

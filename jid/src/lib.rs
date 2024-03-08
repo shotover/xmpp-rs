@@ -130,7 +130,10 @@ impl Jid {
 
     /// Build a [`Jid`] from typed parts. This method cannot fail because it uses parts that have
     /// already been parsed and stringprepped into [`NodePart`], [`DomainPart`], and [`ResourcePart`].
-    /// This method allocates and does not consume the typed parts.
+    ///
+    /// This method allocates and does not consume the typed parts. To avoid
+    /// allocation if both `node` and `resource` are known to be `None` and
+    /// `domain` is owned, you can use `domain.into()`.
     pub fn from_parts(
         node: Option<&NodeRef>,
         domain: &DomainRef,
@@ -523,8 +526,11 @@ impl BareJid {
     }
 
     /// Build a [`BareJid`] from typed parts. This method cannot fail because it uses parts that have
-    /// already been parsed and stringprepped into [`NodePart`] and [`DomainPart`]. This method allocates
-    /// and does not consume the typed parts.
+    /// already been parsed and stringprepped into [`NodePart`] and [`DomainPart`].
+    ///
+    /// This method allocates and does not consume the typed parts. To avoid
+    /// allocation if `node` is known to be `None` and `domain` is owned, you
+    /// can use `domain.into()`.
     pub fn from_parts(node: Option<&NodeRef>, domain: &DomainRef) -> BareJid {
         let (at, normalized) = if let Some(node) = node {
             // Parts are never empty so len > 0 for NonZeroU16::new is always Some
@@ -903,5 +909,17 @@ mod tests {
 
         let jid: FullJid = FullJid::new("node@domain/resource").unwrap();
         serde_test::assert_tokens(&jid, &[serde_test::Token::Str("node@domain/resource")]);
+    }
+
+    #[test]
+    fn jid_into_parts_and_from_parts() {
+        let node = NodePart::new("node").unwrap();
+        let domain = DomainPart::new("domain").unwrap();
+
+        let jid1 = domain.with_node(&node);
+        let jid2 = node.with_domain(&domain);
+        let jid3 = BareJid::new("node@domain").unwrap();
+        assert_eq!(jid1, jid2);
+        assert_eq!(jid2, jid3);
     }
 }

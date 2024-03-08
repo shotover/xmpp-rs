@@ -5,7 +5,7 @@ use std::str::FromStr;
 
 use stringprep::{nameprep, nodeprep, resourceprep};
 
-use crate::Error;
+use crate::{BareJid, Error, InnerJid, Jid};
 
 fn length_check(len: usize, error_empty: Error, error_too_long: Error) -> Result<(), Error> {
     if len == 0 {
@@ -237,6 +237,46 @@ def_part_types! {
     ///
     /// See [`ResourcePart`] for details.
     pub struct ref ResourceRef(str);
+}
+
+impl DomainRef {
+    /// Construct a bare JID (a JID without a resource) from this domain and
+    /// the given node (local part).
+    pub fn with_node(&self, node: &NodeRef) -> BareJid {
+        BareJid::from_parts(Some(node), self)
+    }
+}
+
+impl From<DomainPart> for BareJid {
+    fn from(other: DomainPart) -> Self {
+        BareJid {
+            inner: InnerJid {
+                normalized: other.0,
+                at: None,
+                slash: None,
+            },
+        }
+    }
+}
+
+impl From<DomainPart> for Jid {
+    fn from(other: DomainPart) -> Self {
+        Jid::Bare(other.into())
+    }
+}
+
+impl<'x> From<&'x DomainRef> for BareJid {
+    fn from(other: &'x DomainRef) -> Self {
+        Self::from_parts(None, other)
+    }
+}
+
+impl NodeRef {
+    /// Construct a bare JID (a JID without a resource) from this node (the
+    /// local part) and the given domain.
+    pub fn with_domain(&self, domain: &DomainRef) -> BareJid {
+        BareJid::from_parts(Some(self), domain)
+    }
 }
 
 #[cfg(test)]
