@@ -149,7 +149,7 @@ mod tests {
         assert_size!(Transport, 1);
         assert_size!(Restricted, 1);
         assert_size!(Type, 1);
-        assert_size!(Service, 88);
+        assert_size!(Service, 84);
         assert_size!(ServicesQuery, 1);
         assert_size!(ServicesResult, 16);
         assert_size!(Credentials, 12);
@@ -162,7 +162,7 @@ mod tests {
         assert_size!(Transport, 1);
         assert_size!(Restricted, 1);
         assert_size!(Type, 1);
-        assert_size!(Service, 152);
+        assert_size!(Service, 144);
         assert_size!(ServicesQuery, 1);
         assert_size!(ServicesResult, 32);
         assert_size!(Credentials, 24);

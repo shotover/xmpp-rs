@@ -339,8 +339,8 @@ mod tests {
     #[ignore]
     fn test_size() {
         assert_size!(Range, 32);
-        assert_size!(File, 112);
-        assert_size!(Description, 112);
+        assert_size!(File, 104);
+        assert_size!(Description, 104);
         assert_size!(Checksum, 128);
         assert_size!(Received, 16);
     }
@@ -349,9 +349,9 @@ mod tests {
     #[test]
     fn test_size() {
         assert_size!(Range, 48);
-        assert_size!(File, 184);
-        assert_size!(Description, 184);
-        assert_size!(Checksum, 216);
+        assert_size!(File, 176);
+        assert_size!(Description, 176);
+        assert_size!(Checksum, 208);
         assert_size!(Received, 32);
     }
 
