@@ -20,6 +20,7 @@ Version xxx, release xxx:
       `impl From<DomainPart> for BareJid` and
       `impl From<DomainPart> for Jid`, both of which are (unlike
       `::from_parts`) copy-free.
+    - `as_str` methods have been added on all Jid types.
 
 Version 0.10.0, release 2023-08-17:
   * Breaking

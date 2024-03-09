@@ -141,6 +141,11 @@ impl InnerJid {
             ResourceRef::from_str_unchecked(&self.normalized[slash + 1..])
         })
     }
+
+    #[inline(always)]
+    pub(crate) fn as_str(&self) -> &str {
+        self.normalized.as_str()
+    }
 }
 
 impl FromStr for InnerJid {

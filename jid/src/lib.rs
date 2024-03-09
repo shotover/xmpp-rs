@@ -196,6 +196,13 @@ impl Jid {
     pub fn is_bare(&self) -> bool {
         !self.is_full()
     }
+
+    /// Return a reference to the canonical string representation of the JID.
+    pub fn as_str(&self) -> &str {
+        match self {
+            Jid::Bare(BareJid { inner }) | Jid::Full(FullJid { inner }) => inner.as_str(),
+        }
+    }
 }
 
 impl TryFrom<Jid> for FullJid {
@@ -482,6 +489,11 @@ impl FullJid {
         self.inner.slash = None;
         BareJid { inner: self.inner }
     }
+
+    /// Return a reference to the canonical string representation of the JID.
+    pub fn as_str(&self) -> &str {
+        self.inner.as_str()
+    }
 }
 
 impl FromStr for BareJid {
@@ -607,6 +619,11 @@ impl BareJid {
     pub fn with_resource_str(&self, resource: &str) -> Result<FullJid, Error> {
         let resource = ResourcePart::new(resource)?;
         Ok(self.with_resource(&resource))
+    }
+
+    /// Return a reference to the canonical string representation of the JID.
+    pub fn as_str(&self) -> &str {
+        self.inner.as_str()
     }
 }
 
