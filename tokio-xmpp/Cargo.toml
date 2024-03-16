@@ -19,7 +19,7 @@ tokio = { version = "1", features = ["net", "rt", "rt-multi-thread", "macros"] }
 tokio-stream = { version = "0.1", features = [] }
 tokio-util = { version = "0.7", features = ["codec"] }
 webpki-roots = { version = "0.25", optional = true }
-rxml = "0.9.1"
+rxml = { version = "0.10.0", features = ["smartstring"] }
 rand = "^0.8"
 syntect = { version = "5", optional = true }
 # same repository dependencies

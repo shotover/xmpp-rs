@@ -27,7 +27,7 @@ use std::borrow::Cow;
 use std::str;
 
 use rxml::writer::{Encoder, Item, TrackNamespace};
-use rxml::{EventRead, Lexer, PullDriver, RawParser, XmlVersion};
+use rxml::{RawParser, Reader, XmlVersion};
 
 use std::str::FromStr;
 
@@ -337,7 +337,7 @@ impl Element {
     /// Parse a document from a `BufRead`.
     pub fn from_reader<R: BufRead>(reader: R) -> Result<Element> {
         let mut tree_builder = TreeBuilder::new();
-        let mut driver = PullDriver::wrap(reader, Lexer::new(), RawParser::new());
+        let mut driver = Reader::<_, RawParser>::new(reader);
         while let Some(event) = driver.read()? {
             tree_builder.process_event(event)?;
 
@@ -356,7 +356,7 @@ impl Element {
         prefixes: P,
     ) -> Result<Element> {
         let mut tree_builder = TreeBuilder::new().with_prefixes_stack(vec![prefixes.into()]);
-        let mut driver = PullDriver::wrap(reader, Lexer::new(), RawParser::new());
+        let mut driver = Reader::<_, RawParser>::new(reader);
         while let Some(event) = driver.read()? {
             tree_builder.process_event(event)?;
 
@@ -393,7 +393,7 @@ impl Element {
     /// Like `write_to()` but without the `<?xml?>` prelude
     pub fn write_to_inner<W: Write>(&self, writer: &mut ItemWriter<W>) -> Result<()> {
         for (prefix, namespace) in self.prefixes.declared_prefixes() {
-            assert!(writer.encoder.inner_mut().declare_fixed(
+            assert!(writer.encoder.ns_tracker_mut().declare_fixed(
                 prefix.as_ref().map(|x| (&**x).try_into()).transpose()?,
                 Some(Arc::new(namespace.clone().try_into()?))
             ));
@@ -412,7 +412,7 @@ impl Element {
                 .split_name()
                 .unwrap();
             let namespace = match prefix {
-                Some(prefix) => match writer.encoder.inner().lookup_prefix(Some(prefix)) {
+                Some(prefix) => match writer.encoder.ns_tracker().lookup_prefix(Some(prefix)) {
                     Ok(v) => Some(v),
                     Err(rxml::writer::PrefixError::Undeclared) => return Err(Error::InvalidPrefix),
                 },

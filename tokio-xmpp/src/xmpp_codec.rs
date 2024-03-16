@@ -4,7 +4,7 @@ use crate::Error;
 use bytes::{BufMut, BytesMut};
 use log::debug;
 use minidom::tree_builder::TreeBuilder;
-use rxml::{Lexer, PushDriver, RawParser};
+use rxml::{Parse, RawParser};
 use std::collections::HashMap;
 use std::fmt::Write;
 use std::io;
@@ -63,7 +63,7 @@ pub struct XMPPCodec {
     /// Outgoing
     ns: Option<String>,
     /// Incoming
-    driver: PushDriver<RawParser>,
+    driver: RawParser,
     stanza_builder: TreeBuilder,
 }
 
@@ -71,7 +71,7 @@ impl XMPPCodec {
     /// Constructor
     pub fn new() -> Self {
         let stanza_builder = TreeBuilder::new();
-        let driver = PushDriver::wrap(Lexer::new(), RawParser::new());
+        let driver = RawParser::new();
         #[cfg(feature = "syntax-highlighting")]
         if log::log_enabled!(log::Level::Debug) && PS.get().is_none() {
             init_syntect();

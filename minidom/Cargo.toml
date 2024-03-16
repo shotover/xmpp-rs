@@ -21,4 +21,4 @@ edition = "2021"
 gitlab = { repository = "xmpp-rs/xmpp-rs" }
 
 [dependencies]
-rxml = { version = "0.9.1", default-features = false, features = ["mt"] }
+rxml = { version = "0.10.0", default-features = false, features = ["sync", "smartstring"] }
