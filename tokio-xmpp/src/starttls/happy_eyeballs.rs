@@ -1,4 +1,5 @@
 use super::error::{ConnectorError, Error};
+use futures::{future::select_ok, FutureExt};
 use hickory_resolver::{
     config::LookupIpStrategy, name_server::TokioConnectionProvider, IntoName, TokioAsyncResolver,
 };
@@ -24,13 +25,15 @@ pub async fn connect_to_host(domain: &str, port: u16) -> Result<TcpStream, Error
         .lookup_ip(ascii_domain)
         .await
         .map_err(ConnectorError::Resolve)?;
-    for ip in ips.iter() {
-        match TcpStream::connect(&SocketAddr::new(ip, port)).await {
-            Ok(stream) => return Ok(stream),
-            Err(_) => {}
-        }
-    }
-    Err(crate::Error::Disconnected.into())
+    // Happy Eyeballs: connect to all records in parallel, return the
+    // first to succeed
+    select_ok(
+        ips.into_iter()
+            .map(|ip| TcpStream::connect(SocketAddr::new(ip, port)).boxed()),
+    )
+    .await
+    .map(|(result, _)| result)
+    .map_err(|_| crate::Error::Disconnected.into())
 }
 
 pub async fn connect_with_srv(
