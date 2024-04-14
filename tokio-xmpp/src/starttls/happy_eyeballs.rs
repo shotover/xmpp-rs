@@ -1,5 +1,7 @@
 use super::error::{ConnectorError, Error};
-use hickory_resolver::{IntoName, TokioAsyncResolver};
+use hickory_resolver::{
+    config::LookupIpStrategy, name_server::TokioConnectionProvider, IntoName, TokioAsyncResolver,
+};
 use log::debug;
 use std::net::SocketAddr;
 use tokio::net::TcpStream;
@@ -13,7 +15,10 @@ pub async fn connect_to_host(domain: &str, port: u16) -> Result<TcpStream, Error
             .map_err(|e| Error::from(crate::Error::Io(e)))?);
     }
 
-    let resolver = TokioAsyncResolver::tokio_from_system_conf().map_err(ConnectorError::Resolve)?;
+    let (config, mut options) =
+        hickory_resolver::system_conf::read_system_conf().map_err(ConnectorError::Resolve)?;
+    options.ip_strategy = LookupIpStrategy::Ipv4AndIpv6;
+    let resolver = TokioAsyncResolver::new(config, options, TokioConnectionProvider::default());
 
     let ips = resolver
         .lookup_ip(ascii_domain)
