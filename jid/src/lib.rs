@@ -32,7 +32,9 @@
 
 use core::num::NonZeroU16;
 use std::borrow::{Borrow, Cow};
+use std::cmp::Ordering;
 use std::fmt;
+use std::hash::{Hash, Hasher};
 use std::ops::Deref;
 use std::str::FromStr;
 
@@ -78,11 +80,35 @@ fn length_check(len: usize, error_empty: Error, error_too_long: Error) -> Result
 ///
 /// This dynamic type on the other hand can be used in contexts where it is
 /// not known, at compile-time, whether a JID is full or bare.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Eq)]
 pub struct Jid {
     normalized: String,
     at: Option<NonZeroU16>,
     slash: Option<NonZeroU16>,
+}
+
+impl PartialEq for Jid {
+    fn eq(&self, other: &Jid) -> bool {
+        self.normalized == other.normalized
+    }
+}
+
+impl PartialOrd for Jid {
+    fn partial_cmp(&self, other: &Jid) -> Option<Ordering> {
+        self.normalized.partial_cmp(&other.normalized)
+    }
+}
+
+impl Ord for Jid {
+    fn cmp(&self, other: &Jid) -> Ordering {
+        self.normalized.cmp(&other.normalized)
+    }
+}
+
+impl Hash for Jid {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.normalized.hash(state)
+    }
 }
 
 impl FromStr for Jid {
