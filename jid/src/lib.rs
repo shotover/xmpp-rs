@@ -31,7 +31,7 @@
 //!   mixing left-to-write and right-to-left characters
 
 use core::num::NonZeroU16;
-use std::borrow::Cow;
+use std::borrow::{Borrow, Cow};
 use std::fmt;
 use std::ops::Deref;
 use std::str::FromStr;
@@ -482,6 +482,18 @@ impl Deref for BareJid {
     }
 }
 
+impl Borrow<Jid> for FullJid {
+    fn borrow(&self) -> &Jid {
+        &self.inner
+    }
+}
+
+impl Borrow<Jid> for BareJid {
+    fn borrow(&self) -> &Jid {
+        &self.inner
+    }
+}
+
 impl fmt::Debug for FullJid {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_tuple("FullJid").field(&self.inner).finish()
@@ -826,7 +838,7 @@ impl From<BareJid> for Node {
 mod tests {
     use super::*;
 
-    use std::collections::HashMap;
+    use std::collections::{HashMap, HashSet};
 
     macro_rules! assert_size (
         ($t:ty, $sz:expr) => (
@@ -1136,5 +1148,47 @@ mod tests {
             Ok(_) => (),
             other => panic!("unexpected result: {:?}", other),
         };
+    }
+
+    #[test]
+    fn lookup_jid_by_full_jid() {
+        let mut map: HashSet<Jid> = HashSet::new();
+        let jid1 = Jid::new("foo@bar").unwrap();
+        let jid2 = Jid::new("foo@bar/baz").unwrap();
+        let jid3 = FullJid::new("foo@bar/baz").unwrap();
+
+        map.insert(jid1);
+        assert!(!map.contains(&jid2));
+        assert!(!map.contains(&jid3));
+        map.insert(jid2);
+        assert!(map.contains(&jid3));
+    }
+
+    #[test]
+    fn lookup_full_jid_by_jid() {
+        let mut map: HashSet<FullJid> = HashSet::new();
+        let jid1 = FullJid::new("foo@bar/baz").unwrap();
+        let jid2 = FullJid::new("foo@bar/fnord").unwrap();
+        let jid3 = Jid::new("foo@bar/fnord").unwrap();
+
+        map.insert(jid1);
+        assert!(!map.contains(&jid2));
+        assert!(!map.contains(&jid3));
+        map.insert(jid2);
+        assert!(map.contains(&jid3));
+    }
+
+    #[test]
+    fn lookup_bare_jid_by_jid() {
+        let mut map: HashSet<BareJid> = HashSet::new();
+        let jid1 = BareJid::new("foo@bar").unwrap();
+        let jid2 = BareJid::new("foo@baz").unwrap();
+        let jid3 = Jid::new("foo@baz").unwrap();
+
+        map.insert(jid1);
+        assert!(!map.contains(&jid2));
+        assert!(!map.contains(&jid3));
+        map.insert(jid2);
+        assert!(map.contains(&jid3));
     }
 }
