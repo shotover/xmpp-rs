@@ -1017,6 +1017,7 @@ mod tests {
             FullJid::from_str("a@b"),
             Err(Error::ResourceMissingInFullJid)
         );
+        assert_eq!(BareJid::from_str("a@b/c"), Err(Error::ResourceInBareJid));
     }
 
     #[test]
@@ -1216,5 +1217,125 @@ mod tests {
         assert!(!map.contains(&jid3));
         map.insert(jid2);
         assert!(map.contains(&jid3));
+    }
+
+    #[test]
+    fn normalizes_all_parts() {
+        assert_eq!(
+            Jid::new("ßA@IX.test/\u{2168}").unwrap().as_str(),
+            "ssa@ix.test/IX"
+        );
+    }
+
+    #[test]
+    fn rejects_unassigned_codepoints() {
+        match Jid::new("\u{01f601}@example.com") {
+            Err(Error::NodePrep) => (),
+            other => panic!("unexpected result: {:?}", other),
+        };
+
+        match Jid::new("foo@\u{01f601}.example.com") {
+            Err(Error::NamePrep) => (),
+            other => panic!("unexpected result: {:?}", other),
+        };
+
+        match Jid::new("foo@example.com/\u{01f601}") {
+            Err(Error::ResourcePrep) => (),
+            other => panic!("unexpected result: {:?}", other),
+        };
+    }
+
+    #[test]
+    fn accepts_domain_only_jid() {
+        match Jid::new("example.com") {
+            Ok(_) => (),
+            other => panic!("unexpected result: {:?}", other),
+        };
+
+        match BareJid::new("example.com") {
+            Ok(_) => (),
+            other => panic!("unexpected result: {:?}", other),
+        };
+
+        match FullJid::new("example.com/x") {
+            Ok(_) => (),
+            other => panic!("unexpected result: {:?}", other),
+        };
+    }
+
+    #[test]
+    fn is_bare_returns_true_iff_bare() {
+        let bare = Jid::new("foo@bar").unwrap();
+        let full = Jid::new("foo@bar/baz").unwrap();
+
+        assert!(bare.is_bare());
+        assert!(!full.is_bare());
+    }
+
+    #[test]
+    fn is_full_returns_true_iff_full() {
+        let bare = Jid::new("foo@bar").unwrap();
+        let full = Jid::new("foo@bar/baz").unwrap();
+
+        assert!(!bare.is_full());
+        assert!(full.is_full());
+    }
+
+    #[test]
+    fn reject_long_localpart() {
+        let mut long = Vec::with_capacity(1028);
+        long.resize(1024, b'a');
+        let mut long = String::from_utf8(long).unwrap();
+        long.push_str("@foo");
+
+        match Jid::new(&long) {
+            Err(Error::NodeTooLong) => (),
+            other => panic!("unexpected result: {:?}", other),
+        }
+
+        match BareJid::new(&long) {
+            Err(Error::NodeTooLong) => (),
+            other => panic!("unexpected result: {:?}", other),
+        }
+    }
+
+    #[test]
+    fn reject_long_domainpart() {
+        let mut long = Vec::with_capacity(1028);
+        long.push(b'x');
+        long.push(b'@');
+        long.resize(1026, b'a');
+        let long = String::from_utf8(long).unwrap();
+
+        match Jid::new(&long) {
+            Err(Error::DomainTooLong) => (),
+            other => panic!("unexpected result: {:?}", other),
+        }
+
+        match BareJid::new(&long) {
+            Err(Error::DomainTooLong) => (),
+            other => panic!("unexpected result: {:?}", other),
+        }
+    }
+
+    #[test]
+    fn reject_long_resourcepart() {
+        let mut long = Vec::with_capacity(1028);
+        long.push(b'x');
+        long.push(b'@');
+        long.push(b'y');
+        long.push(b'/');
+        long.resize(1028, b'a');
+        let long = String::from_utf8(long).unwrap();
+
+        match Jid::new(&long) {
+            Err(Error::ResourceTooLong) => (),
+            other => panic!("unexpected result: {:?}", other),
+        }
+
+        match FullJid::new(&long) {
+            Err(Error::ResourceTooLong) => (),
+            other => panic!("unexpected result: {:?}", other),
+        }
     }
 }
