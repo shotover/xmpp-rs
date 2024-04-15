@@ -379,7 +379,7 @@ mod tests {
     fn test_size() {
         assert_size!(Show, 1);
         assert_size!(Type, 1);
-        assert_size!(Presence, 80);
+        assert_size!(Presence, 72);
     }
 
     #[cfg(target_pointer_width = "64")]
@@ -387,7 +387,7 @@ mod tests {
     fn test_size() {
         assert_size!(Show, 1);
         assert_size!(Type, 1);
-        assert_size!(Presence, 160);
+        assert_size!(Presence, 144);
     }
 
     #[test]

@@ -692,7 +692,7 @@ mod tests {
         assert_size!(Reason, 1);
         assert_size!(ReasonElement, 16);
         assert_size!(SessionId, 12);
-        assert_size!(Jingle, 112);
+        assert_size!(Jingle, 104);
     }
 
     #[cfg(target_pointer_width = "64")]
@@ -711,7 +711,7 @@ mod tests {
         assert_size!(Reason, 1);
         assert_size!(ReasonElement, 32);
         assert_size!(SessionId, 24);
-        assert_size!(Jingle, 224);
+        assert_size!(Jingle, 208);
     }
 
     #[test]

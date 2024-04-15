@@ -40,13 +40,13 @@ mod tests {
     #[cfg(target_pointer_width = "32")]
     #[test]
     fn test_size() {
-        assert_size!(Delay, 48);
+        assert_size!(Delay, 44);
     }
 
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
-        assert_size!(Delay, 80);
+        assert_size!(Delay, 72);
     }
 
     #[test]

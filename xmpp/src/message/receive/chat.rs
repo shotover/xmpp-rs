@@ -25,8 +25,8 @@ pub async fn handle_message_chat<C: ServerConnector>(
 
         for payload in &message.payloads {
             if let Ok(_) = MucUser::try_from(payload.clone()) {
-                let event = match from.clone() {
-                    Jid::Bare(bare) => {
+                let event = match from.clone().try_into_full() {
+                    Err(bare) => {
                         // TODO: Can a service message be of type Chat/Normal and not Groupchat?
                         warn!("Received misformed MessageType::Chat in muc#user namespace from a bare JID.");
                         Event::ServiceMessage(
@@ -36,7 +36,7 @@ pub async fn handle_message_chat<C: ServerConnector>(
                             time_info.clone(),
                         )
                     }
-                    Jid::Full(full) => Event::RoomPrivateMessage(
+                    Ok(full) => Event::RoomPrivateMessage(
                         message.id.clone(),
                         full.to_bare(),
                         full.resource().to_string(),

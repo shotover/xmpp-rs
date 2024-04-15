@@ -31,8 +31,14 @@
 //!   mixing left-to-write and right-to-left characters
 
 use core::num::NonZeroU16;
+use std::borrow::Cow;
 use std::fmt;
+use std::ops::Deref;
 use std::str::FromStr;
+
+use memchr::memchr;
+
+use stringprep::{nameprep, nodeprep, resourceprep};
 
 #[cfg(feature = "serde")]
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
@@ -42,53 +48,66 @@ use proc_macro2::TokenStream;
 #[cfg(feature = "quote")]
 use quote::{quote, ToTokens};
 
+#[cfg(feature = "minidom")]
+use minidom::{IntoAttributeValue, Node};
+
 mod error;
 pub use crate::error::Error;
-
-mod inner;
-use inner::InnerJid;
 
 mod parts;
 pub use parts::{DomainPart, DomainRef, NodePart, NodeRef, ResourcePart, ResourceRef};
 
-/// An enum representing a Jabber ID. It can be either a `FullJid` or a `BareJid`.
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde", serde(untagged))]
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub enum Jid {
-    /// Contains a [`BareJid`], without a resource part
-    Bare(BareJid),
+fn length_check(len: usize, error_empty: Error, error_too_long: Error) -> Result<(), Error> {
+    if len == 0 {
+        Err(error_empty)
+    } else if len > 1023 {
+        Err(error_too_long)
+    } else {
+        Ok(())
+    }
+}
 
-    /// Contains a [`FullJid`], with a resource part
-    Full(FullJid),
+/// A struct representing a Jabber ID (JID).
+///
+/// This JID can either be "bare" (without a `/resource` suffix) or full (with
+/// a resource suffix).
+///
+/// In many APIs, it is appropriate to use the more specific types
+/// ([`BareJid`] or [`FullJid`]) instead, as these two JID types are generally
+/// used in different contexts within XMPP.
+///
+/// This dynamic type on the other hand can be used in contexts where it is
+/// not known, at compile-time, whether a JID is full or bare.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Jid {
+    normalized: String,
+    at: Option<NonZeroU16>,
+    slash: Option<NonZeroU16>,
 }
 
 impl FromStr for Jid {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<Jid, Error> {
-        Jid::new(s)
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::new(s)
     }
 }
 
 impl From<BareJid> for Jid {
-    fn from(bare_jid: BareJid) -> Jid {
-        Jid::Bare(bare_jid)
+    fn from(other: BareJid) -> Self {
+        other.inner
     }
 }
 
 impl From<FullJid> for Jid {
-    fn from(full_jid: FullJid) -> Jid {
-        Jid::Full(full_jid)
+    fn from(other: FullJid) -> Self {
+        other.inner
     }
 }
 
 impl fmt::Display for Jid {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        match self {
-            Jid::Bare(bare) => bare.fmt(fmt),
-            Jid::Full(full) => full.fmt(fmt),
-        }
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt.write_str(&self.normalized)
     }
 }
 
@@ -112,20 +131,81 @@ impl Jid {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn new(s: &str) -> Result<Jid, Error> {
-        let inner = InnerJid::new(s)?;
-        if inner.slash.is_some() {
-            Ok(Jid::Full(FullJid { inner }))
-        } else {
-            Ok(Jid::Bare(BareJid { inner }))
+    pub fn new(unnormalized: &str) -> Result<Jid, Error> {
+        let bytes = unnormalized.as_bytes();
+        let mut orig_at = memchr(b'@', bytes);
+        let mut orig_slash = memchr(b'/', bytes);
+        if orig_at.is_some() && orig_slash.is_some() && orig_at > orig_slash {
+            // This is part of the resource, not a node@domain separator.
+            orig_at = None;
         }
+
+        let normalized = match (orig_at, orig_slash) {
+            (Some(at), Some(slash)) => {
+                let node = nodeprep(&unnormalized[..at]).map_err(|_| Error::NodePrep)?;
+                length_check(node.len(), Error::NodeEmpty, Error::NodeTooLong)?;
+
+                let domain = nameprep(&unnormalized[at + 1..slash]).map_err(|_| Error::NamePrep)?;
+                length_check(domain.len(), Error::DomainEmpty, Error::DomainTooLong)?;
+
+                let resource =
+                    resourceprep(&unnormalized[slash + 1..]).map_err(|_| Error::ResourcePrep)?;
+                length_check(resource.len(), Error::ResourceEmpty, Error::ResourceTooLong)?;
+
+                orig_at = Some(node.len());
+                orig_slash = Some(node.len() + domain.len() + 1);
+                match (node, domain, resource) {
+                    (Cow::Borrowed(_), Cow::Borrowed(_), Cow::Borrowed(_)) => {
+                        unnormalized.to_string()
+                    }
+                    (node, domain, resource) => format!("{node}@{domain}/{resource}"),
+                }
+            }
+            (Some(at), None) => {
+                let node = nodeprep(&unnormalized[..at]).map_err(|_| Error::NodePrep)?;
+                length_check(node.len(), Error::NodeEmpty, Error::NodeTooLong)?;
+
+                let domain = nameprep(&unnormalized[at + 1..]).map_err(|_| Error::NamePrep)?;
+                length_check(domain.len(), Error::DomainEmpty, Error::DomainTooLong)?;
+
+                orig_at = Some(node.len());
+                match (node, domain) {
+                    (Cow::Borrowed(_), Cow::Borrowed(_)) => unnormalized.to_string(),
+                    (node, domain) => format!("{node}@{domain}"),
+                }
+            }
+            (None, Some(slash)) => {
+                let domain = nameprep(&unnormalized[..slash]).map_err(|_| Error::NamePrep)?;
+                length_check(domain.len(), Error::DomainEmpty, Error::DomainTooLong)?;
+
+                let resource =
+                    resourceprep(&unnormalized[slash + 1..]).map_err(|_| Error::ResourcePrep)?;
+                length_check(resource.len(), Error::ResourceEmpty, Error::ResourceTooLong)?;
+
+                orig_slash = Some(domain.len());
+                match (domain, resource) {
+                    (Cow::Borrowed(_), Cow::Borrowed(_)) => unnormalized.to_string(),
+                    (domain, resource) => format!("{domain}/{resource}"),
+                }
+            }
+            (None, None) => {
+                let domain = nameprep(unnormalized).map_err(|_| Error::NamePrep)?;
+                length_check(domain.len(), Error::DomainEmpty, Error::DomainTooLong)?;
+
+                domain.into_owned()
+            }
+        };
+
+        Ok(Self {
+            normalized,
+            at: orig_at.and_then(|x| NonZeroU16::new(x as u16)),
+            slash: orig_slash.and_then(|x| NonZeroU16::new(x as u16)),
+        })
     }
 
     /// Returns the inner String of this JID.
     pub fn into_inner(self) -> String {
-        match self {
-            Jid::Bare(BareJid { inner }) | Jid::Full(FullJid { inner }) => inner.normalized,
-        }
+        self.normalized
     }
 
     /// Build a [`Jid`] from typed parts. This method cannot fail because it uses parts that have
@@ -138,117 +218,220 @@ impl Jid {
         node: Option<&NodeRef>,
         domain: &DomainRef,
         resource: Option<&ResourceRef>,
-    ) -> Jid {
-        if let Some(resource) = resource {
-            Jid::Full(FullJid::from_parts(node, domain, resource))
-        } else {
-            Jid::Bare(BareJid::from_parts(node, domain))
+    ) -> Self {
+        match resource {
+            Some(resource) => FullJid::from_parts(node, domain, resource).into(),
+            None => BareJid::from_parts(node, domain).into(),
         }
     }
 
     /// The optional node part of the JID as reference.
     pub fn node(&self) -> Option<&NodeRef> {
-        match self {
-            Jid::Bare(BareJid { inner }) | Jid::Full(FullJid { inner }) => inner.node(),
-        }
+        self.at.map(|at| {
+            let at = u16::from(at) as usize;
+            NodeRef::from_str_unchecked(&self.normalized[..at])
+        })
     }
 
     /// The domain part of the JID as reference
     pub fn domain(&self) -> &DomainRef {
-        match self {
-            Jid::Bare(BareJid { inner }) | Jid::Full(FullJid { inner }) => inner.domain(),
+        match (self.at, self.slash) {
+            (Some(at), Some(slash)) => {
+                let at = u16::from(at) as usize;
+                let slash = u16::from(slash) as usize;
+                DomainRef::from_str_unchecked(&self.normalized[at + 1..slash])
+            }
+            (Some(at), None) => {
+                let at = u16::from(at) as usize;
+                DomainRef::from_str_unchecked(&self.normalized[at + 1..])
+            }
+            (None, Some(slash)) => {
+                let slash = u16::from(slash) as usize;
+                DomainRef::from_str_unchecked(&self.normalized[..slash])
+            }
+            (None, None) => DomainRef::from_str_unchecked(&self.normalized),
         }
     }
 
     /// The optional resource of the Jabber ID. It is guaranteed to be present when the JID is
     /// a Full variant, which you can check with [`Jid::is_full`].
     pub fn resource(&self) -> Option<&ResourceRef> {
-        match self {
-            Jid::Bare(BareJid { inner }) | Jid::Full(FullJid { inner }) => inner.resource(),
-        }
+        self.slash.map(|slash| {
+            let slash = u16::from(slash) as usize;
+            ResourceRef::from_str_unchecked(&self.normalized[slash + 1..])
+        })
     }
 
     /// Allocate a new [`BareJid`] from this JID, discarding the resource.
     pub fn to_bare(&self) -> BareJid {
-        match self {
-            Jid::Full(jid) => jid.to_bare(),
-            Jid::Bare(jid) => jid.clone(),
-        }
+        BareJid::from_parts(self.node(), self.domain())
     }
 
     /// Transforms this JID into a [`BareJid`], throwing away the resource.
-    pub fn into_bare(self) -> BareJid {
-        match self {
-            Jid::Full(jid) => jid.into_bare(),
-            Jid::Bare(jid) => jid,
+    ///
+    /// ```
+    /// # use jid::{BareJid, Jid};
+    /// let jid: Jid = "foo@bar/baz".parse().unwrap();
+    /// let bare = jid.into_bare();
+    /// assert_eq!(bare.to_string(), "foo@bar");
+    /// ```
+    pub fn into_bare(mut self) -> BareJid {
+        if let Some(slash) = self.slash {
+            // truncate the string
+            self.normalized.truncate(slash.get() as usize);
+            self.slash = None;
         }
+        BareJid { inner: self }
     }
 
-    /// Checks if the JID contains a [`FullJid`]
+    /// Checks if the JID is a full JID.
     pub fn is_full(&self) -> bool {
-        match self {
-            Self::Full(_) => true,
-            Self::Bare(_) => false,
-        }
+        self.slash.is_some()
     }
 
-    /// Checks if the JID contains a [`BareJid`]
+    /// Checks if the JID is a bare JID.
     pub fn is_bare(&self) -> bool {
-        !self.is_full()
+        self.slash.is_none()
     }
 
     /// Return a reference to the canonical string representation of the JID.
     pub fn as_str(&self) -> &str {
-        match self {
-            Jid::Bare(BareJid { inner }) | Jid::Full(FullJid { inner }) => inner.as_str(),
+        &self.normalized
+    }
+
+    /// Try to convert this Jid to a [`FullJid`] if it contains a resource
+    /// and return a [`BareJid`] otherwise.
+    ///
+    /// This is useful for match blocks:
+    ///
+    /// ```
+    /// # use jid::Jid;
+    /// let jid: Jid = "foo@bar".parse().unwrap();
+    /// match jid.try_into_full() {
+    ///     Ok(full) => println!("it is full: {:?}", full),
+    ///     Err(bare) => println!("it is bare: {:?}", bare),
+    /// }
+    /// ```
+    pub fn try_into_full(self) -> Result<FullJid, BareJid> {
+        if self.slash.is_some() {
+            Ok(FullJid { inner: self })
+        } else {
+            Err(BareJid { inner: self })
         }
+    }
+
+    /// Try to convert this Jid reference to a [`&FullJid`][`FullJid`] if it
+    /// contains a resource and return a [`&BareJid`][`BareJid`] otherwise.
+    ///
+    /// This is useful for match blocks:
+    ///
+    /// ```
+    /// # use jid::Jid;
+    /// let jid: Jid = "foo@bar".parse().unwrap();
+    /// match jid.try_as_full() {
+    ///     Ok(full) => println!("it is full: {:?}", full),
+    ///     Err(bare) => println!("it is bare: {:?}", bare),
+    /// }
+    /// ```
+    pub fn try_as_full(&self) -> Result<&FullJid, &BareJid> {
+        if self.slash.is_some() {
+            Ok(unsafe {
+                // SAFETY: FullJid is #[repr(transparent)] of Jid
+                // SOUNDNESS: we asserted that self.slash is set above
+                std::mem::transmute::<&Jid, &FullJid>(self)
+            })
+        } else {
+            Err(unsafe {
+                // SAFETY: BareJid is #[repr(transparent)] of Jid
+                // SOUNDNESS: we asserted that self.slash is unset above
+                std::mem::transmute::<&Jid, &BareJid>(self)
+            })
+        }
+    }
+
+    /// Try to convert this mutable Jid reference to a
+    /// [`&mut FullJid`][`FullJid`] if it contains a resource and return a
+    /// [`&mut BareJid`][`BareJid`] otherwise.
+    pub fn try_as_full_mut(&mut self) -> Result<&mut FullJid, &mut BareJid> {
+        if self.slash.is_some() {
+            Ok(unsafe {
+                // SAFETY: FullJid is #[repr(transparent)] of Jid
+                // SOUNDNESS: we asserted that self.slash is set above
+                std::mem::transmute::<&mut Jid, &mut FullJid>(self)
+            })
+        } else {
+            Err(unsafe {
+                // SAFETY: BareJid is #[repr(transparent)] of Jid
+                // SOUNDNESS: we asserted that self.slash is unset above
+                std::mem::transmute::<&mut Jid, &mut BareJid>(self)
+            })
+        }
+    }
+
+    #[doc(hidden)]
+    #[allow(non_snake_case)]
+    #[deprecated(
+        since = "0.11.0",
+        note = "use Jid::from (for construction of Jid values) or Jid::try_into_full/Jid::try_as_full (for match blocks) instead"
+    )]
+    pub fn Bare(other: BareJid) -> Self {
+        Self::from(other)
+    }
+
+    #[doc(hidden)]
+    #[allow(non_snake_case)]
+    #[deprecated(
+        since = "0.11.0",
+        note = "use Jid::from (for construction of Jid values) or Jid::try_into_full/Jid::try_as_full (for match blocks) instead"
+    )]
+    pub fn Full(other: BareJid) -> Self {
+        Self::from(other)
     }
 }
 
 impl TryFrom<Jid> for FullJid {
     type Error = Error;
 
-    fn try_from(jid: Jid) -> Result<Self, Self::Error> {
-        match jid {
-            Jid::Full(full) => Ok(full),
-            Jid::Bare(_) => Err(Error::ResourceMissingInFullJid),
+    fn try_from(inner: Jid) -> Result<Self, Self::Error> {
+        if inner.slash.is_none() {
+            return Err(Error::ResourceMissingInFullJid);
         }
+        Ok(Self { inner })
+    }
+}
+
+impl TryFrom<Jid> for BareJid {
+    type Error = Error;
+
+    fn try_from(inner: Jid) -> Result<Self, Self::Error> {
+        if inner.slash.is_some() {
+            return Err(Error::ResourceInBareJid);
+        }
+        Ok(Self { inner })
     }
 }
 
 impl PartialEq<Jid> for FullJid {
     fn eq(&self, other: &Jid) -> bool {
-        match other {
-            Jid::Full(full) => self == full,
-            Jid::Bare(_) => false,
-        }
+        &self.inner == other
     }
 }
 
 impl PartialEq<Jid> for BareJid {
     fn eq(&self, other: &Jid) -> bool {
-        match other {
-            Jid::Full(_) => false,
-            Jid::Bare(bare) => self == bare,
-        }
+        &self.inner == other
     }
 }
 
 impl PartialEq<FullJid> for Jid {
     fn eq(&self, other: &FullJid) -> bool {
-        match self {
-            Jid::Full(full) => full == other,
-            Jid::Bare(_) => false,
-        }
+        self == &other.inner
     }
 }
 
 impl PartialEq<BareJid> for Jid {
     fn eq(&self, other: &BareJid) -> bool {
-        match self {
-            Jid::Full(_) => false,
-            Jid::Bare(bare) => bare == other,
-        }
+        self == &other.inner
     }
 }
 
@@ -263,9 +446,10 @@ impl PartialEq<BareJid> for Jid {
 /// Unlike a [`BareJid`], it always contains a resource, and should only be used when you are
 /// certain there is no case where a resource can be missing.  Otherwise, use a [`Jid`] or
 /// [`BareJid`].
-#[derive(Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(transparent)] // WARNING: Jid::try_as_* relies on this for safety!
 pub struct FullJid {
-    inner: InnerJid,
+    inner: Jid,
 }
 
 /// A struct representing a bare Jabber ID, without a resource part.
@@ -276,32 +460,59 @@ pub struct FullJid {
 ///
 /// Unlike a [`FullJid`], it can’t contain a resource, and should only be used when you are certain
 /// there is no case where a resource can be set.  Otherwise, use a [`Jid`] or [`FullJid`].
-#[derive(Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(transparent)] // WARNING: Jid::try_as_* relies on this for safety!
 pub struct BareJid {
-    inner: InnerJid,
+    inner: Jid,
+}
+
+impl Deref for FullJid {
+    type Target = Jid;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+impl Deref for BareJid {
+    type Target = Jid;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
 }
 
 impl fmt::Debug for FullJid {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_tuple("FullJid").field(&self.inner).finish()
     }
 }
 
 impl fmt::Debug for BareJid {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         fmt.debug_tuple("BareJid").field(&self.inner).finish()
     }
 }
 
 impl fmt::Display for FullJid {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        fmt.write_str(&self.inner.normalized)
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Display::fmt(&self.inner, fmt)
     }
 }
 
 impl fmt::Display for BareJid {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        fmt.write_str(&self.inner.normalized)
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Display::fmt(&self.inner, fmt)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl Serialize for Jid {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&self.normalized)
     }
 }
 
@@ -311,7 +522,7 @@ impl Serialize for FullJid {
     where
         S: Serializer,
     {
-        serializer.serialize_str(&self.inner.normalized)
+        self.inner.serialize(serializer)
     }
 }
 
@@ -321,15 +532,26 @@ impl Serialize for BareJid {
     where
         S: Serializer,
     {
-        serializer.serialize_str(&self.inner.normalized)
+        self.inner.serialize(serializer)
     }
 }
 
 impl FromStr for FullJid {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<FullJid, Error> {
-        FullJid::new(s)
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::new(s)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> Deserialize<'de> for Jid {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        Jid::new(&s).map_err(de::Error::custom)
     }
 }
 
@@ -339,8 +561,8 @@ impl<'de> Deserialize<'de> for FullJid {
     where
         D: Deserializer<'de>,
     {
-        let s = String::deserialize(deserializer)?;
-        FullJid::from_str(&s).map_err(de::Error::custom)
+        let jid = Jid::deserialize(deserializer)?;
+        jid.try_into().map_err(de::Error::custom)
     }
 }
 
@@ -350,17 +572,17 @@ impl<'de> Deserialize<'de> for BareJid {
     where
         D: Deserializer<'de>,
     {
-        let s = String::deserialize(deserializer)?;
-        BareJid::from_str(&s).map_err(de::Error::custom)
+        let jid = Jid::deserialize(deserializer)?;
+        jid.try_into().map_err(de::Error::custom)
     }
 }
 
 #[cfg(feature = "quote")]
 impl ToTokens for Jid {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        tokens.extend(match self {
-            Jid::Full(full) => quote! { Jid::Full(#full) },
-            Jid::Bare(bare) => quote! { Jid::Bare(#bare) },
+        let s = &self.normalized;
+        tokens.extend(quote! {
+            ::jid::Jid::new(#s).unwrap()
         });
     }
 }
@@ -368,18 +590,20 @@ impl ToTokens for Jid {
 #[cfg(feature = "quote")]
 impl ToTokens for FullJid {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let inner = &self.inner.normalized;
-        let t = quote! { FullJid::new(#inner).unwrap() };
-        tokens.extend(t);
+        let s = &self.inner.normalized;
+        tokens.extend(quote! {
+            ::jid::FullJid::new(#s).unwrap()
+        });
     }
 }
 
 #[cfg(feature = "quote")]
 impl ToTokens for BareJid {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let inner = &self.inner.normalized;
-        let t = quote! { BareJid::new(#inner).unwrap() };
-        tokens.extend(t);
+        let s = &self.inner.normalized;
+        tokens.extend(quote! {
+            ::jid::BareJid::new(#s).unwrap()
+        });
     }
 }
 
@@ -403,18 +627,8 @@ impl FullJid {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn new(s: &str) -> Result<FullJid, Error> {
-        let inner = InnerJid::new(s)?;
-        if inner.slash.is_some() {
-            Ok(FullJid { inner })
-        } else {
-            Err(Error::ResourceMissingInFullJid)
-        }
-    }
-
-    /// Returns the inner String of this JID.
-    pub fn into_inner(self) -> String {
-        self.inner.normalized
+    pub fn new(unnormalized: &str) -> Result<Self, Error> {
+        Jid::new(unnormalized)?.try_into()
     }
 
     /// Build a [`FullJid`] from typed parts. This method cannot fail because it uses parts that have
@@ -445,62 +659,26 @@ impl FullJid {
             )
         };
 
-        let inner = InnerJid {
+        let inner = Jid {
             normalized,
             at,
             slash,
         };
 
-        FullJid { inner }
-    }
-
-    /// The optional node part of the JID as reference.
-    pub fn node(&self) -> Option<&NodeRef> {
-        self.inner.node()
-    }
-
-    /// The domain part of the JID as reference
-    pub fn domain(&self) -> &DomainRef {
-        self.inner.domain()
+        Self { inner }
     }
 
     /// The optional resource of the Jabber ID.  Since this is a full JID it is always present.
     pub fn resource(&self) -> &ResourceRef {
         self.inner.resource().unwrap()
     }
-
-    /// Allocate a new [`BareJid`] from this full JID, discarding the resource.
-    pub fn to_bare(&self) -> BareJid {
-        let slash = self.inner.slash.unwrap().get() as usize;
-        let normalized = self.inner.normalized[..slash].to_string();
-        let inner = InnerJid {
-            normalized,
-            at: self.inner.at,
-            slash: None,
-        };
-        BareJid { inner }
-    }
-
-    /// Transforms this full JID into a [`BareJid`], discarding the resource.
-    pub fn into_bare(mut self) -> BareJid {
-        let slash = self.inner.slash.unwrap().get() as usize;
-        self.inner.normalized.truncate(slash);
-        self.inner.normalized.shrink_to_fit();
-        self.inner.slash = None;
-        BareJid { inner: self.inner }
-    }
-
-    /// Return a reference to the canonical string representation of the JID.
-    pub fn as_str(&self) -> &str {
-        self.inner.as_str()
-    }
 }
 
 impl FromStr for BareJid {
     type Err = Error;
 
-    fn from_str(s: &str) -> Result<BareJid, Error> {
-        BareJid::new(s)
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::new(s)
     }
 }
 
@@ -523,18 +701,8 @@ impl BareJid {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn new(s: &str) -> Result<BareJid, Error> {
-        let inner = InnerJid::new(s)?;
-        if inner.slash.is_none() {
-            Ok(BareJid { inner })
-        } else {
-            Err(Error::ResourceInBareJid)
-        }
-    }
-
-    /// Returns the inner String of this JID.
-    pub fn into_inner(self) -> String {
-        self.inner.normalized
+    pub fn new(unnormalized: &str) -> Result<Self, Error> {
+        Jid::new(unnormalized)?.try_into()
     }
 
     /// Build a [`BareJid`] from typed parts. This method cannot fail because it uses parts that have
@@ -543,7 +711,7 @@ impl BareJid {
     /// This method allocates and does not consume the typed parts. To avoid
     /// allocation if `node` is known to be `None` and `domain` is owned, you
     /// can use `domain.into()`.
-    pub fn from_parts(node: Option<&NodeRef>, domain: &DomainRef) -> BareJid {
+    pub fn from_parts(node: Option<&NodeRef>, domain: &DomainRef) -> Self {
         let (at, normalized) = if let Some(node) = node {
             // Parts are never empty so len > 0 for NonZeroU16::new is always Some
             (
@@ -554,23 +722,13 @@ impl BareJid {
             (None, domain.to_string())
         };
 
-        let inner = InnerJid {
+        let inner = Jid {
             normalized,
             at,
             slash: None,
         };
 
-        BareJid { inner }
-    }
-
-    /// The optional node part of the JID as reference.
-    pub fn node(&self) -> Option<&NodeRef> {
-        self.inner.node()
-    }
-
-    /// The domain part of the JID as reference
-    pub fn domain(&self) -> &DomainRef {
-        self.inner.domain()
+        Self { inner }
     }
 
     /// Constructs a [`BareJid`] from the bare JID, by specifying a [`ResourcePart`].
@@ -592,7 +750,7 @@ impl BareJid {
     pub fn with_resource(&self, resource: &ResourceRef) -> FullJid {
         let slash = NonZeroU16::new(self.inner.normalized.len() as u16);
         let normalized = format!("{}/{resource}", self.inner.normalized);
-        let inner = InnerJid {
+        let inner = Jid {
             normalized,
             at: self.inner.at,
             slash,
@@ -620,15 +778,7 @@ impl BareJid {
         let resource = ResourcePart::new(resource)?;
         Ok(self.with_resource(&resource))
     }
-
-    /// Return a reference to the canonical string representation of the JID.
-    pub fn as_str(&self) -> &str {
-        self.inner.as_str()
-    }
 }
-
-#[cfg(feature = "minidom")]
-use minidom::{IntoAttributeValue, Node};
 
 #[cfg(feature = "minidom")]
 impl IntoAttributeValue for Jid {
@@ -639,7 +789,7 @@ impl IntoAttributeValue for Jid {
 
 #[cfg(feature = "minidom")]
 impl From<Jid> for Node {
-    fn from(jid: Jid) -> Node {
+    fn from(jid: Jid) -> Self {
         Node::Text(jid.to_string())
     }
 }
@@ -647,28 +797,28 @@ impl From<Jid> for Node {
 #[cfg(feature = "minidom")]
 impl IntoAttributeValue for FullJid {
     fn into_attribute_value(self) -> Option<String> {
-        Some(self.to_string())
+        self.inner.into_attribute_value()
     }
 }
 
 #[cfg(feature = "minidom")]
 impl From<FullJid> for Node {
-    fn from(jid: FullJid) -> Node {
-        Node::Text(jid.to_string())
+    fn from(jid: FullJid) -> Self {
+        jid.inner.into()
     }
 }
 
 #[cfg(feature = "minidom")]
 impl IntoAttributeValue for BareJid {
     fn into_attribute_value(self) -> Option<String> {
-        Some(self.to_string())
+        self.inner.into_attribute_value()
     }
 }
 
 #[cfg(feature = "minidom")]
 impl From<BareJid> for Node {
-    fn from(jid: BareJid) -> Node {
-        Node::Text(jid.to_string())
+    fn from(other: BareJid) -> Self {
+        other.inner.into()
     }
 }
 
@@ -689,7 +839,7 @@ mod tests {
     fn test_size() {
         assert_size!(BareJid, 16);
         assert_size!(FullJid, 16);
-        assert_size!(Jid, 20);
+        assert_size!(Jid, 16);
     }
 
     #[cfg(target_pointer_width = "64")]
@@ -697,7 +847,7 @@ mod tests {
     fn test_size() {
         assert_size!(BareJid, 32);
         assert_size!(FullJid, 32);
-        assert_size!(Jid, 40);
+        assert_size!(Jid, 32);
     }
 
     #[test]
@@ -735,8 +885,8 @@ mod tests {
         let full = FullJid::from_str("a@b.c/d").unwrap();
         let bare = BareJid::from_str("e@f.g").unwrap();
 
-        assert_eq!(Jid::from_str("a@b.c/d"), Ok(Jid::Full(full)));
-        assert_eq!(Jid::from_str("e@f.g"), Ok(Jid::Bare(bare)));
+        assert_eq!(Jid::from_str("a@b.c/d").unwrap(), full);
+        assert_eq!(Jid::from_str("e@f.g").unwrap(), bare);
     }
 
     #[test]
@@ -792,13 +942,13 @@ mod tests {
         let full = FullJid::new("a@b.c/d").unwrap();
         let bare = BareJid::new("a@b.c").unwrap();
 
-        assert_eq!(FullJid::try_from(Jid::Full(full.clone())), Ok(full.clone()));
+        assert_eq!(FullJid::try_from(Jid::from(full.clone())), Ok(full.clone()));
         assert_eq!(
-            FullJid::try_from(Jid::Bare(bare.clone())),
+            FullJid::try_from(Jid::from(bare.clone())),
             Err(Error::ResourceMissingInFullJid),
         );
-        assert_eq!(Jid::Bare(full.clone().to_bare()), bare.clone());
-        assert_eq!(Jid::Bare(bare.clone()), bare);
+        assert_eq!(Jid::from(full.clone().to_bare()), bare.clone());
+        assert_eq!(Jid::from(bare.clone()), bare);
     }
 
     #[test]
@@ -836,10 +986,10 @@ mod tests {
         assert_eq!(FullJid::new("a@b/c").unwrap().to_string(), "a@b/c");
         assert_eq!(BareJid::new("a@b").unwrap().to_string(), "a@b");
         assert_eq!(
-            Jid::Full(FullJid::new("a@b/c").unwrap()).to_string(),
+            Jid::from(FullJid::new("a@b/c").unwrap()).to_string(),
             "a@b/c"
         );
-        assert_eq!(Jid::Bare(BareJid::new("a@b").unwrap()).to_string(), "a@b");
+        assert_eq!(Jid::from(BareJid::new("a@b").unwrap()).to_string(), "a@b");
     }
 
     #[cfg(feature = "minidom")]
@@ -847,11 +997,11 @@ mod tests {
     fn minidom() {
         let elem: minidom::Element = "<message xmlns='ns1' from='a@b/c'/>".parse().unwrap();
         let to: Jid = elem.attr("from").unwrap().parse().unwrap();
-        assert_eq!(to, Jid::Full(FullJid::new("a@b/c").unwrap()));
+        assert_eq!(to, Jid::from(FullJid::new("a@b/c").unwrap()));
 
         let elem: minidom::Element = "<message xmlns='ns1' from='a@b'/>".parse().unwrap();
         let to: Jid = elem.attr("from").unwrap().parse().unwrap();
-        assert_eq!(to, Jid::Bare(BareJid::new("a@b").unwrap()));
+        assert_eq!(to, Jid::from(BareJid::new("a@b").unwrap()));
 
         let elem: minidom::Element = "<message xmlns='ns1' from='a@b/c'/>".parse().unwrap();
         let to: FullJid = elem.attr("from").unwrap().parse().unwrap();
@@ -877,7 +1027,7 @@ mod tests {
             .build();
         assert_eq!(elem.attr("from"), Some(bare.to_string().as_str()));
 
-        let jid = Jid::Bare(bare.clone());
+        let jid = Jid::from(bare.clone());
         let _elem = minidom::Element::builder("message", "jabber:client")
             .attr("from", jid)
             .build();
@@ -938,5 +1088,53 @@ mod tests {
         let jid3 = BareJid::new("node@domain").unwrap();
         assert_eq!(jid1, jid2);
         assert_eq!(jid2, jid3);
+    }
+
+    #[test]
+    fn jid_match_replacement_try_as() {
+        let jid1 = Jid::new("foo@bar").unwrap();
+        let jid2 = Jid::new("foo@bar/baz").unwrap();
+
+        match jid1.try_as_full() {
+            Err(_) => (),
+            other => panic!("unexpected result: {:?}", other),
+        };
+
+        match jid2.try_as_full() {
+            Ok(_) => (),
+            other => panic!("unexpected result: {:?}", other),
+        };
+    }
+
+    #[test]
+    fn jid_match_replacement_try_as_mut() {
+        let mut jid1 = Jid::new("foo@bar").unwrap();
+        let mut jid2 = Jid::new("foo@bar/baz").unwrap();
+
+        match jid1.try_as_full_mut() {
+            Err(_) => (),
+            other => panic!("unexpected result: {:?}", other),
+        };
+
+        match jid2.try_as_full_mut() {
+            Ok(_) => (),
+            other => panic!("unexpected result: {:?}", other),
+        };
+    }
+
+    #[test]
+    fn jid_match_replacement_try_into() {
+        let jid1 = Jid::new("foo@bar").unwrap();
+        let jid2 = Jid::new("foo@bar/baz").unwrap();
+
+        match jid1.try_as_full() {
+            Err(_) => (),
+            other => panic!("unexpected result: {:?}", other),
+        };
+
+        match jid2.try_as_full() {
+            Ok(_) => (),
+            other => panic!("unexpected result: {:?}", other),
+        };
     }
 }

@@ -28,17 +28,15 @@ pub async fn handle_message_group_chat<C: ServerConnector>(
     }
 
     if let Some((_lang, body)) = message.get_best_body(langs) {
-        let event = match from.clone() {
-            Jid::Full(full) => Event::RoomMessage(
+        let event = match from.clone().try_into_full() {
+            Ok(full) => Event::RoomMessage(
                 message.id.clone(),
                 from.to_bare(),
                 full.resource().to_string(),
                 body.clone(),
                 time_info,
             ),
-            Jid::Bare(bare) => {
-                Event::ServiceMessage(message.id.clone(), bare, body.clone(), time_info)
-            }
+            Err(bare) => Event::ServiceMessage(message.id.clone(), bare, body.clone(), time_info),
         };
         events.push(event)
     }

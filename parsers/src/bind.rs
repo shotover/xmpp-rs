@@ -88,7 +88,7 @@ impl From<BindResponse> for FullJid {
 
 impl From<BindResponse> for Jid {
     fn from(bind: BindResponse) -> Jid {
-        Jid::Full(bind.jid)
+        Jid::from(bind.jid)
     }
 }
 

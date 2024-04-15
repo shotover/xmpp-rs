@@ -5,7 +5,7 @@ use std::str::FromStr;
 
 use stringprep::{nameprep, nodeprep, resourceprep};
 
-use crate::{BareJid, Error, InnerJid, Jid};
+use crate::{BareJid, Error, Jid};
 
 fn length_check(len: usize, error_empty: Error, error_too_long: Error) -> Result<(), Error> {
     if len == 0 {
@@ -250,18 +250,18 @@ impl DomainRef {
 impl From<DomainPart> for BareJid {
     fn from(other: DomainPart) -> Self {
         BareJid {
-            inner: InnerJid {
-                normalized: other.0,
-                at: None,
-                slash: None,
-            },
+            inner: other.into(),
         }
     }
 }
 
 impl From<DomainPart> for Jid {
     fn from(other: DomainPart) -> Self {
-        Jid::Bare(other.into())
+        Jid {
+            normalized: other.0,
+            at: None,
+            slash: None,
+        }
     }
 }
 

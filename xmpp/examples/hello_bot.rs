@@ -75,7 +75,7 @@ async fn main() -> Result<(), Option<()>> {
                 Event::RoomJoined(jid) => {
                     println!("Joined room {}.", jid);
                     client
-                        .send_message(Jid::Bare(jid), MessageType::Groupchat, "en", "Hello world!")
+                        .send_message(Jid::from(jid), MessageType::Groupchat, "en", "Hello world!")
                         .await;
                 }
                 Event::RoomLeft(jid) => {

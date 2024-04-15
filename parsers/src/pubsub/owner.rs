@@ -200,11 +200,11 @@ mod tests {
             node: NodeName(String::from("foo")),
             affiliations: vec![
                 Affiliation {
-                    jid: Jid::Bare(BareJid::from_str("hamlet@denmark.lit").unwrap()),
+                    jid: Jid::from(BareJid::from_str("hamlet@denmark.lit").unwrap()),
                     affiliation: AffiliationAttribute::Owner,
                 },
                 Affiliation {
-                    jid: Jid::Bare(BareJid::from_str("polonius@denmark.lit").unwrap()),
+                    jid: Jid::from(BareJid::from_str("polonius@denmark.lit").unwrap()),
                     affiliation: AffiliationAttribute::Outcast,
                 },
             ],
@@ -335,22 +335,22 @@ mod tests {
             node: NodeName(String::from("foo")),
             subscriptions: vec![
                 SubscriptionElem {
-                    jid: Jid::Bare(BareJid::from_str("hamlet@denmark.lit").unwrap()),
+                    jid: Jid::from(BareJid::from_str("hamlet@denmark.lit").unwrap()),
                     subscription: Subscription::Subscribed,
                     subid: None,
                 },
                 SubscriptionElem {
-                    jid: Jid::Bare(BareJid::from_str("polonius@denmark.lit").unwrap()),
+                    jid: Jid::from(BareJid::from_str("polonius@denmark.lit").unwrap()),
                     subscription: Subscription::Unconfigured,
                     subid: None,
                 },
                 SubscriptionElem {
-                    jid: Jid::Bare(BareJid::from_str("bernardo@denmark.lit").unwrap()),
+                    jid: Jid::from(BareJid::from_str("bernardo@denmark.lit").unwrap()),
                     subscription: Subscription::Subscribed,
                     subid: Some(String::from("123-abc")),
                 },
                 SubscriptionElem {
-                    jid: Jid::Bare(BareJid::from_str("bernardo@denmark.lit").unwrap()),
+                    jid: Jid::from(BareJid::from_str("bernardo@denmark.lit").unwrap()),
                     subscription: Subscription::Subscribed,
                     subid: Some(String::from("004-yyy")),
                 },

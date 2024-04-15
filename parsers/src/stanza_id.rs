@@ -44,14 +44,14 @@ mod tests {
     #[cfg(target_pointer_width = "32")]
     #[test]
     fn test_size() {
-        assert_size!(StanzaId, 32);
+        assert_size!(StanzaId, 24);
         assert_size!(OriginId, 12);
     }
 
     #[cfg(target_pointer_width = "64")]
     #[test]
     fn test_size() {
-        assert_size!(StanzaId, 64);
+        assert_size!(StanzaId, 56);
         assert_size!(OriginId, 24);
     }
 
