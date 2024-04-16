@@ -410,7 +410,7 @@ impl Jid {
         since = "0.11.0",
         note = "use Jid::from (for construction of Jid values) or Jid::try_into_full/Jid::try_as_full (for match blocks) instead"
     )]
-    pub fn Full(other: BareJid) -> Self {
+    pub fn Full(other: FullJid) -> Self {
         Self::from(other)
     }
 }
