@@ -114,7 +114,7 @@ impl ServerConnector for ServerConfig {
 async fn get_tls_stream<S: AsyncRead + AsyncWrite + Unpin>(
     xmpp_stream: XMPPStream<S>,
 ) -> Result<TlsStream<S>, Error> {
-    let domain = xmpp_stream.jid.domain_str().to_owned();
+    let domain = xmpp_stream.jid.domain().to_owned();
     let stream = xmpp_stream.into_inner();
     let tls_stream = TlsConnector::from(NativeTlsConnector::builder().build().unwrap())
         .connect(&domain, stream)
