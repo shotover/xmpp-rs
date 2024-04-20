@@ -2,7 +2,12 @@
 
 #![deny(unsafe_code, missing_docs, bare_trait_objects)]
 
-#[cfg(all(feature = "tls-native", feature = "tls-rust"))]
+#[cfg(all(
+    not(xmpprs_doc_build),
+    not(doc),
+    feature = "tls-native",
+    feature = "tls-rust"
+))]
 compile_error!("Both tls-native and tls-rust features can't be enabled at the same time.");
 
 #[cfg(all(

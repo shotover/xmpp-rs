@@ -41,7 +41,7 @@ variables:
   stage: test
   script:
     - echo "Building docs to CI_DOC_TARGET=$CI_DOC_TARGET"
-    - RUSTDOCFLAGS="--cfg docsrs" cargo +nightly doc --no-deps -Zrustdoc-map
+    - RUSTDOCFLAGS="--cfg docsrs" RUSTFLAGS="--cfg xmpprs_doc_build" cargo +nightly doc --no-deps -Zrustdoc-map --all-features
     - apt install -y rsync openssh-client
     - mkdir -p $HOME/.ssh
     - echo -e "Host docs\n\tHostname docs.xmpp.rs\n\tPort 1312\n\tUser xmpp-rs\n\tStrictHostKeyChecking no" > $HOME/.ssh/config
