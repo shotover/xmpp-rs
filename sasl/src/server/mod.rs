@@ -36,6 +36,7 @@ pub trait Validator<S: Secret> {
 pub enum ProviderError {
     AuthenticationFailed,
     #[cfg(feature = "scram")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "scram")))]
     DeriveError(DeriveError),
 }
 
@@ -65,8 +66,10 @@ pub enum MechanismError {
 
     CannotDecodeResponse,
     #[cfg(feature = "scram")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "scram")))]
     InvalidKeyLength(hmac::digest::InvalidLength),
     #[cfg(any(feature = "scram", feature = "anonymous"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "scram", feature = "anonymous"))))]
     RandomFailure(getrandom::Error),
     NoProof,
     CannotDecodeProof,
@@ -75,6 +78,7 @@ pub enum MechanismError {
 }
 
 #[cfg(feature = "scram")]
+#[cfg_attr(docsrs, doc(cfg(feature = "scram")))]
 impl From<DeriveError> for ProviderError {
     fn from(err: DeriveError) -> ProviderError {
         ProviderError::DeriveError(err)
@@ -100,6 +104,7 @@ impl From<ValidatorError> for MechanismError {
 }
 
 #[cfg(feature = "scram")]
+#[cfg_attr(docsrs, doc(cfg(feature = "scram")))]
 impl From<hmac::digest::InvalidLength> for MechanismError {
     fn from(err: hmac::digest::InvalidLength) -> MechanismError {
         MechanismError::InvalidKeyLength(err)
@@ -107,6 +112,7 @@ impl From<hmac::digest::InvalidLength> for MechanismError {
 }
 
 #[cfg(any(feature = "scram", feature = "anonymous"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "scram", feature = "anonymous"))))]
 impl From<getrandom::Error> for MechanismError {
     fn from(err: getrandom::Error) -> MechanismError {
         MechanismError::RandomFailure(err)

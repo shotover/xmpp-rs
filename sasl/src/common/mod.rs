@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::string::FromUtf8Error;
 
 #[cfg(feature = "scram")]
+#[cfg_attr(docsrs, doc(cfg(feature = "scram")))]
 pub mod scram;
 
 #[derive(Clone, Debug, PartialEq, Eq)]

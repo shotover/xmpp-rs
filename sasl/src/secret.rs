@@ -23,6 +23,7 @@ pub struct Pbkdf2Sha1 {
 
 impl Pbkdf2Sha1 {
     #[cfg(feature = "scram")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "scram")))]
     pub fn derive(password: &str, salt: &[u8], iterations: u32) -> Result<Pbkdf2Sha1, DeriveError> {
         use crate::common::scram::{ScramProvider, Sha1};
         use crate::common::Password;
@@ -58,6 +59,7 @@ pub struct Pbkdf2Sha256 {
 
 impl Pbkdf2Sha256 {
     #[cfg(feature = "scram")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "scram")))]
     pub fn derive(
         password: &str,
         salt: &[u8],
