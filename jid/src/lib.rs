@@ -8,6 +8,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#![no_std]
 #![deny(missing_docs)]
 
 //! Represents XMPP addresses, also known as JabberIDs (JIDs) for the [XMPP](https://xmpp.org/)
@@ -30,13 +31,22 @@
 //! - stringprep error: some characters were invalid according to the stringprep algorithm, such as
 //!   mixing left-to-write and right-to-left characters
 
+extern crate alloc;
+
+#[cfg(any(feature = "std", test))]
+extern crate std;
+
+use alloc::borrow::Cow;
+use alloc::format;
+use alloc::string::{String, ToString};
+use core::borrow::Borrow;
+use core::cmp::Ordering;
+use core::fmt;
+use core::hash::{Hash, Hasher};
+use core::mem;
 use core::num::NonZeroU16;
-use std::borrow::{Borrow, Cow};
-use std::cmp::Ordering;
-use std::fmt;
-use std::hash::{Hash, Hasher};
-use std::ops::Deref;
-use std::str::FromStr;
+use core::ops::Deref;
+use core::str::FromStr;
 
 use memchr::memchr;
 
@@ -364,13 +374,13 @@ impl Jid {
             Ok(unsafe {
                 // SAFETY: FullJid is #[repr(transparent)] of Jid
                 // SOUNDNESS: we asserted that self.slash is set above
-                std::mem::transmute::<&Jid, &FullJid>(self)
+                mem::transmute::<&Jid, &FullJid>(self)
             })
         } else {
             Err(unsafe {
                 // SAFETY: BareJid is #[repr(transparent)] of Jid
                 // SOUNDNESS: we asserted that self.slash is unset above
-                std::mem::transmute::<&Jid, &BareJid>(self)
+                mem::transmute::<&Jid, &BareJid>(self)
             })
         }
     }
@@ -383,13 +393,13 @@ impl Jid {
             Ok(unsafe {
                 // SAFETY: FullJid is #[repr(transparent)] of Jid
                 // SOUNDNESS: we asserted that self.slash is set above
-                std::mem::transmute::<&mut Jid, &mut FullJid>(self)
+                mem::transmute::<&mut Jid, &mut FullJid>(self)
             })
         } else {
             Err(unsafe {
                 // SAFETY: BareJid is #[repr(transparent)] of Jid
                 // SOUNDNESS: we asserted that self.slash is unset above
-                std::mem::transmute::<&mut Jid, &mut BareJid>(self)
+                mem::transmute::<&mut Jid, &mut BareJid>(self)
             })
         }
     }
@@ -865,10 +875,11 @@ mod tests {
     use super::*;
 
     use std::collections::{HashMap, HashSet};
+    use std::vec::Vec;
 
     macro_rules! assert_size (
         ($t:ty, $sz:expr) => (
-            assert_eq!(::std::mem::size_of::<$t>(), $sz);
+            assert_eq!(::core::mem::size_of::<$t>(), $sz);
         );
     );
 

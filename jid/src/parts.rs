@@ -1,7 +1,10 @@
-use std::borrow::{Borrow, Cow};
-use std::fmt;
-use std::ops::Deref;
-use std::str::FromStr;
+use alloc::borrow::{Cow, ToOwned};
+use alloc::string::{String, ToString};
+use core::borrow::Borrow;
+use core::fmt;
+use core::mem;
+use core::ops::Deref;
+use core::str::FromStr;
 
 use stringprep::{nameprep, nodeprep, resourceprep};
 
@@ -162,7 +165,7 @@ macro_rules! def_part_types {
             pub(crate) fn from_str_unchecked(s: &str) -> &Self {
                 // SAFETY: repr(transparent) thing can be transmuted to/from
                 // its inner.
-                unsafe { std::mem::transmute(s) }
+                unsafe { mem::transmute(s) }
             }
 
             /// Access the contents as [`str`] slice.

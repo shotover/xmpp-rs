@@ -32,4 +32,6 @@ serde_test = "1"
 jid = { path = ".", features = [ "serde" ] }
 
 [features]
+default = ["std"]
+std = []
 quote = ["dep:quote", "dep:proc-macro2"]
