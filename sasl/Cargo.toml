@@ -20,7 +20,7 @@ scram = ["base64", "getrandom", "sha-1", "sha2", "hmac", "pbkdf2"]
 anonymous = ["getrandom"]
 
 [dependencies]
-base64 = { version = "0.21", optional = true }
+base64 = { version = "0.22", optional = true }
 getrandom = { version = "0.2", optional = true }
 sha-1 = { version = "0.10", optional = true }
 sha2 = { version = "0.10", optional = true }
