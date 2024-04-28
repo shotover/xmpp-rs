@@ -151,22 +151,25 @@ impl TryFrom<Element> for DiscoInfoResult {
             }
         }
 
-        if result.identities.is_empty() {
-            return Err(Error::ParseError(
-                "There must be at least one identity in disco#info.",
-            ));
-        }
-        if result.features.is_empty() {
-            return Err(Error::ParseError(
-                "There must be at least one feature in disco#info.",
-            ));
-        }
-        if !result.features.contains(&Feature {
-            var: ns::DISCO_INFO.to_owned(),
-        }) {
-            return Err(Error::ParseError(
-                "disco#info feature not present in disco#info.",
-            ));
+        #[cfg(not(feature = "disable-validation"))]
+        {
+            if result.identities.is_empty() {
+                return Err(Error::ParseError(
+                    "There must be at least one identity in disco#info.",
+                ));
+            }
+            if result.features.is_empty() {
+                return Err(Error::ParseError(
+                    "There must be at least one feature in disco#info.",
+                ));
+            }
+            if !result.features.contains(&Feature {
+                var: ns::DISCO_INFO.to_owned(),
+            }) {
+                return Err(Error::ParseError(
+                    "disco#info feature not present in disco#info.",
+                ));
+            }
         }
 
         Ok(result)
