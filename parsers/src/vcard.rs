@@ -14,7 +14,7 @@
 //! see [`vcard_update`][crate::vcard_update] module.
 
 use crate::iq::{IqGetPayload, IqResultPayload, IqSetPayload};
-use crate::util::text_node_codecs::{Base64, Codec, Text};
+use crate::util::text_node_codecs::{Codec, Text, WhitespaceAwareBase64};
 use crate::{ns, Error};
 use minidom::Element;
 
@@ -44,7 +44,7 @@ generate_element!(
     Binval, "BINVAL", VCARD,
     text: (
         /// The actual data.
-        data: Base64
+        data: WhitespaceAwareBase64
     )
 );
 
@@ -130,5 +130,35 @@ mod tests {
 
         assert_eq!(photo.type_.data, "image/jpeg".to_string());
         assert_eq!(photo.binval.data, bytes);
+    }
+
+    #[test]
+    fn test_vcard_with_linebreaks() {
+        // Test xml stolen from https://xmpp.org/extensions/xep-0153.html#example-5
+        // extended to use a multi-line base64 string as is allowed as per RFC 2426
+        let test_vcard = r"<vCard xmlns='vcard-temp'>
+    <BDAY>1476-06-09</BDAY>
+    <ADR>
+      <CTRY>Italy</CTRY>
+      <LOCALITY>Verona</LOCALITY>
+      <HOME/>
+    </ADR>
+    <NICKNAME/>
+    <N><GIVEN>Juliet</GIVEN><FAMILY>Capulet</FAMILY></N>
+    <EMAIL>jcapulet@shakespeare.lit</EMAIL>
+    <PHOTO>
+      <TYPE>image/jpeg</TYPE>
+      <BINVAL>Zm9v
+Cg==</BINVAL>
+    </PHOTO>
+  </vCard>";
+
+        let test_vcard = Element::from_str(&test_vcard).expect("Failed to parse XML");
+        let test_vcard = VCard::try_from(test_vcard).expect("Failed to parse vCard");
+
+        let photo = test_vcard.photo.expect("No photo found");
+
+        assert_eq!(photo.type_.data, "image/jpeg".to_string());
+        assert_eq!(photo.binval.data, b"foo\n");
     }
 }
