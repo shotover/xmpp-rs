@@ -204,6 +204,40 @@ impl Message {
     pub fn get_best_subject(&self, preferred_langs: Vec<&str>) -> Option<(Lang, &Subject)> {
         Message::get_best::<Subject>(&self.subjects, preferred_langs)
     }
+
+    /// Try to extract the given payload type from the message's payloads.
+    ///
+    /// Returns the first matching payload element as parsed struct or its
+    /// parse error. If no element matches, `Ok(None)` is returned. If an
+    /// element matches, but fails to parse, it is nontheless removed from
+    /// the message.
+    ///
+    /// Elements which do not match the given type are not removed.
+    pub fn extract_payload<T: TryFrom<Element, Error = Error>>(
+        &mut self,
+    ) -> Result<Option<T>, Error> {
+        let mut buf = Vec::with_capacity(self.payloads.len());
+        let mut iter = self.payloads.drain(..);
+        let mut result = Ok(None);
+        for item in &mut iter {
+            match T::try_from(item) {
+                Ok(v) => {
+                    result = Ok(Some(v));
+                    break;
+                }
+                Err(Error::TypeMismatch(_, _, residual)) => {
+                    buf.push(residual);
+                }
+                Err(other) => {
+                    result = Err(other);
+                    break;
+                }
+            }
+        }
+        buf.extend(iter);
+        std::mem::swap(&mut buf, &mut self.payloads);
+        result
+    }
 }
 
 impl TryFrom<Element> for Message {
@@ -459,5 +493,28 @@ mod tests {
         let message = Message::try_from(elem).unwrap();
         let elem2 = message.into();
         assert_eq!(elem1, elem2);
+    }
+
+    #[test]
+    fn test_extract_payload() {
+        use super::super::attention::Attention;
+        use super::super::pubsub::event::PubSubEvent;
+
+        #[cfg(not(feature = "component"))]
+        let elem: Element = "<message xmlns='jabber:client' to='coucou@example.org' type='chat'><attention xmlns='urn:xmpp:attention:0'/></message>".parse().unwrap();
+        #[cfg(feature = "component")]
+        let elem: Element = "<message xmlns='jabber:component:accept' to='coucou@example.org' type='chat'><attention xmlns='urn:xmpp:attention:0'/></message>".parse().unwrap();
+        let mut message = Message::try_from(elem).unwrap();
+        assert_eq!(message.payloads.len(), 1);
+        match message.extract_payload::<PubSubEvent>() {
+            Ok(None) => (),
+            other => panic!("unexpected result: {:?}", other),
+        };
+        assert_eq!(message.payloads.len(), 1);
+        match message.extract_payload::<Attention>() {
+            Ok(Some(_)) => (),
+            other => panic!("unexpected result: {:?}", other),
+        };
+        assert_eq!(message.payloads.len(), 0);
     }
 }
