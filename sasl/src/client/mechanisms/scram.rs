@@ -109,7 +109,7 @@ impl<S: ScramProvider> Mechanism for Scram<S> {
         bare.extend(self.client_nonce.bytes());
         let mut data = Vec::new();
         data.extend(&gs2_header);
-        data.extend(bare.clone());
+        data.extend(&bare);
         self.state = ScramState::SentInitialMessage {
             initial_message: bare,
             gs2_header: gs2_header,
