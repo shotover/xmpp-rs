@@ -27,6 +27,8 @@ pub struct Scram<S: ScramProvider> {
     name_plus: String,
     username: String,
     password: Password,
+    client_first_extensions: String,
+    client_final_extensions: String,
     client_nonce: String,
     state: ScramState,
     channel_binding: ChannelBinding,
@@ -39,16 +41,23 @@ impl<S: ScramProvider> Scram<S> {
     ///
     /// It is recommended that instead you use a `Credentials` struct and turn it into the
     /// requested mechanism using `from_credentials`.
+    ///
+    /// `client_first_extensions` and `client_final_extensions` should be empty strings if unused.
+    /// Otherwise they should be a comma seperated list of SCRAM extensions to be used e.g. `foo=true,bar=baz`
     pub fn new<N: Into<String>, P: Into<Password>>(
         username: N,
         password: P,
         channel_binding: ChannelBinding,
+        client_first_extensions: String,
+        client_final_extensions: String,
     ) -> Result<Scram<S>, Error> {
         Ok(Scram {
             name: format!("SCRAM-{}", S::name()),
             name_plus: format!("SCRAM-{}-PLUS", S::name()),
             username: username.into(),
             password: password.into(),
+            client_first_extensions,
+            client_final_extensions,
             client_nonce: generate_nonce()?,
             state: ScramState::Init,
             channel_binding: channel_binding,
@@ -63,12 +72,16 @@ impl<S: ScramProvider> Scram<S> {
         username: N,
         password: P,
         nonce: String,
+        client_first_extensions: String,
+        client_final_extensions: String,
     ) -> Scram<S> {
         Scram {
             name: format!("SCRAM-{}", S::name()),
             name_plus: format!("SCRAM-{}-PLUS", S::name()),
             username: username.into(),
             password: password.into(),
+            client_first_extensions,
+            client_final_extensions,
             client_nonce: nonce,
             state: ScramState::Init,
             channel_binding: ChannelBinding::None,
@@ -89,8 +102,14 @@ impl<S: ScramProvider> Mechanism for Scram<S> {
     fn from_credentials(credentials: Credentials) -> Result<Scram<S>, MechanismError> {
         if let Secret::Password(password) = credentials.secret {
             if let Identity::Username(username) = credentials.identity {
-                Scram::new(username, password, credentials.channel_binding)
-                    .map_err(|_| MechanismError::CannotGenerateNonce)
+                Scram::new(
+                    username,
+                    password,
+                    credentials.channel_binding,
+                    String::new(),
+                    String::new(),
+                )
+                .map_err(|_| MechanismError::CannotGenerateNonce)
             } else {
                 Err(MechanismError::ScramRequiresUsername)
             }
@@ -107,6 +126,10 @@ impl<S: ScramProvider> Mechanism for Scram<S> {
         bare.extend(self.username.bytes());
         bare.extend(b",r=");
         bare.extend(self.client_nonce.bytes());
+        if !self.client_first_extensions.is_empty() {
+            bare.extend(b",");
+            bare.extend(self.client_first_extensions.bytes());
+        }
         let mut data = Vec::new();
         data.extend(&gs2_header);
         data.extend(&bare);
@@ -142,6 +165,10 @@ impl<S: ScramProvider> Mechanism for Scram<S> {
                 client_final_message_bare.extend(Base64.encode(&cb_data).bytes());
                 client_final_message_bare.extend(b",r=");
                 client_final_message_bare.extend(server_nonce.bytes());
+                if !self.client_final_extensions.is_empty() {
+                    client_final_message_bare.extend(b",");
+                    client_final_message_bare.extend(self.client_final_extensions.bytes());
+                }
                 let salted_password = S::derive(&self.password, &salt, iterations)?;
                 let client_key = S::hmac(b"Client Key", &salted_password)?;
                 let server_key = S::hmac(b"Server Key", &salted_password)?;
@@ -210,8 +237,13 @@ mod tests {
         let client_final =
             b"c=biws,r=fyko+d2lbbFgONRv9qkxdawL3rfcNHYJY1ZVvWVs7j,p=v0X8v3Bz2T0CJGbJQyF0X+HI4Ts=";
         let server_final = b"v=rmF9pqV8S7suAoZWja4dJRkFsKQ=";
-        let mut mechanism =
-            Scram::<Sha1>::new_with_nonce(username, password, client_nonce.to_owned());
+        let mut mechanism = Scram::<Sha1>::new_with_nonce(
+            username,
+            password,
+            client_nonce.to_owned(),
+            String::new(),
+            String::new(),
+        );
         let init = mechanism.initial();
         assert_eq!(
             String::from_utf8(init.clone()).unwrap(),
@@ -235,8 +267,13 @@ mod tests {
         let server_init = b"r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0,s=W22ZaJ0SNY7soEsUEjb6gQ==,i=4096";
         let client_final = b"c=biws,r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0,p=dHzbZapWIk4jUhN+Ute9ytag9zjfMHgsqmmiz7AndVQ=";
         let server_final = b"v=6rriTRBi23WpRR/wtup+mMhUZUn/dB5nLTJRsjl95G4=";
-        let mut mechanism =
-            Scram::<Sha256>::new_with_nonce(username, password, client_nonce.to_owned());
+        let mut mechanism = Scram::<Sha256>::new_with_nonce(
+            username,
+            password,
+            client_nonce.to_owned(),
+            String::new(),
+            String::new(),
+        );
         let init = mechanism.initial();
         assert_eq!(
             String::from_utf8(init.clone()).unwrap(),
@@ -248,5 +285,63 @@ mod tests {
             String::from_utf8(client_final[..].to_owned()).unwrap()
         ); // again, depends on ordering…
         mechanism.success(&server_final[..]).unwrap();
+    }
+
+    #[test]
+    fn scram_kafka_token_delegation_works() {
+        // credentials and raw messages taken from a real kafka SCRAM token delegation authentication
+        let username = "6Lbb79aSTs-mDWUPc64D9Q";
+        let password = "O574x+7mB0B8R9Yt8DqwWbIzBgEm3lUE+fy7VWdvCwcLvGvwJK9GM4y0Qaz/MxiIxDHEnxDfSuB13uycXiUqyg==";
+        let client_nonce = "o6wj2xqdu0fxe4nmnukkj076m";
+        let client_init = b"n,,n=6Lbb79aSTs-mDWUPc64D9Q,r=o6wj2xqdu0fxe4nmnukkj076m,tokenauth=true";
+        let server_init = b"r=o6wj2xqdu0fxe4nmnukkj076m1eut816hvmsycqw2qzyn14zxvr,s=MWVtNWw1Mzc1MnFianNoYWhqMjhyYzVzZHM=,i=4096";
+        let client_final = b"c=biws,r=o6wj2xqdu0fxe4nmnukkj076m1eut816hvmsycqw2qzyn14zxvr,p=qVfqg28hDgroc6pal4qCF+8hO1/wiB84o7snGRDZKuE=";
+        let server_final = b"v=2ZSkAlHEUj6WehcizLhQRiiVGn+VDVtmAqj1v/IPa28=";
+        let mut mechanism = Scram::<Sha256>::new_with_nonce(
+            username,
+            password,
+            client_nonce.to_owned(),
+            "tokenauth=true".to_owned(),
+            String::new(),
+        );
+        let init = mechanism.initial();
+        assert_eq!(
+            std::str::from_utf8(&init).unwrap(),
+            std::str::from_utf8(client_init).unwrap()
+        ); // depends on ordering…
+        let resp = mechanism.response(server_init).unwrap();
+        assert_eq!(
+            std::str::from_utf8(&resp).unwrap(),
+            std::str::from_utf8(client_final).unwrap()
+        ); // again, depends on ordering…
+        mechanism.success(server_final).unwrap();
+    }
+
+    #[test]
+    fn scram_final_extension_works() {
+        let username = "some_user";
+        let password = "a_password";
+        let client_nonce = "client_nonce";
+        let client_init = b"n,,n=some_user,r=client_nonce";
+        let server_init =
+            b"r=client_nonceserver_nonce,s=MWVtNWw1Mzc1MnFianNoYWhqMjhyYzVzZHM=,i=4096";
+        let client_final = b"c=biws,r=client_nonceserver_nonce,foo=true,p=T9XQLmykBv74DzbaCtX90/ElJYJU2XWM/jHmHJ+BI/w=";
+        let mut mechanism = Scram::<Sha256>::new_with_nonce(
+            username,
+            password,
+            client_nonce.to_owned(),
+            String::new(),
+            "foo=true".to_owned(),
+        );
+        let init = mechanism.initial();
+        assert_eq!(
+            std::str::from_utf8(&init).unwrap(),
+            std::str::from_utf8(client_init).unwrap()
+        ); // depends on ordering…
+        let resp = mechanism.response(server_init).unwrap();
+        assert_eq!(
+            std::str::from_utf8(&resp).unwrap(),
+            std::str::from_utf8(client_final).unwrap()
+        ); // again, depends on ordering…
     }
 }
