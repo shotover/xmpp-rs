@@ -1,5 +1,5 @@
 [package]
-name = "sasl"
+name = "a8da96aa9ee5ce956b7069f92a4ca762efc75133"
 version = "0.5.1"
 authors = ["lumi <lumi@pew.im>"]
 description = "A crate for SASL authentication. Currently only does the client side."
